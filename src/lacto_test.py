@@ -46,6 +46,7 @@ medium_volume_liter = 0.001
 biomass = 1.0
 bacterium_size = 1.0
 growth_curve = [biomass]
+growth_rate = [0.0]
 
 '''
 file = open("D:/Uni/Bioinformatik/Masterarbeit/EX_lacto.txt", 'w')
@@ -88,6 +89,7 @@ for t in range(72):
 
         biomass = solution.objective_value * biomass + biomass
         growth_curve.append(biomass)
+        growth_rate.append(solution.objective_value)
         bacterium_size = biomass % 1 + 1
 
         # print(solution.objective_value)
@@ -107,6 +109,6 @@ for t in range(72):
 file = open("D:/Uni/Bioinformatik/Masterarbeit/growth_lacto.csv", 'w')
 
 for i, g in enumerate(growth_curve):
-    file.write(str(i) + ";" + str(round(g, 2)) + "\n")
+    file.write(str(i) + ";" + str(round(g, 2)) + ";" + str(growth_rate[i]) + "\n")
 file.close()
 
