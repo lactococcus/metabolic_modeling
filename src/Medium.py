@@ -34,12 +34,20 @@ class Medium:
 
     def update_medium(self, fluxes_dict):
 
-        for key in fluxes_dict:
-            if key in self.components:
+        for key in self.components:
+            if key in fluxes_dict:
                 self.components[key] = max(self.components[key] + fluxes_dict[key], 0)
-            #else:
-                #self.components[key] = max(fluxes_dict[key], 0)
+            else:
+                print(key)
 
     def get_component(self, id):
         return self.components[id]
+
+    def print_content(self):
+        for component in self.components:
+            print(component + ": " + str(round(self.components[component], 5)) + " mmol")
+        print()
+
+    def has_component(self, id):
+        return id in self.components
 

@@ -17,3 +17,10 @@ class Culture:
                 self.bacteria.append(bacterium / 2)
                 self.bacteria.append(bacterium / 2)
 
+    def addBiomass(self, biomass):
+
+        for bacterium in self.bacteria:
+            bacterium += biomass
+
+    def bacteriaCount(self):
+        return len(self.bacteria)
