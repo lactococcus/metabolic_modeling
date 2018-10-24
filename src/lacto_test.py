@@ -1,5 +1,5 @@
 import cobra
-
+import Medium
 model = cobra.io.read_sbml_model("D:/Uni/Bioinformatik/Masterarbeit/iNF517.xml")
 
 # objective = model.reactions.get_by_id("BIOMASS_LLA_noATPnoH")
@@ -26,20 +26,20 @@ min_medium = {"EX_glc__D_e": 1000.0,
               "EX_ura_e": 1000.0,
               "EX_orot_e": 1000.0}
 
-min_medium2 = {"EX_2hxic__L_e": 1000.0,
+min_medium2 = {"EX_2hxic__L_e": 1.0,
                #"EX_acgam_e": 0.0,
-               "EX_glc__D_e": 10000000.0,
-               "EX_cys__L_e": 1000.0,
-               "EX_glu__L_e": 10000000.0,
-               "EX_met__L_e": 1000.0,
-               "EX_nmn_e": 1000.0,
-               "EX_orn__L_e": 1000.0,
-               "EX_orot_e": 1000.0,
-               "EX_pnto__R_e": 1000.0,
-               "EX_ppi_e": 1000.0,
-               "EX_pro__L_e": 1000.0,
-               "EX_thm_e": 1000.0,
-               "EX_thymd_e": 1000.0}
+               "EX_glc__D_e": 50.0,
+               "EX_cys__L_e": 1.0,
+               "EX_glu__L_e": 20.0,
+               "EX_met__L_e": 1.0,
+               "EX_nmn_e": 1.0,
+               "EX_orn__L_e": 1.0,
+               "EX_orot_e": 1.0,
+               "EX_pnto__R_e": 1.0,
+               "EX_ppi_e": 1.0,
+               "EX_pro__L_e": 1.0,
+               "EX_thm_e": 1.0,
+               "EX_thymd_e": 1.0}
 
 medium_availability_factor = 1000000
 medium_volume_liter = 0.001
@@ -48,6 +48,8 @@ bacterium_size = 1.0
 growth_curve = [biomass]
 growth_rate = [0.0]
 
+stock = Medium.StockMedium(min_medium2, 1.0)
+medium = Medium.Medium(stock, 0.01)
 '''
 file = open("D:/Uni/Bioinformatik/Masterarbeit/EX_lacto.txt", 'w')
 for reac in model.reactions:
@@ -66,8 +68,8 @@ for t in range(72):
             reaction.lower_bound = -1000.0
 
             if reaction.id in min_medium2:
-                if reaction.id == "EX_glc__D_e" or reaction.id == "EX_glu__L_e":
-                    reaction.lower_bound = -1 * min_medium2[reaction.id] / medium_availability_factor
+                #if reaction.id == "EX_glc__D_e" or reaction.id == "EX_glu__L_e":
+                reaction.lower_bound = -1 * medium.get_component(reaction.id)
             else:
                 reaction.lower_bound = 0
             #print(reaction.id, reaction.bounds)
@@ -91,12 +93,14 @@ for t in range(72):
         growth_curve.append(biomass)
         growth_rate.append(solution.objective_value)
         bacterium_size = biomass % 1 + 1
-
         # print(solution.objective_value)
 
+        '''
         for component in min_medium2:
             if component in solution.fluxes:
                 min_medium2[component] = max(min_medium2[component] + solution.fluxes[component] * biomass, 0)
+        '''
+        medium.update_medium(solution.fluxes)
     else:
         break
 
