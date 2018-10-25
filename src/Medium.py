@@ -14,6 +14,9 @@ class StockMedium:
     def remove_component(self, id):
         del(self.components[id])
 
+    def create_medium(self, volume_in_litre):
+        return Medium(self, volume_in_litre)
+
 
 class Medium:
 
@@ -41,11 +44,14 @@ class Medium:
                 print(key)
 
     def get_component(self, id):
-        return self.components[id]
+        if id in self.components:
+            return self.components[id]
+        else:
+            raise LookupError
 
     def print_content(self):
         for component in self.components:
-            print(component + ": " + str(round(self.components[component], 5)) + " mmol")
+            print(component + ": " + str(round(self.components[component], 3)) + " mmol")
         print()
 
     def has_component(self, id):
