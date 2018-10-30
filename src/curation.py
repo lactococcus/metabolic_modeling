@@ -29,7 +29,7 @@ reac_lac_transport.add_metabolites({'lac__L_c': -1.0, 'lac__L_e': 1.0})
 
 reac_lac_exchange.name = 'L-lactate exchange'
 reac_lac_exchange.upper_bound = 1000.0
-reac_lac_exchange.lower_bound = 1.0
+reac_lac_exchange.lower_bound = 0.1
 
 reac_lac_exchange.add_metabolites({'lac__L_e': -1.0})
 
