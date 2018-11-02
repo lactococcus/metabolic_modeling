@@ -99,7 +99,7 @@ for t in range(1):
             reaction.upper_bound = 1000.0
             reaction.lower_bound = -1000.0
 
-            if medium.has_component(reaction.id):
+            if reaction.id in medium:
                 reaction.lower_bound = max(-1 * medium.get_component(reaction.id), -1000.0)
             else:
                 reaction.lower_bound = 0.0

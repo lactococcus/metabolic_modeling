@@ -60,6 +60,6 @@ class Medium:
             print(component + ": " + str(round(self.components[component], 3)) + " mmol")
         print()
 
-    def has_component(self, id):
-        return id in self.components
+    def __contains__(self, item):
+        return item in self.components
 
