@@ -1,8 +1,10 @@
 import cobra
 from cobra import Reaction, Metabolite
+from cobra.flux_analysis import flux_variability_analysis
+from cobra.medium import minimal_medium
+
 
 model = cobra.io.read_sbml_model("U:\Masterarbeit\Genomes\Lactococcus.GFF___FASTA\Lactococcus.xml")
-model2 = cobra.io.read_sbml_model("U:\Masterarbeit\iNF517.xml")
 
 #for reaction in model.reactions:
     #print(reaction.check_mass_balance())
@@ -29,9 +31,28 @@ reac_lac_transport.add_metabolites({'lac__L_c': -1.0, 'lac__L_e': 1.0})
 
 reac_lac_exchange.name = 'L-lactate exchange'
 reac_lac_exchange.upper_bound = 1000.0
-reac_lac_exchange.lower_bound = 0.1
+reac_lac_exchange.lower_bound = -1000.0
 
 reac_lac_exchange.add_metabolites({'lac__L_e': -1.0})
 
-solution = model.optimize()
-print(model.summary())
+for reaction in model.reactions:
+    # print(reaction.id, reaction.bounds)
+    if reaction.id[:3] == "EX_":
+        reaction.upper_bound = 1000.0
+        reaction.lower_bound = -1000.0
+
+print(minimal_medium(model,0.001, exports=False, open_exchanges=True))
+
+'''
+fva = flux_variability_analysis(model, model.reactions, loopless=True)
+
+file = open("U:\Masterarbeit\Lactococcus\lacto_fva.csv", 'w')
+
+file.write("Name;minimum;maximum\n")
+
+for i in range(len(fva.index)):
+    file.write(fva.iloc[i].name + ";" + str(fva.iloc[i]['minimum']) + ";" + str(fva.iloc[i]['maximum']))
+    file.write("\n")
+
+file.close()
+'''
