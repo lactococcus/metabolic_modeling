@@ -11,9 +11,6 @@ for reaction in model.reactions:
         reaction.upper_bound = 1000.0
         reaction.lower_bound = -1000.0
 
-    if reaction.id == "O2t":
-        reaction.upper_bound = 1000.0
-        reaction.lower_bound = -1000.0
 
 fva = flux_variability_analysis(model, model.reactions, loopless=True)
 
