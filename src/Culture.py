@@ -1,26 +1,23 @@
+import Species
+import Medium
 
 class Culture:
 
-    bacteria = []
+    def __init__(self, medium, species=None):
+        self.species = species
+        self.medium = medium
 
-    def __init__(self, duplication_cutoff=2.0):
-        self.duplication_cutoff = duplication_cutoff
+    def add_species(self, species):
+        self.species.append(species)
 
-    def addBacterium(self, biomass):
-        self.bacteria += biomass
+    def species_count(self):
+        return len(self.species)
 
-    def duplicate(self):
+    def update_biomass(self):
 
-        for bacterium in self.bacteria:
-            if bacterium > self.duplication_cutoff:
-                self.bacteria.remove(bacterium)
-                self.bacteria.append(bacterium / 2)
-                self.bacteria.append(bacterium / 2)
+        for species in self.species:
 
-    def addBiomass(self, biomass):
+            solution = species.optimize(self.medium)
+            self.medium.update_medium(solution.fluxes)
 
-        for bacterium in self.bacteria:
-            bacterium += biomass
 
-    def bacteriaCount(self):
-        return len(self.bacteria)
