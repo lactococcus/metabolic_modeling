@@ -3,12 +3,19 @@ import Medium
 
 class Culture:
 
-    def __init__(self, medium, species=None):
-        self.species = species
+    def __init__(self, medium=None):
+        self.species = {}
         self.medium = medium
 
-    def add_species(self, species):
-        self.species.append(species)
+    def innoculate_species(self, species, biomass):
+        self.species[species.name] = (species, biomass)
+
+    def get_biomass_of_species(self, species):
+
+        if species.name in self.species:
+            return self.species[species.name][1]
+        else:
+            return 0.0
 
     def species_count(self):
         return len(self.species)
@@ -17,7 +24,9 @@ class Culture:
 
         for species in self.species:
 
-            solution = species.optimize(self.medium)
+            solution = self.species[species][0].optimize(self.medium)
             self.medium.update_medium(solution.fluxes)
+
+            self.species[species] = (self.species[species][0], self.species[species][1] * solution.objective_value + self.species[species][1])
 
 
