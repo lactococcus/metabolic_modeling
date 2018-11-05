@@ -46,8 +46,6 @@ class Medium:
         for key in self.components:
             if key in fluxes_dict:
                 self.components[key] = max(self.components[key] + fluxes_dict[key], 0)
-            else:
-                print(key)
 
     def get_component(self, id):
         if id in self.components:
