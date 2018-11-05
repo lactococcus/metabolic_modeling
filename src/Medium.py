@@ -57,7 +57,7 @@ class Medium:
         if id in self.components:
             return self.components[id]
         else:
-            raise LookupError
+            return 0.0
 
     def print_content(self):
         for component in self.components:
