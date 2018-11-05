@@ -41,11 +41,17 @@ class Medium:
     def remove_component(self, id):
         del(self.components[id])
 
-    def update_medium(self, fluxes_dict):
+    def update_medium(self, fluxes_pandas):
 
-        for key in self.components:
-            if key in fluxes_dict:
-                self.components[key] = max(self.components[key] + fluxes_dict[key], 0)
+        for i in range(len(fluxes_pandas.index)):
+            #print(fluxes_pandas.index[i])
+            key = fluxes_pandas.index[i]
+
+            if key[:3] == "EX_":
+                if key in self.components:
+                    self.components[key] = max(self.components[key] + fluxes_pandas.iloc[i], 0)
+                elif fluxes_pandas.iloc[i] > 0.0:
+                    self.components[key] = fluxes_pandas.iloc[i]
 
     def get_component(self, id):
         if id in self.components:
