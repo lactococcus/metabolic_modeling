@@ -18,13 +18,20 @@ class Species:
         if medium != None:
             for reaction in self.model.exchanges:
                 if reaction.id in medium:
-                    reaction.lower_bound = max(-1 * medium.get_component(reaction.id) / self.dry_weight, -1000.0)
+                    reaction.lower_bound = max(-1 * medium.get_component(reaction.id) / self.dry_weight, -10.0)
 
         try:
             solution = self.model.optimize(objective_sense='maximize', raise_error=True)
         except OptimizationError:
-            print("Model infeasible")
+            print(self.name + " Model infeasible")
             return
+
+        #print(self.model.summary())
+
+        for i in range(len(solution.fluxes.index)):
+            name = solution.fluxes.index[i]
+            if name[:3] == "EX_":
+                solution.fluxes.iloc[i] *= self.dry_weight
 
         return solution
 

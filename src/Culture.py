@@ -26,7 +26,7 @@ class Culture:
 
             solution = self.species[species][0].optimize(self.medium)
             self.medium.update_medium(solution.fluxes)
-
+            #self.medium.print_content()
             self.species[species] = (self.species[species][0], self.species[species][1] * solution.objective_value + self.species[species][1])
 
 
