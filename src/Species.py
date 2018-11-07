@@ -20,13 +20,13 @@ class Species:
 
     def optimize(self, medium):
 
-        volume_factor = 10 * self.volume / (medium.volume * 10**15)
+        volume_factor = 100000 * self.volume / (medium.volume * 10**15)
         #print(volume_factor)
 
         if medium != None:
             for reaction in self.model.exchanges:
                 if reaction.id in medium:
-                    reaction.lower_bound = max(-1 * medium.get_component(reaction.id) / self.dry_weight, -1000.0)
+                    reaction.lower_bound = max(-1 * medium.get_component(reaction.id) * volume_factor / self.dry_weight, -1000.0)
                     #print(reaction.lower_bound)
 
         #if self.last_solution != None:
