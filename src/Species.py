@@ -9,7 +9,7 @@ class Species:
         self.name = name
         self.model = cobra.io.read_sbml_model(model_file_path)
         self.model.solver = 'cplex'
-        self.dry_weight = dry_weight_pg / 1000000000
+        self.dry_weight = dry_weight_pg / 1000000000000
         self.surface_area = 4 * math.pi * radius_microm**2
         self.volume = 4/3 * math.pi * radius_microm**3
         self.last_solution = None
@@ -20,7 +20,7 @@ class Species:
 
     def optimize(self, medium):
 
-        volume_factor = 100000 * self.volume / (medium.volume * 10**15)
+        volume_factor = 150000 * self.volume / (medium.volume * 10**15)
         #print(volume_factor)
 
         if medium != None:
@@ -46,7 +46,7 @@ class Species:
             name = solution.fluxes.index[i]
             if name[:3] == "EX_":
                 solution.fluxes.iloc[i] *= self.dry_weight
-
+        #print(solution.fluxes)
         return solution
 
 
