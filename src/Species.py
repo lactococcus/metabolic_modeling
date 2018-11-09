@@ -54,4 +54,7 @@ class Species:
     def get_biomass(self):
         return self.biomass
 
+    def add_to_culture(self, culture):
+        self.culture = culture
+
 
