@@ -1,6 +1,5 @@
 import Species
 import Medium
-from random import shuffle
 
 class Culture:
 
@@ -25,9 +24,9 @@ class Culture:
         return len(self.species_list)
 
     def update_biomass(self):
-
-        #shuffle(self.species_list)
-        medium_partition = self.medium.partition(self.species_count())
+        medium_partition = self.medium
+        if self.species_count() > 1:
+            medium_partition = self.medium.partition(self.species_count())
 
         for species in self.species_list:
 
