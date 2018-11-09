@@ -22,15 +22,16 @@ class Culture:
             return 0.0
 
     def species_count(self):
-        return len(self.species)
+        return len(self.species_list)
 
     def update_biomass(self):
 
-        shuffle(self.species_list)
+        #shuffle(self.species_list)
+        medium_partition = self.medium.partition(self.species_count())
 
         for species in self.species_list:
 
-            solution = self.species[species.name].optimize(self.medium)
+            solution = self.species[species.name].optimize(medium_partition)
             self.medium.update_medium(solution.fluxes)
             #self.medium.print_content()
 
