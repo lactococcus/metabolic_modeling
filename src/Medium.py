@@ -32,8 +32,14 @@ class Medium:
 
         self.components = {}
 
-        for component in self.stock.components:
-            self.components[component] = self.stock.components[component] * self.volume
+        if self.stock != None:
+            for component in self.stock.components:
+                self.components[component] = self.stock.components[component] * self.volume
+
+    def from_dict(components_as_dict, volume_in_litre):
+        medium = Medium(None,volume_in_litre)
+        medium.components = components_as_dict
+        return medium
 
     def add_component(self, id, amount, volume_in_litre):
         self.components[id] = amount
@@ -70,7 +76,6 @@ class Medium:
             partition.components[component] /= factor
 
         return partition
-
 
     def __contains__(self, item):
         return item in self.components
