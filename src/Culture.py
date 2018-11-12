@@ -1,5 +1,5 @@
 import Species
-import Medium
+from Medium import Medium
 
 class Culture:
 
@@ -7,6 +7,21 @@ class Culture:
         self.species = {}
         self.species_list = []
         self.medium = medium
+        self.rations = {}
+
+    def allocate_medium(self):
+        ratios =[0 for species in self.species_list]
+
+        total_biomass = 0
+        for species in self.species_list:
+            total_biomass += species.biomass
+
+        for i in range(len(ratios)):
+            ratios[i] = self.species_list[i].biomass / total_biomass
+
+        for component in self.medium.components:
+            self.rations[component] = [self.medium.components[component] / x for x in ratios]
+
 
     def innoculate_species(self, species, biomass):
         species.set_biomass(biomass)
@@ -24,13 +39,17 @@ class Culture:
         return len(self.species_list)
 
     def update_biomass(self):
-        medium_partition = self.medium
-        if self.species_count() > 1:
-            medium_partition = self.medium.partition(self.species_count())
 
-        for species in self.species_list:
+        self.allocate_medium()
 
-            solution = self.species[species.name].optimize(medium_partition)
+        for i, species in enumerate(self.species_list):
+
+            components = {}
+
+            for component in self.rations:
+                components[component] = self.rations[component][i]
+
+            solution = self.species[species.name].optimize(Medium.from_dict(components, self.medium.volume))
             self.medium.update_medium(solution.fluxes)
             #self.medium.print_content()
 

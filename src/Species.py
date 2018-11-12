@@ -21,7 +21,7 @@ class Species:
 
     def optimize(self, medium):
 
-        volume_factor = 400 * self.volume / (medium.volume * 10**15)
+        volume_factor = 100 * self.volume / (medium.volume * 10**15)
         #print(volume_factor)
 
         if medium != None:
@@ -38,7 +38,7 @@ class Species:
 
         self.last_solution = solution
         self.biomass = self.biomass * solution.objective_value + self.biomass
-        #print(self.model.summary())
+        print(self.model.summary())
         #print(solution.objective_value)
 
         for i in range(len(solution.fluxes.index)):
