@@ -70,13 +70,6 @@ class Medium:
             print(component + ": " + str(round(self.components[component], 3)) + " mmol")
         print()
 
-    def partition(self, factor):
-        partition = copy.deepcopy(self)
-        for component in partition.components:
-            partition.components[component] /= factor
-
-        return partition
-
     def __contains__(self, item):
         return item in self.components
 
