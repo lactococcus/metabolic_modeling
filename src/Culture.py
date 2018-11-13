@@ -29,9 +29,14 @@ class Culture:
         self.species_list.append(species)
 
     def get_biomass_of_species(self, species):
-
         if species.name in self.species:
             return self.species[species.name].get_biomass()
+        else:
+            return 0.0
+
+    def get_abundance_of_species(self, species):
+        if species.name in self.species:
+            return self.species[species.name].get_biomass() // self.species[species.name].dry_weight
         else:
             return 0.0
 

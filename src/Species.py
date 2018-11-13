@@ -2,6 +2,7 @@ import cobra
 from cobra.exceptions import OptimizationError
 import Medium
 import math
+import cplex._internal._subinterfaces as cpx
 import cplex
 
 class Species:
@@ -21,6 +22,8 @@ class Species:
 
     def optimize(self, medium):
 
+        #self.add_warmstart()
+
         volume_factor = 100 * self.volume / (medium.volume * 10**15)
         #print(volume_factor)
 
@@ -38,7 +41,7 @@ class Species:
 
         self.last_solution = solution
         self.biomass = self.biomass * solution.objective_value + self.biomass
-        print(self.model.summary())
+        #print(self.model.summary())
         #print(solution.objective_value)
 
         for i in range(len(solution.fluxes.index)):
@@ -57,4 +60,23 @@ class Species:
     def add_to_culture(self, culture):
         self.culture = culture
 
+    def add_warmstart(self):
+        if self.last_solution != None:
+            print("found last sol")
+            fluxes = self.last_solution.fluxes
+            ind = []
+            val = []
+            for i in range(len(fluxes.index)):
+                ind.append(fluxes.index[i])
+                val.append(fluxes.iloc[i])
 
+            sol = [ind, val]
+
+            '''
+            if cpx.MIPStartsInterface.get_num() > 0:
+                if self.name in cpx.MIPStartsInterface.get_names():
+                    cpx.MIPStartsInterface.change(self.name, sol, cpx.MIPStartsInterface.effort_level.solve_MIP)
+                    return
+            '''
+            cpx.MIPStartsInterface.add(sol, cpx.MIPStartsInterface.effort_level.solve_MIP, self.name)
+            print("Test")
