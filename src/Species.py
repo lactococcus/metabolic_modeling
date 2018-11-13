@@ -2,9 +2,10 @@ import cobra
 from cobra.exceptions import OptimizationError
 import Medium
 import math
-import cplex._internal._subinterfaces as cpx
 import cplex
+import optlang.cplex_interface
 
+'''class representing a bacterial species'''
 class Species:
     def __init__(self, name, model_file_path, radius_microm, dry_weight_pg=0.28):
         self.name = name
@@ -20,10 +21,8 @@ class Species:
             reaction.upper_bound = 1000.0
             reaction.lower_bound = 0.0
 
+    '''does FBA for the bacterial species. sets bounds of exchange reactions based on medium'''
     def optimize(self, medium):
-
-        #self.add_warmstart()
-
         volume_factor = 100 * self.volume / (medium.volume * 10**15)
         #print(volume_factor)
 
@@ -32,6 +31,8 @@ class Species:
                 if reaction.id in medium:
                     reaction.lower_bound = max(-1 * medium.get_component(reaction.id) * volume_factor / self.dry_weight, -1000.0)
                     #print(reaction.lower_bound)
+
+        #self.add_warmstart()
 
         try:
             solution = self.model.optimize(objective_sense='maximize', raise_error=True)
@@ -60,9 +61,11 @@ class Species:
     def add_to_culture(self, culture):
         self.culture = culture
 
+    '''adds the last solution as a warmstart for cplex solver (does not work rn)'''
     def add_warmstart(self):
+        cpx = self.model.solver.problem
+
         if self.last_solution != None:
-            print("found last sol")
             fluxes = self.last_solution.fluxes
             ind = []
             val = []
@@ -72,11 +75,10 @@ class Species:
 
             sol = [ind, val]
 
-            '''
-            if cpx.MIPStartsInterface.get_num() > 0:
-                if self.name in cpx.MIPStartsInterface.get_names():
-                    cpx.MIPStartsInterface.change(self.name, sol, cpx.MIPStartsInterface.effort_level.solve_MIP)
+            if cpx.MIP_starts.get_num() > 0:
+                if self.name in cpx.MIP_starts.get_names():
+                    cpx.MIP_starts.change(self.name, sol, cpx.MIP_starts.effort_level.auto)
                     return
-            '''
-            cpx.MIPStartsInterface.add(sol, cpx.MIPStartsInterface.effort_level.solve_MIP, self.name)
+
+            cpx.MIP_starts.add(sol, cpx.MIP_starts.effort_level.auto, self.name)
             print("Test")

@@ -1,6 +1,7 @@
 import Species
 from Medium import Medium
 
+'''class representing a bacterial culture. a culture consists of 1 medium and n different bacterial species'''
 class Culture:
 
     def __init__(self, medium=None):
@@ -9,6 +10,7 @@ class Culture:
         self.medium = medium
         self.rations = {}
 
+    '''partitions the available resources of the medium based on co-culture composition'''
     def allocate_medium(self):
         ratios =[0 for species in self.species_list]
 
@@ -22,7 +24,7 @@ class Culture:
         for component in self.medium.components:
             self.rations[component] = [self.medium.components[component] / x for x in ratios]
 
-
+    '''adds a species to the culture'''
     def innoculate_species(self, species, biomass):
         species.set_biomass(biomass)
         self.species[species.name] = species
@@ -40,9 +42,11 @@ class Culture:
         else:
             return 0.0
 
+    '''returns the number of different bacterial species in the culture'''
     def species_count(self):
         return len(self.species_list)
 
+    '''optimizes the biomass production of all species in the culture using FBA'''
     def update_biomass(self):
 
         self.allocate_medium()
