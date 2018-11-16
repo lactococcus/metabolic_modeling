@@ -1,5 +1,6 @@
 import Species
 from Medium import Medium
+import multiprocessing as mp
 
 '''class representing a bacterial culture. a culture consists of 1 medium and n different bacterial species'''
 class Culture:
@@ -11,8 +12,9 @@ class Culture:
         self.rations = {}
 
     '''partitions the available resources of the medium based on co-culture composition'''
+
     def allocate_medium(self):
-        ratios =[0 for species in self.species_list]
+        ratios = [0 for species in self.species_list]
 
         total_biomass = 0
         for species in self.species_list:
@@ -25,6 +27,7 @@ class Culture:
             self.rations[component] = [self.medium.components[component] / x for x in ratios]
 
     '''adds a species to the culture'''
+
     def innoculate_species(self, species, biomass):
         species.set_biomass(biomass)
         self.species[species.name] = species
@@ -43,24 +46,37 @@ class Culture:
             return 0.0
 
     '''returns the number of different bacterial species in the culture'''
+
     def species_count(self):
         return len(self.species_list)
 
     '''optimizes the biomass production of all species in the culture using FBA'''
+
     def update_biomass(self):
 
         self.allocate_medium()
 
         for i, species in enumerate(self.species_list):
+            self._update_biomass(i, species)
 
-            components = {}
+        '''
+        processes = [mp.Process(target=self._update_biomass, args=(i, species)) for i, species in
+                     enumerate(self.species_list)]
 
-            for component in self.rations:
-                components[component] = self.rations[component][i]
+        for process in processes:
+            process.start()
 
-            solution = self.species[species.name].optimize(Medium.from_dict(components, self.medium.volume))
-            self.medium.update_medium(solution.fluxes)
-            #self.medium.print_content()
+        for process in processes:
+            process.join()
+        '''
 
+    def _update_biomass(self, i, species):
 
+        components = {}
 
+        for component in self.rations:
+            components[component] = self.rations[component][i]
+
+        solution = self.species[species.name].optimize(Medium.from_dict(components, self.medium.volume))
+        self.medium.update_medium(solution.fluxes)
+        # self.medium.print_content()
