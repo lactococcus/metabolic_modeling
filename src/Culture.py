@@ -16,20 +16,28 @@ class Culture:
     def allocate_medium(self):
         ratios = [0 for species in self.species_list]
 
-        total_biomass = 0
+        total_volume = self.medium.volume * 10**15
+        used_volume = 0
+
         for species in self.species_list:
-            total_biomass += species.biomass
+            used_volume += species.volume * species.get_abundance()
 
-        for i in range(len(ratios)):
-            ratios[i] = self.species_list[i].biomass / total_biomass
+        if total_volume <= used_volume:
+            for component in self.medium.components:
+                self.rations[component] = [0 for x in ratios]
 
-        for component in self.medium.components:
-            self.rations[component] = [self.medium.components[component] / x for x in ratios]
+        else:
+            for i in range(len(ratios)):
+                spec = self.species_list[i]
+                ratios[i] = (spec.get_abundance() * spec.volume) / total_volume
+
+            for component in self.medium.components:
+                self.rations[component] = [self.medium.components[component] / x for x in ratios]
 
     '''adds a species to the culture'''
 
-    def innoculate_species(self, species, biomass):
-        species.set_biomass(biomass)
+    def innoculate_species(self, species, abundance):
+        species.set_abundance(abundance)
         self.species[species.name] = species
         self.species_list.append(species)
 
@@ -41,9 +49,9 @@ class Culture:
 
     def get_abundance_of_species(self, species):
         if species.name in self.species:
-            return self.species[species.name].get_biomass() // self.species[species.name].dry_weight
+            return self.species[species.name].get_abundance()
         else:
-            return 0.0
+            return 0
 
     '''returns the number of different bacterial species in the culture'''
 

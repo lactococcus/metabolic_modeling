@@ -16,6 +16,7 @@ class Species:
         self.volume = 4/3 * math.pi * radius_microm**3
         self.last_solution = None
         self.biomass = 0.0
+        self.abundance = 0.0
 
         for reaction in self.model.exchanges:
             reaction.upper_bound = 1000.0
@@ -23,13 +24,11 @@ class Species:
 
     '''does FBA for the bacterial species. sets bounds of exchange reactions based on medium'''
     def optimize(self, medium):
-        volume_factor = 100 * self.volume / (medium.volume * 10**15)
-        #print(volume_factor)
 
         if medium != None:
             for reaction in self.model.exchanges:
                 if reaction.id in medium:
-                    reaction.lower_bound = max(-1 * medium.get_component(reaction.id) * volume_factor / self.dry_weight, -1000.0)
+                    reaction.lower_bound = max(-1 * medium.get_component(reaction.id) * self.abundance / self.dry_weight, -1000.0)
                     #print(reaction.lower_bound)
 
         #self.add_warmstart()
@@ -41,7 +40,7 @@ class Species:
             return
 
         self.last_solution = solution
-        self.biomass = self.biomass * solution.objective_value + self.biomass
+        self.set_biomass(self.biomass * solution.objective_value + self.biomass)
         #print(self.model.summary())
         #print(solution.objective_value)
 
@@ -54,6 +53,14 @@ class Species:
 
     def set_biomass(self,biomass):
         self.biomass = biomass
+        self.abundance = biomass // self.dry_weight
+
+    def set_abundance(self, abundance):
+        self.abundance = abundance
+        self.biomass = abundance * self.dry_weight
+
+    def get_abundance(self):
+        return self.abundance
 
     def get_biomass(self):
         return self.biomass
