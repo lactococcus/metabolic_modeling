@@ -28,7 +28,7 @@ class Species:
         if medium != None:
             for reaction in self.model.exchanges:
                 if reaction.id in medium:
-                    reaction.lower_bound = max(-1 * medium.get_component(reaction.id) * self.abundance / self.dry_weight, -1000.0)
+                    reaction.lower_bound = max(-1 * medium.get_component(reaction.id) / self.biomass, -1000.0)
                     #print(reaction.lower_bound)
 
         #self.add_warmstart()
