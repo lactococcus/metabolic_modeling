@@ -61,18 +61,15 @@ def main():
     index_to_names = dicts[1]
 
     founder = None
-    for i in range(20):
+    for i in range(10):
         print(i + 1)
-        population = generate_population(culture, 10, 0.05, 10, 1, names_to_index, index_to_names, objective, founder)
+        population = generate_population(culture, 10, 0.05, 12, 1, names_to_index, index_to_names, objective, founder)
         population.sort()
         founder = population[-1]
         if founder.get_fitness() == 0.0:
             break
 
     print(founder.chromosome.to_medium(0.05).print_content())
-
-
-
 
 
 if __name__ == '__main__':

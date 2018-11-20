@@ -33,7 +33,7 @@ class Individual:
         fitness = 0.0
 
         for key in self.objective:
-            fitness += abs(self.objective[key] - rel_abundance[key])
+            fitness += abs(self.objective[key] - rel_abundance[key]) + len(self.culture.medium.components)
 
         self.fitness = fitness
 
