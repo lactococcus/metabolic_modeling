@@ -36,7 +36,7 @@ class Medium:
             for component in self.stock.components:
                 self.components[component] = self.stock.components[component] * self.volume
 
-    def from_dict(components_as_dict, volume_in_litre):
+    def from_dict(components_as_dict, volume_in_litre=1.0):
         medium = Medium(None,volume_in_litre)
         medium.components = components_as_dict
         return medium

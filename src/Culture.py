@@ -88,3 +88,6 @@ class Culture:
         solution = self.species[species.name].optimize(Medium.from_dict(components, self.medium.volume))
         self.medium.update_medium(solution.fluxes)
         # self.medium.print_content()
+
+    def set_medium(self, medium):
+        self.medium = medium
