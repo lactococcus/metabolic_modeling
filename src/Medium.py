@@ -70,6 +70,23 @@ class Medium:
             print(component + ": " + str(round(self.components[component], 3)) + " mmol")
         print()
 
+    def export_medium(medium, file_path):
+        file = open(file_path, 'w')
+
+        for c in medium.components:
+            file.write(c + ":" + str(medium.components[c]) + "\n")
+        file.close()
+
+    def import_medium(file_path, volume):
+        file = open(file_path, 'r')
+
+        components = {}
+        for line in file:
+            tmp = line.split(":")
+            components[tmp[0]] = float(tmp[1])
+        file.close()
+        return Medium.from_dict(components, volume)
+
     def __contains__(self, item):
         return item in self.components
 
