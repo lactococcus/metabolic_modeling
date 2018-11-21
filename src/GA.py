@@ -4,6 +4,8 @@ from Species import Species
 from Chromosome import Chromosome
 from Individual import Individual
 import multiprocessing as mp
+import itertools
+#import threading as th
 
 def generate_dicts(species_list):
     names_to_index = {}
@@ -22,7 +24,7 @@ def generate_dicts(species_list):
 
 
 
-def generate_population(culture, pop_size, medium_volume, simulation_time, timestep, names_to_index, index_to_names, objective, founder=None):
+def generate_population(culture, pop_size, medium_volume, simulation_time, timestep, names_to_index, index_to_names, objective, founder=None, queue=None):
     population = []
 
     chromosome = None
@@ -38,13 +40,12 @@ def generate_population(culture, pop_size, medium_volume, simulation_time, times
     else:
         for i in range(pop_size):
             chromosome = founder.chromosome
-            chromosome.mutate(1)
+            chromosome.mutate(3)
             individual = Individual(culture, chromosome, objective, medium_volume, simulation_time, timestep)
             individual.score_fitness()
             population.append(individual)
 
-    return population
-
+    queue.put(population)
 
 def main():
     spec1 = Species('Lactococcus', "U:/Masterarbeit/Lactococcus/Lactococcus.xml", 1.0, 0.52)
@@ -61,6 +62,7 @@ def main():
     index_to_names = dicts[1]
 
     founder = None
+    '''
     for i in range(10):
         print(i + 1)
         population = generate_population(culture, 10, 0.05, 12, 1, names_to_index, index_to_names, objective, founder)
@@ -68,8 +70,38 @@ def main():
         founder = population[-1]
         if founder.get_fitness() == 0.0:
             break
+    '''
+    num_cpu = mp.cpu_count()
+    pop_size = 40
 
-    print(founder.chromosome.to_medium(0.05).print_content())
+    for i in range(10):
+        print(i + 1)
+        population = []
+        res = mp.Queue()
+        processes = [(mp.Process(target=generate_population, args=(culture, pop_size // num_cpu, 0.05, 12, 1, names_to_index, index_to_names, objective, founder, res))) for x in range(num_cpu)]
+        #processes = [(mp.Process(target=test, args=(res, x))) for x in range(10)]
+
+        for process in processes:
+            process.start()
+        #print("started")
+
+        for process in processes:
+            population.append(res.get())
+        #print("got data")
+
+        for process in processes:
+            process.join()
+        #print("joined")
+
+        population = list(itertools.chain.from_iterable(population))
+
+        population.sort()
+        founder = population[-1]
+
+        if founder.get_fitness() == 0.0:
+            break
+
+    Medium.export_medium(founder.chromosome.to_medium(0.05), "U:/Masterarbeit/GA_Results/medium.txt")
 
 
 if __name__ == '__main__':
