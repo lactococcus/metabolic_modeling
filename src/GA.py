@@ -46,7 +46,7 @@ def generate_population(culture, pop_size, cpu_count, proc_num, medium_volume, s
     else:
         for i in range(population_size - 1):
             chromosome = founder.chromosome
-            chromosome.mutate(1)
+            chromosome.mutate(10)
             individual = Individual(culture, chromosome, objective, medium_volume, simulation_time, timestep)
             individual.score_fitness()
             population.append(individual)
