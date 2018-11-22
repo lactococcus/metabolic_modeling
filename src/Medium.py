@@ -90,5 +90,8 @@ class Medium:
     def __contains__(self, item):
         return item in self.components
 
+    def __len__(self):
+        return len(self.components)
+
 
 

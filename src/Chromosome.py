@@ -22,6 +22,6 @@ class Chromosome:
             self.chromosome[index] = not self.chromosome[index]
 
     def initialize_random(self):
-        for bool in self.chromosome:
-            bool = True if random.random() <= 0.3 else False
+        for i, bool in enumerate(self.chromosome):
+            self.chromosome[i] = True if random.random() <= 0.7 else False
 
