@@ -1,6 +1,6 @@
 import Species
 from Medium import Medium
-import multiprocessing as mp
+import threading
 
 '''class representing a bacterial culture. a culture consists of 1 medium and n different bacterial species'''
 class Culture:
@@ -64,21 +64,24 @@ class Culture:
 
         self.allocate_medium()
 
-        for i, species in enumerate(self.species_list):
-            self._update_biomass(i, species)
+        #for i, species in enumerate(self.species_list):
+            #self._update_biomass(i, species)
+        solutions = []
 
-        '''
-        processes = [mp.Process(target=self._update_biomass, args=(i, species)) for i, species in
+        threads = [threading.Thread(target=self._update_biomass, args=(i, species, solutions)) for i, species in
                      enumerate(self.species_list)]
 
-        for process in processes:
-            process.start()
+        for thread in threads:
+            thread.start()
 
-        for process in processes:
-            process.join()
-        '''
+        for thread in threads:
+            thread.join()
 
-    def _update_biomass(self, i, species):
+        for solutions in solutions:
+            self.medium.update_medium(solutions.fluxes)
+
+
+    def _update_biomass(self, i, species, list):
 
         components = {}
 
@@ -86,7 +89,8 @@ class Culture:
             components[component] = self.rations[component][i]
 
         solution = self.species[species.name].optimize(Medium.from_dict(components, self.medium.volume))
-        self.medium.update_medium(solution.fluxes)
+        list.append(solution)
+        #self.medium.update_medium(solution.fluxes)
         # self.medium.print_content()
 
     def set_medium(self, medium):

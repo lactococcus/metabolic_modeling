@@ -2,8 +2,6 @@ import cobra
 from cobra.exceptions import OptimizationError
 import Medium
 import math
-import cplex
-import optlang.cplex_interface
 
 '''class representing a bacterial species'''
 
@@ -16,7 +14,6 @@ class Species:
         self.dry_weight = dry_weight_pg / 1000000000000
         self.surface_area = 4 * math.pi * radius_microm ** 2
         self.volume = 4 / 3 * math.pi * radius_microm ** 3
-        self.last_solution = None
         self.biomass = 0.0
 
         for reaction in self.model.exchanges:
@@ -30,24 +27,7 @@ class Species:
         if medium != None:
             for reaction in self.model.exchanges:
                 if reaction.id in medium:
-                    reaction.lower_bound = max(-1 * medium.get_component(reaction.id) / self.biomass, -1000.0)
-                    # print(reaction.lower_bound)
-
-        '''
-        prob = self.model.problem
-
-        with self.model:
-            self.model.slim_optimize(error_value=None,
-                                     message="There is no optimal solution for the "
-                                             "chosen objective!")
-            if self.model.solver.objective.direction == "max":
-                old_objective = prob.Variable("old_objective", lb=self.model.solver.objective.value)
-            else:
-                old_objective = prob.Variable("old_objective", ub=self.model.solver.objective.value)
-            old_obj_constraint = prob.Constraint(self.model.solver.objective.expression - old_objective, lb=0, ub=0,
-                                                 name="old_objective_constraint")
-            self.model.add_cons_vars([old_objective, old_obj_constraint])
-        '''
+                    reaction.lower_bound = max(-1 * medium.get_component(reaction.id) / self.dry_weight, -1000.0)
 
         try:
             solution = self.model.optimize(objective_sense='maximize', raise_error=True)
@@ -55,16 +35,13 @@ class Species:
             print(self.name + " Model infeasible")
             return
 
-        #self.last_solution = solution
         self.set_biomass(self.biomass * solution.objective_value + self.biomass)
-        # print(self.model.summary())
-        # print(solution.objective_value)
 
         for i in range(len(solution.fluxes.index)):
             name = solution.fluxes.index[i]
             if name[:3] == "EX_":
-                solution.fluxes.iloc[i] *= self.biomass // self.dry_weight
-        # print(solution.fluxes)
+                solution.fluxes.iloc[i] *= self.get_abundance()
+
         return solution
 
 
@@ -89,8 +66,6 @@ class Species:
 
 
     '''adds the last solution as a warmstart for cplex solver (does not work rn)'''
-
-
     def add_warmstart(self):
         prob = self.model.problem
 

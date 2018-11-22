@@ -14,28 +14,37 @@ class Individual:
 
     def score_fitness(self):
         abundance = {}
+        init_abundance = {}
         total_abundance = 0
+
+        for spec in self.culture.species_list:
+            init_abundance[spec.name] = spec.get_abundance()
+
         for i in range(self.simulation_time):
             self.culture.update_biomass()
-        else:
-            for spec in self.culture.species_list:
-                abundance[spec.name] = spec.get_abundance()
-                total_abundance += spec.get_abundance()
+
+        for spec in self.culture.species_list:
+            abundance[spec.name] = spec.get_abundance()
+            total_abundance += spec.get_abundance()
 
         rel_abundance = {}
 
         for key in abundance:
             rel_abundance[key] = abundance[key] / total_abundance
 
-        return self.fitness_function(rel_abundance)
+        self.fitness = self.fitness_function(init_abundance, abundance, rel_abundance)
 
-    def fitness_function(self, rel_abundance):
+    def fitness_function(self, init_abundance,abundance, rel_abundance):
         fitness = 0.0
 
         for key in self.objective:
-            fitness += abs(self.objective[key] - rel_abundance[key]) + len(self.culture.medium.components)
+            fitness += abs(self.objective[key] - rel_abundance[key]) * 100
+            if abundance[key] <= init_abundance[key]:
+                fitness += 1000
+        fitness += 5 * len(self.culture.medium)
+        #print(len(self.culture.medium))
 
-        self.fitness = fitness
+        return fitness
 
     def get_fitness(self):
         if self.fitness == None:
