@@ -37,11 +37,12 @@ class Species:
 
         self.set_biomass(self.biomass * solution.objective_value + self.biomass)
 
+        '''
         for i in range(len(solution.fluxes.index)):
             name = solution.fluxes.index[i]
             if name[:3] == "EX_":
                 solution.fluxes.iloc[i] *= self.get_abundance()
-
+        '''
         return solution
 
 
@@ -67,16 +68,4 @@ class Species:
 
     '''adds the last solution as a warmstart for cplex solver (does not work rn)'''
     def add_warmstart(self):
-        prob = self.model.problem
-
-        if self.last_solution != None:
-            self.model.slim_optimize(error_value=None,
-                                     message="There is no optimal solution for the "
-                                             "chosen objective!")
-            if self.model.solver.objective.direction == "max":
-                old_objective = prob.Variable("old_objective", lb=self.model.solver.objective.value)
-            else:
-                old_objective = prob.Variable("old_objective", ub=self.model.solver.objective.value)
-            old_obj_constraint = prob.Constraint(self.model.solver.objective.expression - old_objective, lb=0, ub=0,
-                                                 name="old_objective_constraint")
-            self.model.add_cons_vars([old_objective, old_obj_constraint])
+        pass

@@ -2,17 +2,21 @@ from Medium import Medium
 import random
 
 class Chromosome:
-    def __init__(self, names_to_index, index_to_names):
+    def __init__(self, names_to_index, index_to_names, essentials=None):
         self.names_to_index = names_to_index
         self.index_to_names = index_to_names
         self.chromosome = [False for i in range(len(names_to_index))]
+        self.essentials = essentials
+
+        if self.essentials == None:
+            self.essentials = [False for i in range(len(names_to_index))]
 
     def to_medium(self, volume):
         med_dict = {}
 
         for i, bool in enumerate(self.chromosome):
-            if bool:
-                med_dict[self.index_to_names[i]] = 10.0
+            if bool or self.essentials[i]:
+                med_dict[self.index_to_names[i]] = 1000.0
 
         return Medium.from_dict(med_dict, volume)
 
@@ -24,4 +28,8 @@ class Chromosome:
     def initialize_random(self):
         for i, bool in enumerate(self.chromosome):
             self.chromosome[i] = True if random.random() <= 0.5 else False
+
+    def initialize_all_true(self):
+        for i, bool in enumerate(self.chromosome):
+            self.chromosome[i] = True
 

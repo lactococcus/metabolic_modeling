@@ -1,6 +1,7 @@
 import Species
 from Medium import Medium
 import threading
+from cobra.util.context import HistoryManager
 
 '''class representing a bacterial culture. a culture consists of 1 medium and n different bacterial species'''
 class Culture:
@@ -10,6 +11,9 @@ class Culture:
         self.species_list = []
         self.medium = medium
         self.rations = {}
+
+        #for contexts
+        self._contexts = []
 
     '''partitions the available resources of the medium based on co-culture composition'''
 
@@ -77,9 +81,16 @@ class Culture:
         for thread in threads:
             thread.join()
 
-        for solutions in solutions:
-            self.medium.update_medium(solutions.fluxes)
+        counter = 0
+        for solution in solutions:
+            self.medium.update_medium(solution.fluxes)
+            if solution.objective_value < 0.0001:
+                counter += 1
 
+        if counter == len(self.species_list):
+            return False
+        else:
+            return True
 
     def _update_biomass(self, i, species, list):
 
@@ -95,3 +106,21 @@ class Culture:
 
     def set_medium(self, medium):
         self.medium = medium
+
+    def __enter__(self):
+        """Record all future changes to the model, undoing them when a call to
+        __exit__ is received"""
+
+        # Create a new context and add it to the stack
+        try:
+            self._contexts.append(HistoryManager())
+        except AttributeError:
+            self._contexts = [HistoryManager()]
+
+        return self
+
+    def __exit__(self, type, value, traceback):
+        """Pop the top context manager and trigger the undo functions"""
+        context = self._contexts.pop()
+        context.reset()
+
