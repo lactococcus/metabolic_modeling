@@ -30,7 +30,7 @@ def find_essential_nutrients(species_list, names_to_index):
         for exchange in species.model.exchanges:
             exchange.lower_bound = -1000.0
             exchange.upper_bound = 1000.0
-        fva = flux_variability_analysis(species.model, species.model.exchanges, fraction_of_optimum=0.9, loopless=True)
+        fva = flux_variability_analysis(species.model, species.model.exchanges, fraction_of_optimum=1.0, loopless=True)
         for i in range(len(fva.index)):
             if fva.iloc[i]['minimum'] < 0 and fva.iloc[i]['minimum'] < 0:
                 essentials[names_to_index[fva.iloc[i].name]] = True
