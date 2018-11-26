@@ -42,10 +42,9 @@ class Individual:
         for key in self.objective:
             fitness += abs(self.objective[key] - rel_abundance[key]) * 100
             #print("Init: " + str(init_abundance[key]) + " Now: " + str(abundance[key]))
-            if abundance[key] <= init_abundance[key]:
-                fitness += 1000
+            if not(abundance[key] > init_abundance[key]):
+                fitness += 1000000
         fitness += 2 * len(self.culture.medium)
-        # print(len(self.culture.medium))
 
         return fitness
 

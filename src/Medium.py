@@ -1,4 +1,5 @@
 import copy
+import matplotlib.pyplot as plt
 '''
 Class for creating a stock solution of a given medium
 used to create a working medium
@@ -31,14 +32,19 @@ class Medium:
         self.volume = volume_in_litre
 
         self.components = {}
+        self.components_over_time = {}
+        self.time = 0
 
         if self.stock != None:
             for component in self.stock.components:
                 self.components[component] = self.stock.components[component] * self.volume
+                self.components_over_time[component] = [self.stock.components[component] * self.volume]
 
     def from_dict(components_as_dict, volume_in_litre):
         medium = Medium(None,volume_in_litre)
         medium.components = components_as_dict
+        for comp in medium.components:
+            medium.components_over_time[comp] = [medium.components[comp]]
         return medium
 
     def add_component(self, id, amount, volume_in_litre):
@@ -48,7 +54,7 @@ class Medium:
         del(self.components[id])
 
     def update_medium(self, fluxes_pandas):
-
+        self.time += 1
         for i in range(len(fluxes_pandas.index)):
             #print(fluxes_pandas.index[i])
             key = fluxes_pandas.index[i]
@@ -56,14 +62,28 @@ class Medium:
             if key[:3] == "EX_":
                 if key in self.components:
                     self.components[key] = max(self.components[key] + fluxes_pandas.iloc[i], 0)
+                    self.components_over_time[key].append(self.components[key])
                 elif fluxes_pandas.iloc[i] > 0.0:
                     self.components[key] = fluxes_pandas.iloc[i]
+                    self.components_over_time[key] = []
+                    for i in range(self.time):
+                        self.components_over_time[key].append(0)
+                    self.components_over_time[key].append(self.components[key])
 
     def get_component(self, id):
         if id in self.components:
             return self.components[id]
         else:
             return 0.0
+
+    def get_components(self):
+        return self.components
+
+    def plot_nutrients_over_time(self):
+        for key in self.components_over_time:
+            plt.plot(self.components_over_time[key], label=key)
+        plt.legend()
+        plt.show()
 
     def print_content(self):
         for component in self.components:

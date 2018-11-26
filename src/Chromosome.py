@@ -25,6 +25,10 @@ class Chromosome:
             index = random.randrange(len(self.chromosome))
             self.chromosome[index] = not self.chromosome[index]
 
+    def mutate_with_chance(self, mutation_chance):
+        for i, bool in enumerate(self.chromosome):
+            self.chromosome[i] = (not self.chromosome[i]) if random.random() <= mutation_chance else self.chromosome[i]
+
     def initialize_random(self):
         for i, bool in enumerate(self.chromosome):
             self.chromosome[i] = True if random.random() <= 0.5 else False
