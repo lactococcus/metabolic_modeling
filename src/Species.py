@@ -2,6 +2,7 @@ import cobra
 from cobra.exceptions import OptimizationError
 import Medium
 import math
+from cobra.flux_analysis import pfba
 
 '''class representing a bacterial species'''
 
@@ -31,6 +32,7 @@ class Species:
 
         try:
             solution = self.model.optimize(objective_sense='maximize', raise_error=True)
+            #solution = pfba(self.model)
         except OptimizationError:
             print(self.name + " Model infeasible")
             return

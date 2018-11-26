@@ -57,13 +57,13 @@ def generate_population(culture, pop_size, cpu_count, proc_num, medium_volume, s
             population.append(individual)
 
     else:
+        population.append(founder)
         for i in range(population_size - 1):
             chromosome = founder.chromosome
-            chromosome.mutate(1)
+            chromosome.mutate_with_chance(0.05)
             individual = Individual(culture, chromosome, objective, medium_volume, simulation_time, timestep)
             individual.score_fitness()
             population.append(individual)
-        population.append(founder)
 
     queue.put(population)
 
@@ -81,8 +81,8 @@ def main():
     names_to_index = dicts[0]
     index_to_names = dicts[1]
     print("Start FVA")
-    essentials = find_essential_nutrients(culture.species_list, names_to_index)
-    #essentials = None
+    #essentials = find_essential_nutrients(culture.species_list, names_to_index)
+    essentials = None
     print("End FVA")
     #print(essentials)
     #test(names_to_index, index_to_names)
@@ -92,7 +92,7 @@ def main():
     num_cpu = mp.cpu_count()
     pop_size = 200
 
-    for i in range(20):
+    for i in range(10):
         population = []
         res = mp.Queue()
 
