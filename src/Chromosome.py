@@ -16,7 +16,7 @@ class Chromosome:
 
         for i, bool in enumerate(self.chromosome):
             if bool or self.essentials[i]:
-                med_dict[self.index_to_names[i]] = 1000.0
+                med_dict[self.index_to_names[i]] = 10.0
 
         return Medium.from_dict(med_dict, volume)
 
@@ -31,7 +31,7 @@ class Chromosome:
 
     def initialize_random(self):
         for i, bool in enumerate(self.chromosome):
-            self.chromosome[i] = True if random.random() <= 0.5 else False
+            self.chromosome[i] = True if random.random() <= 0.8 else False
 
     def initialize_all_true(self):
         for i, bool in enumerate(self.chromosome):
