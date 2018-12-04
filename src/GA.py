@@ -8,10 +8,14 @@ import itertools
 from cobra.flux_analysis import find_essential_reactions
 #import threading as th
 
-def generate_dicts(species_list):
+def generate_dicts(species_list, essentials):
     names_to_index = {}
     index_to_names = {}
-    counter = 0
+    counter = len(essentials)
+
+    for nutrient in essentials:
+        names_to_index[nutrient] = essentials[nutrient]
+
     for species in species_list:
         for ex in species.model.exchanges:
             if ex.id not in names_to_index:
@@ -23,9 +27,9 @@ def generate_dicts(species_list):
 
     return names_to_index, index_to_names
 
-def find_essential_nutrients(species_list, names_to_index, cpu_count):
-    essentials = [False for x in range(len(names_to_index))]
-
+def find_essential_nutrients(species_list, cpu_count):
+    essentials = {}
+    counter = 0
     for species in species_list:
         for exchange in species.model.exchanges:
             exchange.lower_bound = -1000.0
@@ -33,12 +37,14 @@ def find_essential_nutrients(species_list, names_to_index, cpu_count):
         ess = find_essential_reactions(species.model, 0.001, cpu_count)
         for reaction in ess:
             if reaction.id[:3] == "EX_":
-                essentials[names_to_index[reaction.id]] = True
+                if reaction.id not in essentials:
+                    essentials[reaction.id] = counter
+                    counter += 1
                 # print(reaction.id)
-    return essentials
+    return counter, essentials
 
 
-def generate_population(culture, pop_size, cpu_count, proc_num, medium_volume, simulation_time, timestep, names_to_index, index_to_names, essentials, objective, founder=None, queue=None):
+def generate_population(culture, pop_size, cpu_count, proc_num, medium_volume, simulation_time, timestep, index_to_names, essentials, objective, founder=None, queue=None):
     population = []
 
     chromosome = None
@@ -51,11 +57,12 @@ def generate_population(culture, pop_size, cpu_count, proc_num, medium_volume, s
 
     if founder == None:
         for i in range(population_size):
-            chromosome = Chromosome(names_to_index, index_to_names, essentials)
-            chromosome.initialize_random()
+            chromosome = Chromosome(index_to_names, essentials)
+            chromosome.initialize_all_true()
             individual = Individual(culture, chromosome, objective, medium_volume, simulation_time, timestep)
             individual.score_fitness()
-            population.append(individual)
+            if individual.get_fitness() >= 0.0:
+                population.append(individual)
 
     else:
         if proc_num == 0:
@@ -63,10 +70,11 @@ def generate_population(culture, pop_size, cpu_count, proc_num, medium_volume, s
 
         for i in range(population_size):
             chromosome = founder.chromosome
-            chromosome.mutate_with_chance(0.05)
+            chromosome.mutate_with_chance(0.03)
             individual = Individual(culture, chromosome, objective, medium_volume, simulation_time, timestep)
             individual.score_fitness()
-            population.append(individual)
+            if individual.get_fitness() >= 0.0:
+                population.append(individual)
 
     queue.put(population)
 
@@ -82,26 +90,26 @@ def main():
 
     objective = {"Lactococcus": 0.2, "Klebsiella": 0.8}
 
-    dicts = generate_dicts(culture.species_list)
+    print("Finding Essential Nutrients...")
+    num_essentials, essential_nutrients = find_essential_nutrients(culture.species_list, num_cpu)
+    print("Found " + str(num_essentials) + " Essential Nutrients!")
+
+    dicts = generate_dicts(culture.species_list, essential_nutrients)
     names_to_index = dicts[0]
     index_to_names = dicts[1]
-    print("Finding Essential Nutrients...")
-    essentials = find_essential_nutrients(culture.species_list, names_to_index, num_cpu)
-    #essentials = None
-    print("Found Essential Nutrients!")
-    #print(essentials)
-    #test(names_to_index, index_to_names)
+    #for key in names_to_index:
+        #print(key + ": " + str(names_to_index[key]))
 
     founder = None
 
-    pop_size = 200
+    pop_size = 100
 
-    for i in range(20):
+    for i in range(10):
         population = []
         res = mp.Queue()
 
         if num_cpu > 1:
-            processes = [mp.Process(target=generate_population, args=(culture, pop_size, num_cpu, x, 0.05, 12, 1, names_to_index, index_to_names, essentials, objective, founder, res)) for x in range(num_cpu)]
+            processes = [mp.Process(target=generate_population, args=(culture, pop_size, num_cpu, x, 0.05, 12, 1, index_to_names, num_essentials, objective, founder, res)) for x in range(num_cpu)]
             #processes = [(mp.Process(target=test, args=(res, x))) for x in range(10)]
 
             for process in processes:
@@ -117,7 +125,7 @@ def main():
                 #process.terminate()
             #print("joined")
         else:
-            generate_population(culture, pop_size, 1, 1, 0.05, 12, 1, names_to_index, index_to_names, essentials, objective, founder, res)
+            generate_population(culture, pop_size, 1, 1, 0.05, 12, 1, names_to_index, index_to_names, num_essentials, objective, founder, res)
 
         population = list(itertools.chain.from_iterable(population))
 
@@ -129,12 +137,6 @@ def main():
             break
 
     Medium.export_medium(founder.chromosome.to_medium(0.05), "U:/Masterarbeit/GA_Results/medium.txt")
-
-def test(names_to_index, index_to_names):
-    c = Chromosome(names_to_index, index_to_names)
-    c.initialize_random()
-    Medium.export_medium(c.to_medium(0.05), "U:/Masterarbeit/GA_Results/medium_full.txt")
-    print("fertig")
 
 if __name__ == '__main__':
     main()
