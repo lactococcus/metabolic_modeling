@@ -1,11 +1,8 @@
 import copy
 import matplotlib.pyplot as plt
-'''
-Class for creating a stock solution of a given medium
-used to create a working medium
-'''
-class StockMedium:
 
+class StockMedium:
+    """ Class for creating a stock solution of a given medium used to create a working medium """
     def __init__(self, medium_as_dict={}, volume_in_litre=1.0):
         self.components = medium_as_dict
         self.volume = volume_in_litre
@@ -26,7 +23,7 @@ class StockMedium:
 
 
 class Medium:
-
+    """ Class for creating a working medium """
     def __init__(self, stock_medium, volume_in_litre):
         self.stock = stock_medium
         self.volume = volume_in_litre
@@ -41,19 +38,15 @@ class Medium:
                 self.components_over_time[component] = [self.stock.components[component] * self.volume]
 
     def from_dict(components_as_dict, volume_in_litre):
+        """creates a medium from a dictionary containing component names as keys and amounts as values"""
         medium = Medium(None,volume_in_litre)
         medium.components = components_as_dict
         for comp in medium.components:
             medium.components_over_time[comp] = [medium.components[comp]]
         return medium
 
-    def add_component(self, id, amount, volume_in_litre):
-        self.components[id] = amount
-
-    def remove_component(self, id):
-        del(self.components[id])
-
     def update_medium(self, fluxes_pandas):
+        """updates the medium components after doing fba"""
         self.time += 1
         for i in range(len(fluxes_pandas.index)):
             #print(fluxes_pandas.index[i])

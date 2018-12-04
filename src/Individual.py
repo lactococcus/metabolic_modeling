@@ -9,13 +9,13 @@ class Individual:
         self.simulation_time = simulation_time
         self.timestep = timestep
         self.fitness = None
-
-        self.culture.set_medium(self.chromosome.to_medium(medium_volume))
+        self.medium_volume = medium_volume
 
     def score_fitness(self):
         abundance = {}
         init_abundance = {}
         total_abundance = 0
+        self.culture.set_medium(self.chromosome.to_medium(self.medium_volume))
 
         for spec in self.culture.species_list:
             init_abundance[spec.name] = spec.get_abundance()
@@ -38,13 +38,15 @@ class Individual:
 
     def fitness_function(self, init_abundance, abundance, rel_abundance):
         fitness = 0.0
+        # fitness += 2 * len(self.culture.medium)
 
         for key in self.objective:
-            fitness += abs(self.objective[key] - rel_abundance[key]) * 1000
-            #print("Name: " + key + " Init: " + str(init_abundance[key]) + " Now: " + str(abundance[key]))
-            if not(abundance[key] > init_abundance[key]):
-                fitness += 1000000
-        fitness += 2 * len(self.culture.medium)
+            if abundance[key] > init_abundance[key]:
+                fitness += abs(self.objective[key] - rel_abundance[key]) * 1000
+                #print("Name: " + key + " Init: " + str(init_abundance[key]) + " Now: " + str(abundance[key]))
+            else:
+                fitness = -1.0
+                break
 
         return fitness
 
@@ -55,4 +57,5 @@ class Individual:
         return self.fitness
 
     def __lt__(self, other):
+        """an indicidual is leser than another when its fitness score is higher. higher fitness == bad"""
         return self.get_fitness() > other.get_fitness()

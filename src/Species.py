@@ -2,12 +2,10 @@ import cobra
 from cobra.exceptions import OptimizationError
 import Medium
 import math
-from cobra.flux_analysis import pfba
-
-'''class representing a bacterial species'''
-
+#from cobra.flux_analysis import pfba
 
 class Species:
+    """class representing a bacterial species"""
     def __init__(self, name, model_file_path, radius_microm, dry_weight_pg=0.3):
         self.name = name
         self.model = cobra.io.read_sbml_model(model_file_path)
@@ -21,10 +19,8 @@ class Species:
             reaction.upper_bound = 1000.0
             reaction.lower_bound = 0.0
 
-    '''does FBA for the bacterial species. sets bounds of exchange reactions based on medium'''
-
     def optimize(self, medium):
-
+        """does FBA for the bacterial species. sets bounds of exchange reactions based on medium"""
         if medium != None:
             for reaction in self.model.exchanges:
                 if reaction.id in medium:
@@ -66,8 +62,3 @@ class Species:
 
     def add_to_culture(self, culture):
         self.culture = culture
-
-
-    '''adds the last solution as a warmstart for cplex solver (does not work rn)'''
-    def add_warmstart(self):
-        pass

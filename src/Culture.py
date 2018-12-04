@@ -2,18 +2,16 @@ import Species
 from Medium import Medium
 import threading
 
-'''class representing a bacterial culture. a culture consists of 1 medium and n different bacterial species'''
 class Culture:
-
+    """class representing a bacterial culture. a culture consists of 1 medium and n different bacterial species"""
     def __init__(self, medium=None):
         self.species = {}
         self.species_list = []
         self.medium = medium
         self.rations = {}
 
-    '''partitions the available resources of the medium based on co-culture composition'''
-
     def allocate_medium(self):
+        """partitions the available resources of the medium based on the volume each bacterial species occupies in the medium"""
         ratios = [0 for species in self.species_list]
 
         total_volume = self.medium.volume * 10**15
@@ -34,9 +32,8 @@ class Culture:
             for component in self.medium.components:
                 self.rations[component] = [self.medium.components[component] / x for x in ratios]
 
-    '''adds a species to the culture'''
-
     def innoculate_species(self, species, abundance):
+        """adds a species to the culture"""
         species.set_abundance(abundance)
         self.species[species.name] = species
         self.species_list.append(species)
@@ -53,19 +50,14 @@ class Culture:
         else:
             return 0
 
-    '''returns the number of different bacterial species in the culture'''
-
     def species_count(self):
+        """returns the number of different bacterial species in the culture"""
         return len(self.species_list)
 
-    '''optimizes the biomass production of all species in the culture using FBA'''
-
     def update_biomass(self):
-
+        """optimizes the biomass production of all species in the culture using FBA"""
         self.allocate_medium()
 
-        #for i, species in enumerate(self.species_list):
-            #self._update_biomass(i, species)
         solutions = []
 
         threads = [threading.Thread(target=self._update_biomass, args=(i, species, solutions)) for i, species in
@@ -97,8 +89,7 @@ class Culture:
 
         solution = self.species[species.name].optimize(Medium.from_dict(components, self.medium.volume))
         list.append(solution)
-        #self.medium.update_medium(solution.fluxes)
-        # self.medium.print_content()
+
 
     def set_medium(self, medium):
         self.medium = medium
