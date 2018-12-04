@@ -43,6 +43,28 @@ def find_essential_nutrients(species_list, cpu_count):
                 # print(reaction.id)
     return counter, essentials
 
+def minimize_medium(individual):
+    ref_medium = individual.chromosome.to_medium(individual.medium_volume).get_components()
+    size_before = len(ref_medium)
+    #individual.score_fitness()
+    used_medium = individual.culture.medium.components_over_time
+    min_medium = {}
+
+    for key in ref_medium:
+        if key in used_medium:
+            progress = used_medium[key]
+            tmp = progress[0]
+            for timepoint in progress:
+                if timepoint < tmp:
+                    min_medium[key] = ref_medium[key]
+                    break
+                else:
+                    tmp = timepoint
+
+    size_after = len(min_medium)
+    print("Before: " + str(size_before) + " After: " + str(size_after))
+
+    return min_medium
 
 def generate_population(culture, pop_size, cpu_count, proc_num, medium_volume, simulation_time, timestep, index_to_names, essentials, objective, founder=None, queue=None):
     population = []
@@ -70,7 +92,7 @@ def generate_population(culture, pop_size, cpu_count, proc_num, medium_volume, s
 
         for i in range(population_size):
             chromosome = founder.chromosome
-            chromosome.mutate_with_chance(0.03)
+            chromosome.mutate_with_chance(0.01)
             individual = Individual(culture, chromosome, objective, medium_volume, simulation_time, timestep)
             individual.score_fitness()
             if individual.get_fitness() >= 0.0:
@@ -136,7 +158,9 @@ def main():
         if founder.get_fitness() == 0.0:
             break
 
-    Medium.export_medium(founder.chromosome.to_medium(0.05), "U:/Masterarbeit/GA_Results/medium.txt")
+    Medium.export_medium(founder.chromosome.to_medium(0.05), "U:/Masterarbeit/GA_Results/medium_founder.txt")
+    medium = minimize_medium(founder)
+    Medium.export_medium(Medium.from_dict(medium, 0.05), "U:/Masterarbeit/GA_Results/medium.txt")
 
 if __name__ == '__main__':
     main()
