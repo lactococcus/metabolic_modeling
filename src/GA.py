@@ -53,13 +53,12 @@ def minimize_medium(individual):
     for key in ref_medium:
         if key in used_medium:
             progress = used_medium[key]
-            tmp = progress[0]
+            #print(progress)
+            start = progress[0]
             for timepoint in progress:
-                if timepoint < tmp:
+                if timepoint < start:
                     min_medium[key] = ref_medium[key]
                     break
-                else:
-                    tmp = timepoint
 
     size_after = len(min_medium)
     print("Before: " + str(size_before) + " After: " + str(size_after))
@@ -78,7 +77,7 @@ def generate_population(culture, pop_size, cpu_count, proc_num, medium_volume, s
         population_size = pop_size // cpu_count
 
     if founder == None:
-        for i in range(population_size):
+        for i in range(1):
             chromosome = Chromosome(index_to_names, essentials)
             chromosome.initialize_all_true()
             individual = Individual(culture, chromosome, objective, medium_volume, simulation_time, timestep)
@@ -103,14 +102,14 @@ def generate_population(culture, pop_size, cpu_count, proc_num, medium_volume, s
 def main():
     num_cpu = mp.cpu_count()
 
-    spec1 = Species('Lactococcus', "U:/Masterarbeit/Lactococcus/Lactococcus.xml", 1.0, 0.52)
+    spec1 = Species('Lactococcus', "U:/Masterarbeit/Lactococcus/Lactococcus.xml", 1.0)
     spec2 = Species('Klebsiella', "U:/Masterarbeit/Klebsiella/Klebsiella.xml", 1.0)
 
     culture = Culture()
-    culture.innoculate_species(spec1, 100)
-    culture.innoculate_species(spec2, 100)
+    culture.innoculate_species(spec1, 1000000)
+    culture.innoculate_species(spec2, 1000000)
 
-    objective = {"Lactococcus": 0.2, "Klebsiella": 0.8}
+    objective = {"Lactococcus": 0.1, "Klebsiella": 0.9}
 
     print("Finding Essential Nutrients...")
     num_essentials, essential_nutrients = find_essential_nutrients(culture.species_list, num_cpu)
@@ -131,7 +130,7 @@ def main():
         res = mp.Queue()
 
         if num_cpu > 1:
-            processes = [mp.Process(target=generate_population, args=(culture, pop_size, num_cpu, x, 0.05, 12, 1, index_to_names, num_essentials, objective, founder, res)) for x in range(num_cpu)]
+            processes = [mp.Process(target=generate_population, args=(culture, pop_size, num_cpu, x, 0.05, 16, 1, index_to_names, num_essentials, objective, founder, res)) for x in range(num_cpu)]
             #processes = [(mp.Process(target=test, args=(res, x))) for x in range(10)]
 
             for process in processes:
@@ -155,7 +154,7 @@ def main():
         founder = population[-1]
         print("Iteration: " + str(i+1) + " Fitness: " + str(founder.get_fitness()))
 
-        if founder.get_fitness() == 0.0:
+        if founder.get_fitness() < 0.000001:
             break
 
     Medium.export_medium(founder.chromosome.to_medium(0.05), "U:/Masterarbeit/GA_Results/medium_founder.txt")
