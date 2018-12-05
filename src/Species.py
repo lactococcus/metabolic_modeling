@@ -24,11 +24,11 @@ class Species:
         if medium != None:
             for reaction in self.model.exchanges:
                 if reaction.id in medium:
-                    reaction.lower_bound = max(-1 * medium.get_component(reaction.id) / self.get_biomass(), -1000.0)
+                    reaction.lower_bound = max(-1 * medium.get_component(reaction.id) / self.get_biomass(), -10.0)
 
         try:
             solution = self.model.optimize(objective_sense='maximize', raise_error=True)
-            #solution = pfba(self.model)
+            #self.model.summary()
         except OptimizationError:
             print(self.name + " Model infeasible")
             return

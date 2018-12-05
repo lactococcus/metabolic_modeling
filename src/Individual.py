@@ -32,7 +32,8 @@ class Individual:
         rel_abundance = {}
 
         for key in abundance:
-            rel_abundance[key] = abundance[key] / total_abundance
+            rel_abundance[key] = round(abundance[key] / total_abundance, 6)
+            #print(key + ": " + str(rel_abundance[key]))
 
         self.fitness = self.fitness_function(init_abundance, abundance, rel_abundance)
 
@@ -42,13 +43,13 @@ class Individual:
 
         for key in self.objective:
             if abundance[key] > init_abundance[key]:
-                fitness += abs(self.objective[key] - rel_abundance[key]) * 1000
+                fitness += abs(self.objective[key] - rel_abundance[key])
                 #print("Name: " + key + " Init: " + str(init_abundance[key]) + " Now: " + str(abundance[key]))
             else:
                 fitness = -1.0
                 break
 
-        return fitness
+        return round(fitness, 6)
 
     def get_fitness(self):
         if self.fitness == None:
