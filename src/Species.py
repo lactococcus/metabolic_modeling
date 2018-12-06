@@ -6,7 +6,7 @@ import math
 
 class Species:
     """class representing a bacterial species"""
-    def __init__(self, name, model_file_path, radius_microm, dry_weight_pg=0.3):
+    def __init__(self, name, model_file_path, radius_microm, dry_weight_pg=0.3, init_abundance=0):
         self.name = name
         self.model = cobra.io.read_sbml_model(model_file_path)
         self.model.solver = 'cplex'
@@ -14,10 +14,10 @@ class Species:
         self.surface_area = 4 * math.pi * radius_microm ** 2
         self.volume = 4 / 3 * math.pi * radius_microm ** 3
         self.biomass = 0.0
+        self.init_abundance = 0
 
         for reaction in self.model.exchanges:
-            reaction.upper_bound = 1000.0
-            reaction.lower_bound = 0.0
+            reaction.bounds = (0.0, 1000.0)
 
     def optimize(self, medium):
         """does FBA for the bacterial species. sets bounds of exchange reactions based on medium"""

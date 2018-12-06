@@ -35,6 +35,7 @@ class Culture:
     def innoculate_species(self, species, abundance):
         """adds a species to the culture"""
         species.set_abundance(abundance)
+        species.init_abundance = abundance
         self.species[species.name] = species
         self.species_list.append(species)
 
