@@ -40,26 +40,29 @@ def find_essential_nutrients(species_list, cpu_count):
                 if reaction.id not in essentials:
                     essentials[reaction.id] = counter
                     counter += 1
-                # print(reaction.id)
+                #print(reaction.id)
     return counter, essentials
 
 def minimize_medium(individual):
     ref_medium = individual.chromosome.to_medium(individual.medium_volume).get_components()
     size_before = len(ref_medium)
     #individual.score_fitness()
+    med = individual.culture.medium
     used_medium = individual.culture.medium.components_over_time
     min_medium = {}
-
+    #med.plot_nutrients_over_time()
     for key in ref_medium:
         if key in used_medium:
             progress = used_medium[key]
             #print(progress)
             start = progress[0]
             for timepoint in progress:
-                if timepoint < start:
-                    min_medium[key] = ref_medium[key]
+                if timepoint > start:
                     break
-
+                start = timepoint
+            else:
+                min_medium[key] = ref_medium[key]
+    #med.plot_nutrients_over_time()
     size_after = len(min_medium)
     print("Before: " + str(size_before) + " After: " + str(size_after))
 
@@ -102,14 +105,14 @@ def generate_population(culture, pop_size, cpu_count, proc_num, medium_volume, s
 def main():
     num_cpu = mp.cpu_count()
 
-    spec1 = Species('Lactococcus', "U:/Masterarbeit/Lactococcus/Lactococcus.xml", 1.0)
+    spec1 = Species('Lactococcus', "U:/Masterarbeit/iNF517.xml", 1.0)
     spec2 = Species('Klebsiella', "U:/Masterarbeit/Klebsiella/Klebsiella.xml", 1.0)
 
     culture = Culture()
     culture.innoculate_species(spec1, 1000000)
     culture.innoculate_species(spec2, 1000000)
 
-    objective = {"Lactococcus": 0.1, "Klebsiella": 0.9}
+    objective = {"Lactococcus": 0.2, "Klebsiella": 0.8}
 
     print("Finding Essential Nutrients...")
     num_essentials, essential_nutrients = find_essential_nutrients(culture.species_list, num_cpu)
@@ -123,7 +126,7 @@ def main():
 
     founder = None
 
-    pop_size = 100
+    pop_size = 150
 
     for i in range(10):
         population = []
@@ -151,10 +154,11 @@ def main():
         population = list(itertools.chain.from_iterable(population))
 
         population.sort()
+        print("Feasible: " + str(len(population)) + "/" + str(pop_size+1))
         founder = population[-1]
         print("Iteration: " + str(i+1) + " Fitness: " + str(founder.get_fitness()))
 
-        if founder.get_fitness() < 0.000001:
+        if founder.get_fitness() < 0.0001:
             break
 
     Medium.export_medium(founder.chromosome.to_medium(0.05), "U:/Masterarbeit/GA_Results/medium_founder.txt")

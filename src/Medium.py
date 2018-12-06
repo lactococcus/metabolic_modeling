@@ -63,6 +63,16 @@ class Medium:
                         self.components_over_time[key].append(0)
                     self.components_over_time[key].append(self.components[key])
 
+
+    def remove_component(self, component):
+        if component in self.components:
+            del(self.components[component])
+            del (self.components_over_time[component])
+            return True
+        else:
+            return False
+
+
     def get_component(self, id):
         if id in self.components:
             return self.components[id]
