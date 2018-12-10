@@ -20,6 +20,36 @@ class Chromosome:
 
         return Medium.from_dict(med_dict, volume)
 
+    def export_chromosome(self, file_path):
+        with open(file_path, 'w') as file:
+            for key in self.index_to_names:
+                file.write(self.index_to_names[key] + "\n")
+            file.write("-chrom-\n")
+            file.write(str(self.chromosome))
+
+    def import_chromosome(file_path):
+        index_to_names = {}
+        chromosome = []
+        flag = True
+        counter = 0
+        with open(file_path, 'r') as file:
+            for line in file:
+                line = line.strip("\n")
+                if line == "-chrom-":
+                    flag = False
+                if flag:
+                    index_to_names[counter] = line
+                    counter += 1
+                else:
+                    line = line.strip("[")
+                    line = line.strip("]")
+                    values = line.split(", ")
+                    for value in values[1:]:
+                        chromosome.append(bool(value == "True"))
+        chr = Chromosome(index_to_names)
+        chr.chromosome = chromosome
+        return chr
+
     def mutate(self, number_of_mutation):
         for i in range(number_of_mutation):
             index = random.randrange(self.num_essentials, len(self.chromosome))
