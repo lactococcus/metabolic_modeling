@@ -84,7 +84,6 @@ def generate_population(culture, pop_size, cpu_count, proc_num, medium_volume, s
             chromosome = Chromosome(index_to_names, essentials)
             chromosome.initialize_all_true()
             individual = Individual(culture, chromosome, objective, medium_volume, simulation_time, timestep)
-            individual.score_fitness()
             if individual.get_fitness() >= 0.0:
                 population.append(individual)
 
@@ -96,7 +95,6 @@ def generate_population(culture, pop_size, cpu_count, proc_num, medium_volume, s
             chromosome = founder.chromosome
             chromosome.mutate_with_chance(0.01)
             individual = Individual(culture, chromosome, objective, medium_volume, simulation_time, timestep)
-            individual.score_fitness()
             if individual.get_fitness() >= 0.0:
                 population.append(individual)
 
@@ -104,6 +102,7 @@ def generate_population(culture, pop_size, cpu_count, proc_num, medium_volume, s
 
 def main():
     num_cpu = mp.cpu_count()
+    info_file_path = "U:/Masterarbeit/GA_Results/run_info.txt"
 
     spec1 = Species('Lactococcus', "U:/Masterarbeit/iNF517.xml", 1.0)
     spec2 = Species('Klebsiella', "U:/Masterarbeit/Klebsiella/Klebsiella.xml", 1.0)
@@ -118,6 +117,10 @@ def main():
     num_essentials, essential_nutrients = find_essential_nutrients(culture.species_list, num_cpu)
     print("Found " + str(num_essentials) + " Essential Nutrients!")
 
+    with open(info_file_path, 'w') as file:
+        file.write("Starting Run\n")
+        file.write("Found " + str(num_essentials) + " Essential Nutrients!\n")
+
     dicts = generate_dicts(culture.species_list, essential_nutrients)
     names_to_index = dicts[0]
     index_to_names = dicts[1]
@@ -126,9 +129,9 @@ def main():
 
     founder = None
 
-    pop_size = 150
+    pop_size = 200
 
-    for i in range(10):
+    for i in range(15):
         population = []
         res = mp.Queue()
 
@@ -154,16 +157,26 @@ def main():
         population = list(itertools.chain.from_iterable(population))
 
         population.sort()
-        print("Feasible: " + str(len(population)) + "/" + str(pop_size+1))
         founder = population[-1]
-        print("Iteration: " + str(i+1) + " Fitness: " + str(founder.get_fitness()))
 
-        if founder.get_fitness() < 0.0001:
+        with open(info_file_path, 'a') as file:
+            print("Feasible: " + str(len(population)) + "/" + str(pop_size+1))
+            print("Iteration: " + str(i+1) + " Fitness: " + str(founder.get_fitness()))
+            file.write("Feasible: " + str(len(population)) + "/" + str(pop_size+1) + "\n")
+            file.write("Iteration: " + str(i+1) + " Fitness: " + str(founder.get_fitness()) + "\n")
+
+        if founder.get_fitness() < 0.0002:
             break
 
-    Medium.export_medium(founder.chromosome.to_medium(0.05), "U:/Masterarbeit/GA_Results/medium_founder.txt")
+    Medium.export_medium(founder.chromosome.to_medium(0.05), "U:/Masterarbeit/GA_Results/medium_founder_test.txt")
     medium = minimize_medium(founder)
-    Medium.export_medium(Medium.from_dict(medium, 0.05), "U:/Masterarbeit/GA_Results/medium.txt")
+    Medium.export_medium(Medium.from_dict(medium, 0.05), "U:/Masterarbeit/GA_Results/medium_test.txt")
+    founder.chromosome.export_chromosome("U:/Masterarbeit/GA_Results/chromosome.txt")
+
+    with open(info_file_path, 'a') as file:
+        for spec in founder.culture.species_list:
+            print(spec.name + ": " + str(spec.get_abundance()))
+            file.write(spec.name + ": " + str(spec.get_abundance()) + "\n")
 
 if __name__ == '__main__':
     main()

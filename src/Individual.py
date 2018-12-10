@@ -1,4 +1,5 @@
 from Culture import *
+from matplotlib import pyplot as plt
 
 
 class Individual:
@@ -11,6 +12,23 @@ class Individual:
         self.fitness = None
         self.medium_volume = medium_volume
 
+    def plot(self):
+        self.culture.set_medium(self.chromosome.to_medium(self.medium_volume))
+        growth = {}
+
+        for spec in self.culture.species_list:
+            growth[spec.name] = [spec.get_abundance()]
+
+        for i in range(self.simulation_time):
+            self.culture.update_biomass()
+            for spec in self.culture.species_list:
+                growth[spec.name].append(spec.get_abundance())
+
+        for key in growth:
+            plt.plot(growth[key], label=key)
+        plt.legend()
+        plt.show()
+
     def score_fitness(self):
         abundance = {}
         init_abundance = {}
@@ -19,6 +37,7 @@ class Individual:
 
         for spec in self.culture.species_list:
             init_abundance[spec.name] = spec.init_abundance
+            spec.set_abundance(spec.init_abundance)
 
         for i in range(self.simulation_time):
             if not self.culture.update_biomass():
@@ -27,7 +46,6 @@ class Individual:
         for spec in self.culture.species_list:
             abundance[spec.name] = spec.get_abundance()
             total_abundance += spec.get_abundance()
-            spec.set_abundance(spec.init_abundance)
 
         rel_abundance = {}
 
@@ -53,8 +71,7 @@ class Individual:
 
     def get_fitness(self):
         if self.fitness == None:
-            self.score_fitness
-
+            self.score_fitness()
         return self.fitness
 
     def __lt__(self, other):
