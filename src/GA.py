@@ -6,6 +6,7 @@ from Individual import Individual
 import multiprocessing as mp
 import itertools
 from cobra.flux_analysis import find_essential_reactions
+from copy import deepcopy
 #import threading as th
 
 def generate_dicts(species_list, essentials):
@@ -42,6 +43,13 @@ def find_essential_nutrients(species_list, cpu_count):
                     counter += 1
                 #print(reaction.id)
     return counter, essentials
+
+def average_num_nutrients(population):
+    average = 0
+    for ind in population:
+        average += len(ind.chromosome)
+    average /= len(population)
+    return roun(average, 3)
 
 def minimize_medium(individual):
     ref_medium = individual.chromosome.to_medium(individual.medium_volume).get_components()
@@ -92,7 +100,7 @@ def generate_population(culture, pop_size, cpu_count, proc_num, medium_volume, s
             population.append(founder)
 
         for i in range(population_size):
-            chromosome = founder.chromosome
+            chromosome = deepcopy(founder.chromosome)
             chromosome.mutate_with_chance(0.01)
             individual = Individual(culture, chromosome, objective, medium_volume, simulation_time, timestep)
             if individual.get_fitness() >= 0.0:
@@ -129,14 +137,14 @@ def main():
 
     founder = None
 
-    pop_size = 200
+    pop_size = 100
 
-    for i in range(15):
+    for i in range(10):
         population = []
         res = mp.Queue()
 
         if num_cpu > 1:
-            processes = [mp.Process(target=generate_population, args=(culture, pop_size, num_cpu, x, 0.05, 16, 1, index_to_names, num_essentials, objective, founder, res)) for x in range(num_cpu)]
+            processes = [mp.Process(target=generate_population, args=(deepcopy(culture), pop_size, num_cpu, x, 0.05, 108, 1, index_to_names, num_essentials, objective, founder, res)) for x in range(num_cpu)]
             #processes = [(mp.Process(target=test, args=(res, x))) for x in range(10)]
 
             for process in processes:
@@ -152,7 +160,7 @@ def main():
                 #process.terminate()
             #print("joined")
         else:
-            generate_population(culture, pop_size, 1, 1, 0.05, 12, 1, names_to_index, index_to_names, num_essentials, objective, founder, res)
+            generate_population(culture, pop_size, 1, 1, 0.05, 10, 1, names_to_index, index_to_names, num_essentials, objective, founder, res)
 
         population = list(itertools.chain.from_iterable(population))
 
@@ -161,8 +169,10 @@ def main():
 
         with open(info_file_path, 'a') as file:
             print("Feasible: " + str(len(population)) + "/" + str(pop_size+1))
+            print("Average # Nutrients: " + str(average_num_nutrients(population)) + " Founder: " + str(len(founder.chromosome)))
             print("Iteration: " + str(i+1) + " Fitness: " + str(founder.get_fitness()))
             file.write("Feasible: " + str(len(population)) + "/" + str(pop_size+1) + "\n")
+            file.write("Average # Nutrients: " + str(average_num_nutrients(population)) + " Founder: " + str(len(founder.chromosome)) + "\n")
             file.write("Iteration: " + str(i+1) + " Fitness: " + str(founder.get_fitness()) + "\n")
 
         if founder.get_fitness() < 0.0002:
