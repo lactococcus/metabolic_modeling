@@ -16,7 +16,7 @@ class Chromosome:
 
         for i, bool in enumerate(self.chromosome):
             if bool:
-                med_dict[self.index_to_names[i]] = 10.0
+                med_dict[self.index_to_names[i]] = 10.0 * volume
 
         return Medium.from_dict(med_dict, volume)
 
@@ -67,4 +67,11 @@ class Chromosome:
     def initialize_all_true(self):
         for i, bool in enumerate(self.chromosome):
             self.chromosome[i] = True
+
+    def __len__(self):
+        counter = 0
+        for boolean in self.chromosome:
+            if boolean:
+                counter += 1
+        return counter
 

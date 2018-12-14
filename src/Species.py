@@ -10,16 +10,16 @@ class Species:
         self.name = name
         self.model = cobra.io.read_sbml_model(model_file_path)
         self.model.solver = 'cplex'
-        self.dry_weight = dry_weight_pg / 1000000000000
+        self.dry_weight = dry_weight_pg
         self.surface_area = 4 * math.pi * radius_microm ** 2
         self.volume = 4 / 3 * math.pi * radius_microm ** 3
         self.biomass = 0.0
-        self.init_abundance = 0
+        self.init_abundance = init_abundance
 
         for reaction in self.model.exchanges:
             reaction.bounds = (0.0, 1000.0)
 
-    def optimize(self, medium):
+    def optimize(self, medium, timestep):
         """does FBA for the bacterial species. sets bounds of exchange reactions based on medium"""
         if medium != None:
             for reaction in self.model.exchanges:
@@ -33,13 +33,13 @@ class Species:
             print(self.name + " Model infeasible")
             return
 
-        self.set_biomass(self.biomass * solution.objective_value + self.biomass)
+        if solution.objective_value > 0.0001:
+            self.set_biomass(self.biomass * solution.objective_value * timestep + self.biomass)
 
-
-        for i in range(len(solution.fluxes.index)):
-            name = solution.fluxes.index[i]
-            if name[:3] == "EX_":
-                solution.fluxes.iloc[i] *= self.get_biomass()
+            for i in range(len(solution.fluxes.index)):
+                name = solution.fluxes.index[i]
+                if name[:3] == "EX_":
+                    solution.fluxes.iloc[i] *= self.get_biomass() * timestep
 
         return solution
 
@@ -49,15 +49,18 @@ class Species:
 
 
     def set_abundance(self, abundance):
-        self.biomass = abundance * self.dry_weight
+        self.biomass = (abundance * self.dry_weight) / 1000000000000
 
 
     def get_abundance(self):
-        return self.biomass // self.dry_weight
+        return self.biomass // self.get_dryweight()
 
 
     def get_biomass(self):
         return self.biomass
+
+    def get_dryweight(self):
+        return self.dry_weight / 1000000000000
 
 
     def add_to_culture(self, culture):
