@@ -73,7 +73,7 @@ class Culture:
         counter = 0
         for solution in solutions:
             self.medium.update_medium(solution.fluxes)
-            if solution.objective_value < 0.0001:
+            if solution.objective_value < 0.001:
                 counter += 1
 
         if counter == len(self.species_list):
