@@ -14,11 +14,13 @@ class Individual:
 
     def plot(self):
         self.culture.set_medium(self.chromosome.to_medium(self.medium_volume))
-        self.culture.medium.print_content()
+        #self.culture.medium.print_content()
         growth = {}
 
         for spec in self.culture.species_list:
+            spec.set_abundance(spec.init_abundance)
             growth[spec.name] = [spec.get_abundance()]
+
 
         for i in range(self.simulation_time):
             self.culture.update_biomass(self.timestep)
