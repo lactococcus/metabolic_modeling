@@ -139,7 +139,7 @@ def main():
 
     pop_size = 150
 
-    for i in range(30):
+    for i in range(10):
         population = []
         res = mp.Queue()
         culture_copy = deepcopy(culture)
