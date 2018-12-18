@@ -22,30 +22,20 @@ class Chromosome:
 
     def export_chromosome(self, file_path):
         with open(file_path, 'w') as file:
+            print(len(self.chromosome))
+            print(len(self.index_to_names))
             for key in self.index_to_names:
-                file.write(self.index_to_names[key] + "\n")
-            file.write("-chrom-\n")
-            file.write(str(self.chromosome))
+                file.write(str(key) + ":" + self.index_to_names[key] + ":" + str(self.chromosome[int(key)]) + "\n")
 
     def import_chromosome(file_path):
         index_to_names = {}
         chromosome = []
-        flag = True
-        counter = 0
         with open(file_path, 'r') as file:
             for line in file:
                 line = line.strip("\n")
-                if line == "-chrom-":
-                    flag = False
-                if flag:
-                    index_to_names[counter] = line
-                    counter += 1
-                else:
-                    line = line.strip("[")
-                    line = line.strip("]")
-                    values = line.split(", ")
-                    for value in values[1:]:
-                        chromosome.append(bool(value == "True"))
+                words = line.split(":")
+                index_to_names[int(words[0])] = words[1]
+                chromosome.append(bool(words[2] == "True"))
         chr = Chromosome(index_to_names)
         chr.chromosome = chromosome
         return chr
