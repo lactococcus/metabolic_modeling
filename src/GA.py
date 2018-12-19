@@ -137,7 +137,7 @@ def main():
 
     founder = None
 
-    pop_size = 150
+    pop_size = 200
 
     for i in range(10):
         population = []
@@ -145,7 +145,7 @@ def main():
         culture_copy = deepcopy(culture)
 
         if num_cpu > 1:
-            processes = [mp.Process(target=generate_population, args=(culture_copy, pop_size, num_cpu, x, 0.05, 10, 1, index_to_names, num_essentials, objective, founder, res)) for x in range(num_cpu)]
+            processes = [mp.Process(target=generate_population, args=(culture_copy, pop_size, num_cpu, x, 0.05, 4, 0.1, index_to_names, num_essentials, objective, founder, res)) for x in range(num_cpu)]
             #processes = [(mp.Process(target=test, args=(res, x))) for x in range(10)]
 
             for process in processes:

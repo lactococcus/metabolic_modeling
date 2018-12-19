@@ -1,5 +1,6 @@
 from Culture import *
 from matplotlib import pyplot as plt
+import math
 
 
 class Individual:
@@ -21,14 +22,16 @@ class Individual:
             spec.set_abundance(spec.init_abundance)
             growth[spec.name] = [spec.get_abundance()]
 
-
-        for i in range(self.simulation_time):
+        xAxis = [0]
+        for i in range(math.floor(self.simulation_time / self.timestep)):
+            xAxis.append(self.timestep * i + self.timestep)
             self.culture.update_biomass(self.timestep)
             for spec in self.culture.species_list:
                 growth[spec.name].append(spec.get_abundance())
 
         for key in growth:
-            plt.plot(growth[key], label=key)
+            plt.plot(xAxis, growth[key], label=key)
+        #plt.xticks(xAxis)
         plt.legend()
         plt.show()
 
@@ -42,7 +45,7 @@ class Individual:
             init_abundance[spec.name] = spec.init_abundance
             spec.set_abundance(spec.init_abundance)
 
-        for i in range(self.simulation_time // self.timestep):
+        for i in range(math.floor(self.simulation_time / self.timestep)):
             if not self.culture.update_biomass(self.timestep):
                 break
 
@@ -61,11 +64,11 @@ class Individual:
 
     def fitness_function(self, init_abundance, abundance, rel_abundance):
         fitness = 0.0
-
+        #fitness += len(self.chromosome)
         for key in self.objective:
             #print("Name: " + key + " Init: " + str(init_abundance[key]) + " Now: " + str(abundance[key]))
             if abundance[key] > init_abundance[key]:
-                fitness += abs(self.objective[key] - rel_abundance[key])
+                fitness += abs(self.objective[key] - rel_abundance[key]) * 100
                 #print("Name: " + key + " Init: " + str(init_abundance[key]) + " Now: " + str(abundance[key]))
             else:
                 fitness = -1.0

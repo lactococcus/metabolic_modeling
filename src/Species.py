@@ -39,7 +39,7 @@ class Species:
             for i in range(len(solution.fluxes.index)):
                 name = solution.fluxes.index[i]
                 if name[:3] == "EX_":
-                    solution.fluxes.iloc[i] *= self.get_biomass() * timestep
+                    solution.fluxes.iloc[i] *= (self.get_biomass() * timestep)
 
         return solution
 
