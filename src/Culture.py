@@ -69,8 +69,16 @@ class Culture:
 
         for thread in threads:
             thread.join()
-
+        '''
+        for i, species in enumerate(self.species_list):
+            for component in self.rations:
+                components[component] = self.rations[component][i]
+            solution = self.species[species.name].optimize(Medium.from_dict(components, self.medium.volume), timestep)
+            solutions.append(solution)
+        '''
         counter = 0
+        if len(solutions) != len(self.species_list):
+            print("Not all Speciesa have a Solution in FVA")
         for solution in solutions:
             self.medium.update_medium(solution.fluxes)
             if solution.objective_value < 0.001:
