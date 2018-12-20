@@ -22,8 +22,6 @@ class Chromosome:
 
     def export_chromosome(self, file_path):
         with open(file_path, 'w') as file:
-            print(len(self.chromosome))
-            print(len(self.index_to_names))
             for key in self.index_to_names:
                 file.write(str(key) + ":" + self.index_to_names[key] + ":" + str(self.chromosome[int(key)]) + "\n")
 

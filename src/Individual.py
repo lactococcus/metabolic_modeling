@@ -13,8 +13,11 @@ class Individual:
         self.fitness = None
         self.medium_volume = medium_volume
 
-    def plot(self):
-        self.culture.set_medium(self.chromosome.to_medium(self.medium_volume))
+    def plot(self, medium=None):
+        if medium == None:
+            self.culture.set_medium(self.chromosome.to_medium(self.medium_volume))
+        else:
+            self.culture.set_medium(medium)
         #self.culture.medium.print_content()
         growth = {}
 
@@ -35,11 +38,14 @@ class Individual:
         plt.legend()
         plt.show()
 
-    def score_fitness(self):
+    def score_fitness(self, medium=None):
         abundance = {}
         init_abundance = {}
         total_abundance = 0
-        self.culture.set_medium(self.chromosome.to_medium(self.medium_volume))
+        if medium == None:
+            self.culture.set_medium(self.chromosome.to_medium(self.medium_volume))
+        else:
+            self.culture.set_medium(medium)
 
         for spec in self.culture.species_list:
             init_abundance[spec.name] = spec.init_abundance
@@ -68,7 +74,7 @@ class Individual:
         for key in self.objective:
             #print("Name: " + key + " Init: " + str(init_abundance[key]) + " Now: " + str(abundance[key]))
             if abundance[key] > init_abundance[key]:
-                fitness += abs(self.objective[key] - rel_abundance[key]) * 100
+                fitness += abs(self.objective[key] - rel_abundance[key])
                 #print("Name: " + key + " Init: " + str(init_abundance[key]) + " Now: " + str(abundance[key]))
             else:
                 fitness = -1.0
