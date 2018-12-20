@@ -74,7 +74,7 @@ def minimize_medium(individual):
     size_after = len(min_medium)
     print("Before: " + str(size_before) + " After: " + str(size_after))
 
-    return min_medium
+    return Medium.from_dict(min_medium, individual.medium_volume)
 
 def generate_population(culture, pop_size, cpu_count, proc_num, medium_volume, simulation_time, timestep, index_to_names, essentials, objective, founder=None, queue=None):
     population = []
@@ -139,13 +139,13 @@ def main():
 
     pop_size = 200
 
-    for i in range(10):
+    for i in range(30):
         population = []
         res = mp.Queue()
         culture_copy = deepcopy(culture)
 
         if num_cpu > 1:
-            processes = [mp.Process(target=generate_population, args=(culture_copy, pop_size, num_cpu, x, 0.05, 4, 0.1, index_to_names, num_essentials, objective, founder, res)) for x in range(num_cpu)]
+            processes = [mp.Process(target=generate_population, args=(culture_copy, pop_size, num_cpu, x, 0.05, 10, 0.3, index_to_names, num_essentials, objective, founder, res)) for x in range(num_cpu)]
             #processes = [(mp.Process(target=test, args=(res, x))) for x in range(10)]
 
             for process in processes:
@@ -177,12 +177,12 @@ def main():
             file.write("Average # Nutrients: " + str(average_num_nutrients(population)) + " Founder: " + str(len(founder.chromosome)) + "\n")
             file.write("Iteration: " + str(i+1) + " Fitness: " + str(founder.get_fitness()) + "\n")
 
-        if founder.get_fitness() < 0.0002:
+        if founder.get_fitness() < 0.0001:
             break
 
     Medium.export_medium(founder.chromosome.to_medium(0.05), "U:/Masterarbeit/GA_Results/medium_founder.txt")
-    medium = minimize_medium(founder)
-    Medium.export_medium(Medium.from_dict(medium, 0.05), "U:/Masterarbeit/GA_Results/medium.txt")
+    #medium = minimize_medium(founder)
+    #Medium.export_medium(Medium.from_dict(medium, 0.05), "U:/Masterarbeit/GA_Results/medium.txt")
     founder.chromosome.export_chromosome("U:/Masterarbeit/GA_Results/chromosome.txt")
 
     with open(info_file_path, 'a') as file:
