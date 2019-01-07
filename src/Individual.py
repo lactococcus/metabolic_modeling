@@ -12,6 +12,7 @@ class Individual:
         self.timestep = timestep
         self.fitness = None
         self.medium_volume = medium_volume
+        self.fitness_medium = None
 
     def plot(self, medium=None):
         if medium == None:
@@ -38,7 +39,7 @@ class Individual:
         plt.legend()
         plt.show()
 
-    def score_fitness(self, medium=None):
+    def score_fitness(self, fitness_func, medium=None):
         abundance = {}
         init_abundance = {}
         total_abundance = 0
@@ -66,7 +67,24 @@ class Individual:
             rel_abundance[key] = round(abundance[key] / total_abundance, 6)
             #print(key + ": " + str(rel_abundance[key]))
 
-        self.fitness = self.fitness_function(init_abundance, abundance, rel_abundance)
+        self.fitness_function(init_abundance, abundance, rel_abundance)
+
+    def fitness_medium_function(self, init_abundance, abundance, rel_abundance):
+        fitness = 0.0
+        #fitness += len(self.chromosome)
+        for key in self.objective:
+            #print("Name: " + key + " Init: " + str(init_abundance[key]) + " Now: " + str(abundance[key]))
+            if abundance[key] > init_abundance[key]:
+                fitness += abs(self.objective[key] - rel_abundance[key])
+                #print("Name: " + key + " Init: " + str(init_abundance[key]) + " Now: " + str(abundance[key]))
+            else:
+                fitness = -1.0
+                return
+
+        fitness = abs(fitness - self.fitness) * 100
+        fitness += len(self.chromosome)
+
+        self.fitness_medium = round(fitness, 6)
 
     def fitness_function(self, init_abundance, abundance, rel_abundance):
         fitness = 0.0
@@ -80,12 +98,17 @@ class Individual:
                 fitness = -1.0
                 break
 
-        return round(fitness, 6)
+        self.fitness = round(fitness, 6)
 
     def get_fitness(self):
         if self.fitness == None:
-            self.score_fitness()
+            self.score_fitness(fitness_func=self.fitness_function)
         return self.fitness
+
+    def get_medium_fitness(self):
+        if self.fitness_medium == None:
+            self.score_fitness(fitness_func=self.fitness_medium_function)
+        return self.fitness_medium
 
     def __lt__(self, other):
         """an indicidual is lesser than another when its fitness score is higher. higher fitness == bad"""

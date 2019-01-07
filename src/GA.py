@@ -76,10 +76,8 @@ def minimize_medium(individual):
 
     return Medium.from_dict(min_medium, individual.medium_volume)
 
-def generate_population(culture, pop_size, cpu_count, proc_num, medium_volume, simulation_time, timestep, index_to_names, essentials, objective, founder=None, queue=None):
+def generate_population(founder, pop_size, cpu_count, proc_num, queue=None):
     population = []
-
-    chromosome = None
     population_size = 0
 
     if proc_num == 0:
@@ -87,29 +85,49 @@ def generate_population(culture, pop_size, cpu_count, proc_num, medium_volume, s
     else:
         population_size = pop_size // cpu_count
 
-    if founder == None:
-        for i in range(1):
-            chromosome = Chromosome(index_to_names, essentials)
-            chromosome.initialize_all_true()
-            individual = Individual(culture, chromosome, objective, medium_volume, simulation_time, timestep)
-            if individual.get_fitness() >= 0.0:
-                population.append(individual)
+    if proc_num == 0:
+        population.append(founder)
 
+    for i in range(population_size):
+        chromosome = Chromosome(founder.chromosome.index_to_names, founder.chromosome.num_essentials)
+        chromosome.chromosome = founder.chromosome.chromosome
+        chromosome.mutate_with_chance(0.01)
+        individual = Individual(founder.culture, chromosome, founder.objective, founder.medium_volume, founder.simulation_time, founder.timestep)
+        if individual.get_fitness() >= 0.0:
+            population.append(individual)
+
+    queue.put(population)
+
+def generate_population_min(founder, pop_size, cpu_count, proc_num, queue=None):
+    population = []
+
+    population_size = 0
+
+    if proc_num == 0:
+        population_size = pop_size // cpu_count + pop_size % cpu_count
     else:
-        if proc_num == 0:
-            population.append(founder)
+        population_size = pop_size // cpu_count
 
-        for i in range(population_size):
-            chromosome = deepcopy(founder.chromosome)
-            chromosome.mutate_with_chance(0.01)
-            individual = Individual(culture, chromosome, objective, medium_volume, simulation_time, timestep)
-            if individual.get_fitness() >= 0.0:
-                population.append(individual)
+    if proc_num == 0:
+        population.append(founder)
+
+    for i in range(population_size):
+        chromosome = Chromosome(founder.chromosome.index_to_names, founder.chromosome.num_essentials)
+        chromosome.chromosome = founder.chromosome.chromosome
+        chromosome.deletion(1)
+        individual = Individual(founder.culture, chromosome, founder.objective, founder.medium_volume, founder.simulation_time, founder.timestep)
+        individual.fitness = founder.fitness
+        individual.chromosome = chromosome
+        if individual.get_medium_fitness() >= 0.0:
+            population.append(individual)
 
     queue.put(population)
 
 def main():
     num_cpu = 4 #mp.cpu_count()
+    medium_volume = 0.05
+    simulation_time = 10
+    timestep = 1
     info_file_path = "U:/Masterarbeit/GA_Results/run_info.txt"
 
     spec1 = Species('Lactococcus', "U:/Masterarbeit/iNF517.xml", 1.0)
@@ -132,20 +150,18 @@ def main():
     dicts = generate_dicts(culture.species_list, essential_nutrients)
     names_to_index = dicts[0]
     index_to_names = dicts[1]
-    #for key in names_to_index:
-        #print(key + ": " + str(names_to_index[key]))
 
-    founder = None
+    founder = Individual(culture, Chromosome(index_to_names, num_essentials), objective, medium_volume, simulation_time, timestep)
+    founder.chromosome.initialize_all_true()
 
     pop_size = 200
 
-    for i in range(30):
+    for i in range(10):
         population = []
         res = mp.Queue()
-        culture_copy = deepcopy(culture)
 
         if num_cpu > 1:
-            processes = [mp.Process(target=generate_population, args=(culture_copy, pop_size, num_cpu, x, 0.05, 10, 0.3, index_to_names, num_essentials, objective, founder, res)) for x in range(num_cpu)]
+            processes = [mp.Process(target=generate_population, args=(founder, pop_size, num_cpu, x, res)) for x in range(num_cpu)]
             #processes = [(mp.Process(target=test, args=(res, x))) for x in range(10)]
 
             for process in processes:
@@ -161,7 +177,7 @@ def main():
                 #process.terminate()
             #print("joined")
         else:
-            generate_population(culture_copy, pop_size, 1, 1, 0.05, 10, 1, index_to_names, num_essentials, objective, founder, res)
+            generate_population(founder_copy, pop_size, num_cpu, 0, res)
             population.append(res.get())
 
         population = list(itertools.chain.from_iterable(population))
@@ -170,12 +186,12 @@ def main():
         founder = population[-1]
 
         with open(info_file_path, 'a') as file:
+            print("Iteration: " + str(i + 1) + " Fitness: " + str(founder.get_fitness()))
             print("Feasible: " + str(len(population)) + "/" + str(pop_size+1))
             print("Average # Nutrients: " + str(average_num_nutrients(population)) + " Founder: " + str(len(founder.chromosome)))
-            print("Iteration: " + str(i+1) + " Fitness: " + str(founder.get_fitness()))
+            file.write("Iteration: " + str(i + 1) + " Fitness: " + str(founder.get_fitness()) + "\n")
             file.write("Feasible: " + str(len(population)) + "/" + str(pop_size+1) + "\n")
             file.write("Average # Nutrients: " + str(average_num_nutrients(population)) + " Founder: " + str(len(founder.chromosome)) + "\n")
-            file.write("Iteration: " + str(i+1) + " Fitness: " + str(founder.get_fitness()) + "\n")
 
         if founder.get_fitness() < 0.0001:
             break
