@@ -88,7 +88,7 @@ class Individual:
 
     def fitness_function(self, init_abundance, abundance, rel_abundance):
         fitness = 0.0
-        #fitness += len(self.chromosome)
+        #fitness += len(self.chromosome) * 0.00001
         for key in self.objective:
             #print("Name: " + key + " Init: " + str(init_abundance[key]) + " Now: " + str(abundance[key]))
             if abundance[key] > init_abundance[key]:
@@ -112,7 +112,7 @@ class Individual:
 
     def __lt__(self, other):
         """an indicidual is lesser than another when its fitness score is higher. higher fitness == bad"""
-        return self.get_fitness() < other.get_fitness()
+        return self.get_fitness() > other.get_fitness()
 
     def sort_med_fitness(ind):
         return ind.get_medium_fitness()
