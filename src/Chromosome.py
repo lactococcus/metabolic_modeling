@@ -48,6 +48,7 @@ class Chromosome:
             index = random.randrange(self.num_essentials, len(self.chromosome))
             self.chromosome[index] = False
 
+
     def mutate_with_chance(self, mutation_chance):
         for i, bool in enumerate(self.chromosome):
             if i >= self.num_essentials:

@@ -109,6 +109,7 @@ def generate_population_min(founder, pop_size, cpu_count, proc_num, queue=None):
         population_size = pop_size // cpu_count
 
     if proc_num == 0:
+        #founder.get_medium_fitness()
         population.append(founder)
 
     for i in range(population_size):
@@ -116,7 +117,7 @@ def generate_population_min(founder, pop_size, cpu_count, proc_num, queue=None):
         chromosome.chromosome = founder.chromosome.chromosome
         chromosome.deletion(1)
         individual = Individual(founder.culture, chromosome, founder.objective, founder.medium_volume, founder.simulation_time, founder.timestep)
-        individual.fitness = founder.fitness
+        individual.fitness = founder.get_fitness()
         individual.chromosome = chromosome
         if individual.get_medium_fitness() >= 0.0:
             population.append(individual)
@@ -126,7 +127,7 @@ def generate_population_min(founder, pop_size, cpu_count, proc_num, queue=None):
 def main():
     num_cpu = 4 #mp.cpu_count()
     medium_volume = 0.05
-    simulation_time = 10
+    simulation_time = 12
     timestep = 1
     info_file_path = "U:/Masterarbeit/GA_Results/run_info.txt"
 
@@ -177,13 +178,13 @@ def main():
                 #process.terminate()
             #print("joined")
         else:
-            generate_population(founder_copy, pop_size, num_cpu, 0, res)
+            generate_population(founder, pop_size, num_cpu, 0, res)
             population.append(res.get())
 
         population = list(itertools.chain.from_iterable(population))
 
         population.sort()
-        founder = population[-1]
+        founder = population[0]
 
         with open(info_file_path, 'a') as file:
             print("Iteration: " + str(i + 1) + " Fitness: " + str(founder.get_fitness()))
@@ -206,7 +207,45 @@ def main():
             print(spec.name + ": " + str(spec.get_abundance()))
             file.write(spec.name + ": " + str(spec.get_abundance()) + "\n")
 
+    print("Minimizing Medium")
+    founder_min = deepcopy(founder)
+
     founder.plot()
+
+    for i in range(5):
+        population = []
+        res = mp.Queue()
+
+        if num_cpu > 1:
+            processes = [mp.Process(target=generate_population_min, args=(founder_min, pop_size, num_cpu, x, res)) for x in range(num_cpu)]
+            #processes = [(mp.Process(target=test, args=(res, x))) for x in range(10)]
+
+            for process in processes:
+                process.start()
+            #print("started")
+
+            for process in processes:
+                population.append(res.get())
+            #print("got data")
+
+            for process in processes:
+                process.join()
+                #process.terminate()
+            #print("joined")
+        else:
+            generate_population_min(founder_min, pop_size, num_cpu, 0, res)
+            population.append(res.get())
+
+        population = list(itertools.chain.from_iterable(population))
+
+        population.sort(key=Individual.sort_med_fitness)
+        founder_min = population[0]
+
+        print("Iteration: " + str(i + 1) + " Fitness: " + str(founder_min.get_medium_fitness()))
+        print("Feasible: " + str(len(population)) + "/" + str(pop_size + 1))
+        print("Average # Nutrients: " + str(average_num_nutrients(population)) + " Founder: " + str(len(founder_min.chromosome)))
+
+    founder_min.plot()
 
 if __name__ == '__main__':
     main()
