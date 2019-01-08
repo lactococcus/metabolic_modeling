@@ -67,11 +67,10 @@ class Individual:
             rel_abundance[key] = round(abundance[key] / total_abundance, 6)
             #print(key + ": " + str(rel_abundance[key]))
 
-        self.fitness_function(init_abundance, abundance, rel_abundance)
+        fitness_func(init_abundance, abundance, rel_abundance)
 
     def fitness_medium_function(self, init_abundance, abundance, rel_abundance):
         fitness = 0.0
-        #fitness += len(self.chromosome)
         for key in self.objective:
             #print("Name: " + key + " Init: " + str(init_abundance[key]) + " Now: " + str(abundance[key]))
             if abundance[key] > init_abundance[key]:
@@ -79,6 +78,7 @@ class Individual:
                 #print("Name: " + key + " Init: " + str(init_abundance[key]) + " Now: " + str(abundance[key]))
             else:
                 fitness = -1.0
+                self.fitness_medium = fitness
                 return
 
         fitness = abs(fitness - self.fitness) * 100
@@ -112,4 +112,7 @@ class Individual:
 
     def __lt__(self, other):
         """an indicidual is lesser than another when its fitness score is higher. higher fitness == bad"""
-        return self.get_fitness() > other.get_fitness()
+        return self.get_fitness() < other.get_fitness()
+
+    def sort_med_fitness(ind):
+        return ind.get_medium_fitness()
