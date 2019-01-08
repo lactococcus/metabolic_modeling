@@ -7,6 +7,7 @@ import multiprocessing as mp
 import itertools
 from cobra.flux_analysis import find_essential_reactions
 from copy import deepcopy
+from matplotlib import pyplot as plt
 #import threading as th
 
 def generate_dicts(species_list, essentials):
@@ -155,9 +156,9 @@ def main():
     founder = Individual(culture, Chromosome(index_to_names, num_essentials), objective, medium_volume, simulation_time, timestep)
     founder.chromosome.initialize_all_true()
 
-    pop_size = 200
-
-    for i in range(10):
+    pop_size = 100
+    fitness = [founder.get_fitness()]
+    for i in range(30):
         population = []
         res = mp.Queue()
 
@@ -184,12 +185,13 @@ def main():
         population = list(itertools.chain.from_iterable(population))
 
         population.sort()
-        founder = population[0]
+        founder = population[-1]
+        fitness.append(founder.get_fitness())
 
         with open(info_file_path, 'a') as file:
             print("Iteration: " + str(i + 1) + " Fitness: " + str(founder.get_fitness()))
             print("Feasible: " + str(len(population)) + "/" + str(pop_size+1))
-            print("Average # Nutrients: " + str(average_num_nutrients(population)) + " Founder: " + str(len(founder.chromosome)))
+            print("Average # Nutrients: " + str(average_num_nutrients(population)) + " Founder: " + str(len(founder.chromosome)) + "\n")
             file.write("Iteration: " + str(i + 1) + " Fitness: " + str(founder.get_fitness()) + "\n")
             file.write("Feasible: " + str(len(population)) + "/" + str(pop_size+1) + "\n")
             file.write("Average # Nutrients: " + str(average_num_nutrients(population)) + " Founder: " + str(len(founder.chromosome)) + "\n")
@@ -206,13 +208,13 @@ def main():
         for spec in founder.culture.species_list:
             print(spec.name + ": " + str(spec.get_abundance()))
             file.write(spec.name + ": " + str(spec.get_abundance()) + "\n")
-
+    plt.plot(fitness)
+    plt.show()
+    founder.plot()
     print("Minimizing Medium")
     founder_min = deepcopy(founder)
 
-    founder.plot()
-
-    for i in range(5):
+    for i in range(0):
         population = []
         res = mp.Queue()
 
@@ -245,7 +247,7 @@ def main():
         print("Feasible: " + str(len(population)) + "/" + str(pop_size + 1))
         print("Average # Nutrients: " + str(average_num_nutrients(population)) + " Founder: " + str(len(founder_min.chromosome)))
 
-    founder_min.plot()
+    #founder_min.plot()
 
 if __name__ == '__main__':
     main()
