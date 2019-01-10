@@ -88,16 +88,12 @@ class Individual:
 
     def fitness_function(self, init_abundance, abundance, rel_abundance):
         fitness = 0.0
-        #fitness += len(self.chromosome) * 0.00001
         for key in self.objective:
-            #print("Name: " + key + " Init: " + str(init_abundance[key]) + " Now: " + str(abundance[key]))
             if abundance[key] > init_abundance[key]:
-                fitness += abs(self.objective[key] - rel_abundance[key])
-                #print("Name: " + key + " Init: " + str(init_abundance[key]) + " Now: " + str(abundance[key]))
+                fitness += abs(self.objective[key] - rel_abundance[key]) * 100
             else:
                 fitness = -1.0
                 break
-
         self.fitness = round(fitness, 6)
 
     def get_fitness(self):

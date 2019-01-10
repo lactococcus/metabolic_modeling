@@ -158,7 +158,7 @@ def main():
 
     pop_size = 100
     fitness = [founder.get_fitness()]
-    for i in range(30):
+    for i in range(40):
         population = []
         res = mp.Queue()
 
@@ -208,9 +208,10 @@ def main():
         for spec in founder.culture.species_list:
             print(spec.name + ": " + str(spec.get_abundance()))
             file.write(spec.name + ": " + str(spec.get_abundance()) + "\n")
+
+    founder.plot()
     plt.plot(fitness)
     plt.show()
-    founder.plot()
     print("Minimizing Medium")
     founder_min = deepcopy(founder)
 
