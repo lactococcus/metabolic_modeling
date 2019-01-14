@@ -9,6 +9,7 @@ class Culture:
         self.species_list = []
         self.medium = medium
         self.rations = {}
+        self.data_watcher = None
 
     def allocate_medium(self):
         """partitions the available resources of the medium based on the volume each bacterial species occupies in the medium"""
@@ -34,8 +35,9 @@ class Culture:
 
     def innoculate_species(self, species, abundance):
         """adds a species to the culture"""
+        species.set_data_watcher(self.data_watcher)
         species.set_abundance(abundance)
-        species.init_abundance = abundance
+        species.set_init_abundance(abundance)
         self.species[species.name] = species
         self.species_list.append(species)
 
@@ -78,7 +80,7 @@ class Culture:
         '''
         counter = 0
         if len(solutions) != len(self.species_list):
-            print("Not all Speciesa have a Solution in FVA")
+            print("Not all Speciesa have a Solution in FBA")
         for solution in solutions:
             self.medium.update_medium(solution.fluxes)
             if solution.objective_value < 0.001:
@@ -99,8 +101,12 @@ class Culture:
         solution = self.species[species.name].optimize(Medium.from_dict(components, self.medium.volume), timestep)
         list.append(solution)
 
-
     def set_medium(self, medium):
         self.medium = medium
+
+    def register_data_watcher(self, data_watcher):
+        self.data_watcher = data_watcher
+        for species in self.species_list:
+            species.data_watcher = data_watcher
 
 
