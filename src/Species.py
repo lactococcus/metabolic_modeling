@@ -6,15 +6,16 @@ import math
 
 class Species:
     """class representing a bacterial species"""
-    def __init__(self, name, model_file_path, radius_microm, dry_weight_pg=0.3, init_abundance=0):
+    def __init__(self, name, model_file_path, radius_microm, dry_weight_pg=0.3):
         self.name = name
         self.model = cobra.io.read_sbml_model(model_file_path)
         self.model.solver = 'cplex'
         self.dry_weight = dry_weight_pg
         self.surface_area = 4 * math.pi * radius_microm ** 2
         self.volume = 4 / 3 * math.pi * radius_microm ** 3
-        self.biomass = 0.0
-        self.init_abundance = init_abundance
+        #self.biomass = 0.0
+        #self.init_abundance = 0
+        self.data_watcher = None
 
         for reaction in self.model.exchanges:
             reaction.bounds = (0.0, 1000.0)
@@ -34,7 +35,7 @@ class Species:
             return
 
         if solution.objective_value > 0.0001:
-            self.set_biomass(self.biomass * solution.objective_value * timestep + self.biomass)
+            self.set_biomass(self.get_biomass() * solution.objective_value * timestep + self.get_biomass())
 
             for i in range(len(solution.fluxes.index)):
                 name = solution.fluxes.index[i]
@@ -43,21 +44,30 @@ class Species:
 
         return solution
 
+    def set_data_watcher(self, data_watcher):
+        self.data_watcher = data_watcher
+        self.data_watcher.data["species"][self.name] = [None, None]  # [init_abundance, biomass]
 
     def set_biomass(self, biomass):
-        self.biomass = biomass
+        self.data_watcher.data["species"][self.name][1] = biomass
 
 
     def set_abundance(self, abundance):
-        self.biomass = (abundance * self.dry_weight) / 1000000000000
+        self.data_watcher.data["species"][self.name][1] = (abundance * self.dry_weight) / 1000000000000
+        #print(self.data_watcher.data["species"][self.name][1])
 
+    def set_init_abundance(self, abundance):
+        self.data_watcher.data["species"][self.name][0] = abundance
+
+    def get_init_abundance(self):
+        return self.data_watcher.data["species"][self.name][0]
 
     def get_abundance(self):
-        return self.biomass // self.get_dryweight()
+        return self.data_watcher.data["species"][self.name][1] // self.get_dryweight()
 
 
     def get_biomass(self):
-        return self.biomass
+        return self.data_watcher.data["species"][self.name][1]
 
     def get_dryweight(self):
         return self.dry_weight / 1000000000000
