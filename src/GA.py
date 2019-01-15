@@ -8,6 +8,7 @@ import itertools
 from cobra.flux_analysis import find_essential_reactions
 from copy import deepcopy
 from matplotlib import pyplot as plt
+from DataWatcher import DataWatcher
 #import threading as th
 
 def generate_dicts(species_list, essentials):
@@ -93,7 +94,7 @@ def generate_population(founder, pop_size, cpu_count, proc_num, queue=None):
         chromosome = Chromosome(founder.chromosome.index_to_names, founder.chromosome.num_essentials)
         chromosome.chromosome = founder.chromosome.chromosome
         chromosome.mutate_with_chance(0.01)
-        individual = Individual(founder.culture, chromosome, founder.objective, founder.medium_volume, founder.simulation_time, founder.timestep)
+        individual = Individual(founder.culture, chromosome, founder.objective, founder.medium_volume, founder.simulation_time, founder.timestep, founder.data_watcher)
         if individual.get_fitness() >= 0.0:
             population.append(individual)
 
@@ -135,7 +136,11 @@ def main():
     spec1 = Species('Lactococcus', "U:/Masterarbeit/iNF517.xml", 1.0)
     spec2 = Species('Klebsiella', "U:/Masterarbeit/Klebsiella/Klebsiella.xml", 1.0)
 
+    data_watcher = DataWatcher()
+
     culture = Culture()
+    culture.register_data_watcher(data_watcher)
+
     culture.innoculate_species(spec1, 1000000)
     culture.innoculate_species(spec2, 1000000)
 
@@ -153,12 +158,12 @@ def main():
     names_to_index = dicts[0]
     index_to_names = dicts[1]
 
-    founder = Individual(culture, Chromosome(index_to_names, num_essentials), objective, medium_volume, simulation_time, timestep)
+    founder = Individual(culture, Chromosome(index_to_names, num_essentials), objective, medium_volume, simulation_time, timestep, data_watcher)
     founder.chromosome.initialize_all_true()
 
     pop_size = 100
     fitness = [founder.get_fitness()]
-    for i in range(40):
+    for i in range(10):
         population = []
         res = mp.Queue()
 
@@ -199,6 +204,7 @@ def main():
         if founder.get_fitness() < 0.0001:
             break
 
+    founder.register_data_watcher(founder.data_watcher)
     Medium.export_medium(founder.chromosome.to_medium(0.05), "U:/Masterarbeit/GA_Results/medium_founder.txt")
     #medium = minimize_medium(founder)
     #Medium.export_medium(Medium.from_dict(medium, 0.05), "U:/Masterarbeit/GA_Results/medium.txt")
