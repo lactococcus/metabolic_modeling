@@ -11,15 +11,16 @@ class Individual:
         self.objective = objective
         self.simulation_time = simulation_time
         self.timestep = timestep
-        #self.fitness = None
         self.medium_volume = medium_volume
-        #.fitness_medium = None
-        self.data_watcher = data_watcher
+        self.data_watcher = None
 
-        if self.data_watcher == None:
-            self.data_watcher = DataWatcher()
-        self.data_watcher.init_data_watcher(self)
-
+        if data_watcher == None:
+            data_watcher = DataWatcher()
+            self.register_data_watcher(data_watcher)
+            self.data_watcher.init_data_watcher(self)
+        else:
+            data_watcher = DataWatcher.create_new_watcher(data_watcher)
+            self.register_data_watcher(data_watcher)
 
     def plot(self, medium=None):
         if medium == None:
@@ -96,17 +97,21 @@ class Individual:
     def fitness_function(self, init_abundance, abundance, rel_abundance):
         fitness = 0.0
         for key in self.objective:
+            #print("Name: " + key + " Init: " + str(init_abundance[key]) + " Now: " + str(abundance[key]))
             if abundance[key] > init_abundance[key]:
                 fitness += abs(self.objective[key] - rel_abundance[key]) * 100
             else:
                 fitness = -1.0
                 break
-        self.data_watcher.data["individual"][0] = round(fitness, 6)
+        self.set_fitness(fitness)
 
     def get_fitness(self):
-        if self.data_watcher.data["individual"][0] == None:
+        if self.data_watcher.get_fitness() == None:
             self.score_fitness(fitness_func=self.fitness_function)
-        return self.data_watcher.data["individual"][0]
+        return self.data_watcher.get_fitness()
+
+    def set_fitness(self, fitness):
+        self.data_watcher.set_fitness(fitness)
 
     def get_medium_fitness(self):
         if self.data_watcher.data["individual"][1] == None:
@@ -119,3 +124,7 @@ class Individual:
 
     def sort_med_fitness(ind):
         return ind.get_medium_fitness()
+
+    def register_data_watcher(self, data_watcher):
+        self.data_watcher = data_watcher
+        self.culture.register_data_watcher(data_watcher)
