@@ -19,8 +19,8 @@ class Individual:
             self.register_data_watcher(data_watcher)
             self.data_watcher.init_data_watcher(self)
         else:
-            data_watcher = DataWatcher.create_new_watcher(data_watcher)
-            self.register_data_watcher(data_watcher)
+            data_watcher2 = DataWatcher.create_new_watcher(data_watcher)
+            self.register_data_watcher(data_watcher2)
 
     def plot(self, medium=None):
         if medium == None:
@@ -48,9 +48,6 @@ class Individual:
         plt.show()
 
     def score_fitness(self, fitness_func, medium=None):
-        abundance = {}
-        init_abundance = {}
-        total_abundance = 0
         if medium == None:
             self.culture.set_medium(self.chromosome.to_medium(self.medium_volume))
         else:
@@ -58,24 +55,12 @@ class Individual:
 
         for spec in self.culture.species_list:
             spec.set_abundance(spec.get_init_abundance())
-            init_abundance[spec.name] = spec.get_init_abundance()
 
         for i in range(math.floor(self.simulation_time / self.timestep)):
             if not self.culture.update_biomass(self.timestep):
                 break
 
-
-        for spec in self.culture.species_list:
-            abundance[spec.name] = spec.get_abundance()
-            total_abundance += spec.get_abundance()
-
-        rel_abundance = {}
-
-        for key in abundance:
-            rel_abundance[key] = round(abundance[key] / total_abundance, 6)
-            #print(key + ": " + str(rel_abundance[key]))
-
-        fitness_func(init_abundance, abundance, rel_abundance)
+        fitness_func()
 
     def fitness_medium_function(self, init_abundance, abundance, rel_abundance):
         fitness = 0.0
@@ -94,16 +79,21 @@ class Individual:
 
         self.data_watcher.data["individual"][1] = round(fitness, 6)
 
-    def fitness_function(self, init_abundance, abundance, rel_abundance):
+    def fitness_function(self):
+        total_abundance = 0
+        for spec in self.data_watcher.get_species():
+            total_abundance += self.data_watcher.get_species()[spec][1]
         fitness = 0.0
         for key in self.objective:
-            #print("Name: " + key + " Init: " + str(init_abundance[key]) + " Now: " + str(abundance[key]))
-            if abundance[key] > init_abundance[key]:
-                fitness += abs(self.objective[key] - rel_abundance[key]) * 100
+            init_abundance = self.data_watcher.get_species()[key][0]
+            abundance = self.data_watcher.get_species()[key][1]
+            rel_abundance = abundance / total_abundance
+            if abundance > init_abundance:
+                fitness += abs(self.objective[key] - rel_abundance) * 100
             else:
                 fitness = -1.0
                 break
-        self.set_fitness(fitness)
+        self.set_fitness(round(fitness, 6))
 
     def get_fitness(self):
         if self.data_watcher.get_fitness() == None:
