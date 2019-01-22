@@ -1,3 +1,4 @@
+from copy import deepcopy
 
 class DataWatcher:
     def __init__(self):
@@ -24,11 +25,14 @@ class DataWatcher:
     def set_fitness(self, fitness):
         self.data["individual"][0] = fitness
 
+    def get_species(self):
+        return self.data["species"]
+
     def create_new_watcher(data_watcher):
         new_watcher = DataWatcher()
-        #new_watcher.init_individual()
+        new_watcher.init_individual()
         new_watcher.init_medium()
-        new_watcher.data["species"] = data_watcher.data["species"]
+        new_watcher.data["species"] = deepcopy(data_watcher.data["species"])
         for key in new_watcher.data["species"]:
             new_watcher.data["species"][key][1] = new_watcher.data["species"][key][0]
         return new_watcher

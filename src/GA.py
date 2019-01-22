@@ -92,14 +92,15 @@ def generate_population(founder, pop_size, cpu_count, proc_num, queue=None):
 
     for i in range(population_size):
         chromosome = Chromosome(founder.chromosome.index_to_names, founder.chromosome.num_essentials)
-        chromosome.chromosome = founder.chromosome.chromosome
+        chromosome.chromosome = deepcopy(founder.chromosome.chromosome)
         chromosome.mutate_with_chance(0.01)
         individual = Individual(founder.culture, chromosome, founder.objective, founder.medium_volume, founder.simulation_time, founder.timestep, founder.data_watcher)
+        #print(individual.get_fitness())
         if individual.get_fitness() >= 0.0:
             population.append(individual)
 
     queue.put(population)
-
+'''
 def generate_population_min(founder, pop_size, cpu_count, proc_num, queue=None):
     population = []
 
@@ -125,7 +126,7 @@ def generate_population_min(founder, pop_size, cpu_count, proc_num, queue=None):
             population.append(individual)
 
     queue.put(population)
-
+'''
 def main():
     num_cpu = 4 #mp.cpu_count()
     medium_volume = 0.05
@@ -189,22 +190,27 @@ def main():
 
         population = list(itertools.chain.from_iterable(population))
 
-        population.sort()
-        founder = population[-1]
+        population.sort(reverse=True)
+        founder = population[0]
         fitness.append(founder.get_fitness())
-
+        founder.register_data_watcher(founder.data_watcher)
+        #print infos
         with open(info_file_path, 'a') as file:
             print("Iteration: " + str(i + 1) + " Fitness: " + str(founder.get_fitness()))
             print("Feasible: " + str(len(population)) + "/" + str(pop_size+1))
+            total = 0
+            for spec in founder.culture.species_list:
+                total += spec.get_abundance()
+            for spec in founder.culture.species_list:
+                print("%s : %d : %f" % (spec.name, spec.get_abundance(), spec.get_abundance() / total))
             print("Average # Nutrients: " + str(average_num_nutrients(population)) + " Founder: " + str(len(founder.chromosome)) + "\n")
             file.write("Iteration: " + str(i + 1) + " Fitness: " + str(founder.get_fitness()) + "\n")
             file.write("Feasible: " + str(len(population)) + "/" + str(pop_size+1) + "\n")
             file.write("Average # Nutrients: " + str(average_num_nutrients(population)) + " Founder: " + str(len(founder.chromosome)) + "\n")
 
-        if founder.get_fitness() < 0.0001:
+        if founder.get_fitness() < 0.002:
             break
 
-    founder.register_data_watcher(founder.data_watcher)
     Medium.export_medium(founder.chromosome.to_medium(0.05), "U:/Masterarbeit/GA_Results/medium_founder.txt")
     #medium = minimize_medium(founder)
     #Medium.export_medium(Medium.from_dict(medium, 0.05), "U:/Masterarbeit/GA_Results/medium.txt")
