@@ -67,11 +67,10 @@ def minimize_medium(individual):
             #print(progress)
             start = progress[0]
             for timepoint in progress:
-                if timepoint > start:
+                if timepoint < start:
+                    min_medium[key] = ref_medium[key]
                     break
                 start = timepoint
-            else:
-                min_medium[key] = ref_medium[key]
     #med.plot_nutrients_over_time()
     size_after = len(min_medium)
     print("Before: " + str(size_before) + " After: " + str(size_after))
@@ -198,14 +197,15 @@ def main():
         with open(info_file_path, 'a') as file:
             print("Iteration: " + str(i + 1) + " Fitness: " + str(founder.get_fitness()))
             print("Feasible: " + str(len(population)) + "/" + str(pop_size+1))
+            file.write("Iteration: " + str(i + 1) + " Fitness: " + str(founder.get_fitness()) + "\n")
+            file.write("Feasible: " + str(len(population)) + "/" + str(pop_size + 1) + "\n")
             total = 0
             for spec in founder.culture.species_list:
                 total += spec.get_abundance()
             for spec in founder.culture.species_list:
                 print("%s : %d : %f" % (spec.name, spec.get_abundance(), spec.get_abundance() / total))
+                file.write("%s : %d : %f" % (spec.name, spec.get_abundance(), spec.get_abundance() / total))
             print("Average # Nutrients: " + str(average_num_nutrients(population)) + " Founder: " + str(len(founder.chromosome)) + "\n")
-            file.write("Iteration: " + str(i + 1) + " Fitness: " + str(founder.get_fitness()) + "\n")
-            file.write("Feasible: " + str(len(population)) + "/" + str(pop_size+1) + "\n")
             file.write("Average # Nutrients: " + str(average_num_nutrients(population)) + " Founder: " + str(len(founder.chromosome)) + "\n")
 
         if founder.get_fitness() < 0.002:
@@ -222,8 +222,16 @@ def main():
             file.write(spec.name + ": " + str(spec.get_abundance()) + "\n")
 
     founder.plot()
-    plt.plot(fitness)
+    plt.plot(fitness, label="fitness")
+    plt.legend()
     plt.show()
+    #founder.score_fitness(founder.fitness_function)
+    medium = minimize_medium(founder)
+    #print(founder.get_fitness())
+    #founder.score_fitness(founder.fitness_function, medium)
+    founder.plot(medium)
+    #print(founder.get_fitness())
+    '''
     print("Minimizing Medium")
     founder_min = deepcopy(founder)
 
@@ -261,6 +269,6 @@ def main():
         print("Average # Nutrients: " + str(average_num_nutrients(population)) + " Founder: " + str(len(founder_min.chromosome)))
 
     #founder_min.plot()
-
+    '''
 if __name__ == '__main__':
     main()
