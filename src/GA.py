@@ -86,9 +86,6 @@ def generate_population(founder, pop_size, cpu_count, proc_num, queue=None):
     else:
         population_size = pop_size // cpu_count
 
-    if proc_num == 0:
-        population.append(founder)
-
     for i in range(population_size):
         chromosome = Chromosome(founder.chromosome.index_to_names, founder.chromosome.num_essentials)
         chromosome.chromosome = deepcopy(founder.chromosome.chromosome)
@@ -98,40 +95,17 @@ def generate_population(founder, pop_size, cpu_count, proc_num, queue=None):
         if individual.get_fitness() >= 0.0:
             population.append(individual)
 
-    queue.put(population)
-'''
-def generate_population_min(founder, pop_size, cpu_count, proc_num, queue=None):
-    population = []
-
-    population_size = 0
-
     if proc_num == 0:
-        population_size = pop_size // cpu_count + pop_size % cpu_count
-    else:
-        population_size = pop_size // cpu_count
-
-    if proc_num == 0:
-        #founder.get_medium_fitness()
         population.append(founder)
 
-    for i in range(population_size):
-        chromosome = Chromosome(founder.chromosome.index_to_names, founder.chromosome.num_essentials)
-        chromosome.chromosome = founder.chromosome.chromosome
-        chromosome.deletion(1)
-        individual = Individual(founder.culture, chromosome, founder.objective, founder.medium_volume, founder.simulation_time, founder.timestep)
-        individual.fitness = founder.get_fitness()
-        individual.chromosome = chromosome
-        if individual.get_medium_fitness() >= 0.0:
-            population.append(individual)
-
     queue.put(population)
-'''
-def main():
+
+def main(suffix="", graphs=False):
     num_cpu = 4 #mp.cpu_count()
     medium_volume = 0.05
     simulation_time = 12
     timestep = 1
-    info_file_path = "U:/Masterarbeit/GA_Results/run_info.txt"
+    info_file_path = "U:/Masterarbeit/GA_Results/run_info%s.txt" % suffix
 
     spec1 = Species('Lactococcus', "U:/Masterarbeit/iNF517.xml", 1.0)
     spec2 = Species('Klebsiella', "U:/Masterarbeit/Klebsiella/Klebsiella.xml", 1.0)
@@ -141,18 +115,18 @@ def main():
     culture = Culture()
     culture.register_data_watcher(data_watcher)
 
-    culture.innoculate_species(spec1, 1000000)
-    culture.innoculate_species(spec2, 1000000)
+    culture.innoculate_species(spec1, 50000000)
+    culture.innoculate_species(spec2, 50000000)
 
     objective = {"Lactococcus": 0.5, "Klebsiella": 0.5}
 
     print("Finding Essential Nutrients...")
     num_essentials, essential_nutrients = find_essential_nutrients(culture.species_list, num_cpu)
-    print("Found " + str(num_essentials) + " Essential Nutrients!")
+    print("Found %d Essential Nutrients!\n" % num_essentials)
 
     with open(info_file_path, 'w') as file:
         file.write("Starting Run\n")
-        file.write("Found " + str(num_essentials) + " Essential Nutrients!\n")
+        file.write("Found %d Essential Nutrients!\n" % num_essentials)
 
     dicts = generate_dicts(culture.species_list, essential_nutrients)
     names_to_index = dicts[0]
@@ -195,80 +169,41 @@ def main():
         founder.register_data_watcher(founder.data_watcher)
         #print infos
         with open(info_file_path, 'a') as file:
-            print("Iteration: " + str(i + 1) + " Fitness: " + str(founder.get_fitness()))
-            print("Feasible: " + str(len(population)) + "/" + str(pop_size+1))
-            file.write("Iteration: " + str(i + 1) + " Fitness: " + str(founder.get_fitness()) + "\n")
-            file.write("Feasible: " + str(len(population)) + "/" + str(pop_size + 1) + "\n")
+            print("Iteration: %d Fitness: %f" % (i+1, founder.get_fitness()))
+            print("Feasible: %d/%d" % (len(population),pop_size+1))
+            file.write("Iteration: %d Fitness: %f\n" % (i+1, founder.get_fitness()))
+            file.write("Feasible: %d/%d\n" % (len(population),pop_size+1))
             total = 0
             for spec in founder.culture.species_list:
                 total += spec.get_abundance()
             for spec in founder.culture.species_list:
                 print("%s : %d : %f" % (spec.name, spec.get_abundance(), spec.get_abundance() / total))
-                file.write("%s : %d : %f" % (spec.name, spec.get_abundance(), spec.get_abundance() / total))
-            print("Average # Nutrients: " + str(average_num_nutrients(population)) + " Founder: " + str(len(founder.chromosome)) + "\n")
-            file.write("Average # Nutrients: " + str(average_num_nutrients(population)) + " Founder: " + str(len(founder.chromosome)) + "\n")
+                file.write("%s : %d : %f\n" % (spec.name, spec.get_abundance(), spec.get_abundance() / total))
+            print("Average # Nutrients: %f Founder: %d\n" % (average_num_nutrients(population), len(founder.chromosome)))
+            file.write("Average # Nutrients: %f Founder: %d\n\n" % (average_num_nutrients(population), len(founder.chromosome)))
 
         if founder.get_fitness() < 0.002:
             break
 
-    Medium.export_medium(founder.chromosome.to_medium(0.05), "U:/Masterarbeit/GA_Results/medium_founder.txt")
-    #medium = minimize_medium(founder)
-    #Medium.export_medium(Medium.from_dict(medium, 0.05), "U:/Masterarbeit/GA_Results/medium.txt")
-    founder.chromosome.export_chromosome("U:/Masterarbeit/GA_Results/chromosome.txt")
+    Medium.export_medium(founder.chromosome.to_medium(0.05), "U:/Masterarbeit/GA_Results/medium_founder%s.txt" % suffix)
+    founder.chromosome.export_chromosome("U:/Masterarbeit/GA_Results/chromosome%s.txt" % suffix)
 
     with open(info_file_path, 'a') as file:
         for spec in founder.culture.species_list:
-            print(spec.name + ": " + str(spec.get_abundance()))
-            file.write(spec.name + ": " + str(spec.get_abundance()) + "\n")
+            print("%s: %d" % (spec.name, spec.get_abundance()))
+            file.write("%s: %d\n" % (spec.name, spec.get_abundance()))
 
-    founder.plot()
-    plt.plot(fitness, label="fitness")
-    plt.legend()
-    plt.show()
-    #founder.score_fitness(founder.fitness_function)
     medium = minimize_medium(founder)
-    #print(founder.get_fitness())
-    #founder.score_fitness(founder.fitness_function, medium)
-    founder.plot(medium)
-    #print(founder.get_fitness())
-    '''
-    print("Minimizing Medium")
-    founder_min = deepcopy(founder)
+    Medium.export_medium(medium, "U:/Masterarbeit/GA_Results/medium_minimized%s.txt" % suffix)
 
-    for i in range(0):
-        population = []
-        res = mp.Queue()
+    if graphs:
+        founder.plot()
+        plt.plot(fitness, label="fitness")
+        plt.legend()
+        plt.show()
+        founder.plot(medium)
 
-        if num_cpu > 1:
-            processes = [mp.Process(target=generate_population_min, args=(founder_min, pop_size, num_cpu, x, res)) for x in range(num_cpu)]
-            #processes = [(mp.Process(target=test, args=(res, x))) for x in range(10)]
-
-            for process in processes:
-                process.start()
-            #print("started")
-
-            for process in processes:
-                population.append(res.get())
-            #print("got data")
-
-            for process in processes:
-                process.join()
-                #process.terminate()
-            #print("joined")
-        else:
-            generate_population_min(founder_min, pop_size, num_cpu, 0, res)
-            population.append(res.get())
-
-        population = list(itertools.chain.from_iterable(population))
-
-        population.sort(key=Individual.sort_med_fitness)
-        founder_min = population[0]
-
-        print("Iteration: " + str(i + 1) + " Fitness: " + str(founder_min.get_medium_fitness()))
-        print("Feasible: " + str(len(population)) + "/" + str(pop_size + 1))
-        print("Average # Nutrients: " + str(average_num_nutrients(population)) + " Founder: " + str(len(founder_min.chromosome)))
-
-    #founder_min.plot()
-    '''
 if __name__ == '__main__':
-    main()
+    for i in range(1):
+        print("Run: %d" % i)
+        main(str(i), True)

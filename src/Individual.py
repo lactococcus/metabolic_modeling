@@ -62,23 +62,6 @@ class Individual:
 
         fitness_func()
 
-    def fitness_medium_function(self, init_abundance, abundance, rel_abundance):
-        fitness = 0.0
-        for key in self.objective:
-            #print("Name: " + key + " Init: " + str(init_abundance[key]) + " Now: " + str(abundance[key]))
-            if abundance[key] > init_abundance[key]:
-                fitness += abs(self.objective[key] - rel_abundance[key])
-                #print("Name: " + key + " Init: " + str(init_abundance[key]) + " Now: " + str(abundance[key]))
-            else:
-                fitness = -1.0
-                self.data_watcher.data["individual"][1] = fitness
-                return
-
-        fitness = abs(fitness - self.fitness) * 100
-        fitness += len(self.chromosome)
-
-        self.data_watcher.data["individual"][1] = round(fitness, 6)
-
     def fitness_function(self):
         total_abundance = 0
         for spec in self.data_watcher.get_species():
@@ -102,11 +85,6 @@ class Individual:
 
     def set_fitness(self, fitness):
         self.data_watcher.set_fitness(fitness)
-
-    def get_medium_fitness(self):
-        if self.data_watcher.data["individual"][1] == None:
-            self.score_fitness(fitness_func=self.fitness_medium_function)
-        return self.data_watcher.data["individual"][1]
 
     def __lt__(self, other):
         """an indicidual is lesser than another when its fitness score is higher. higher fitness == bad"""
