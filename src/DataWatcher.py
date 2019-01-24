@@ -2,7 +2,7 @@ from copy import deepcopy
 
 class DataWatcher:
     def __init__(self):
-        self.data = {"species": {}, "individual": [None, None], "medium": {}}
+        self.data = {"species": {}, "individual": None, "medium": {}}
 
     def init_data_watcher(self, individual):
         self.init_species(individual.culture.species_list)
@@ -17,13 +17,13 @@ class DataWatcher:
             self.data["species"][spec.name] = [None, None] # [init_abundance, abundance]
 
     def init_individual(self):
-        self.data["individual"] = [None, None] # [fitness, medium_fitness]
+        self.data["individual"] = None #fitness
 
     def get_fitness(self):
-        return self.data["individual"][0]
+        return self.data["individual"]
 
     def set_fitness(self, fitness):
-        self.data["individual"][0] = fitness
+        self.data["individual"] = fitness
 
     def get_species(self):
         return self.data["species"]
