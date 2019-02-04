@@ -118,7 +118,7 @@ def main(suffix="", graphs=False):
     culture.innoculate_species(spec1, 50000000)
     culture.innoculate_species(spec2, 50000000)
 
-    objective = {"Lactococcus": 0.5, "Klebsiella": 0.5}
+    objective = {"Lactococcus": 0.1, "Klebsiella": 0.9}
 
     print("Finding Essential Nutrients...")
     num_essentials, essential_nutrients = find_essential_nutrients(culture.species_list, num_cpu)
@@ -182,28 +182,45 @@ def main(suffix="", graphs=False):
             print("Average # Nutrients: %f Founder: %d\n" % (average_num_nutrients(population), len(founder.chromosome)))
             file.write("Average # Nutrients: %f Founder: %d\n\n" % (average_num_nutrients(population), len(founder.chromosome)))
 
-        if founder.get_fitness() < 0.002:
+        if founder.get_fitness() < 0.005:
             break
 
-    Medium.export_medium(founder.chromosome.to_medium(0.05), "U:/Masterarbeit/GA_Results/medium_founder%s.txt" % suffix)
+    #Medium.export_medium(founder.chromosome.to_medium(0.05), "U:/Masterarbeit/GA_Results/medium_founder%s.txt" % suffix)
     founder.chromosome.export_chromosome("U:/Masterarbeit/GA_Results/chromosome%s.txt" % suffix)
-
-    with open(info_file_path, 'a') as file:
-        for spec in founder.culture.species_list:
-            print("%s: %d" % (spec.name, spec.get_abundance()))
-            file.write("%s: %d\n" % (spec.name, spec.get_abundance()))
-
-    medium = minimize_medium(founder)
-    Medium.export_medium(medium, "U:/Masterarbeit/GA_Results/medium_minimized%s.txt" % suffix)
 
     if graphs:
         founder.plot()
         plt.plot(fitness, label="fitness")
         plt.legend()
         plt.show()
+
+    medium = minimize_medium(founder)
+    Medium.export_medium(medium, "U:/Masterarbeit/GA_Results/medium_minimized%s.txt" % suffix)
+
+    if graphs:
         founder.plot(medium)
 
+    return medium
+
+
+
 if __name__ == '__main__':
-    for i in range(1):
+
+    runs = 30
+    nutrient_dist = {}
+
+    for i in range(runs):
         print("Run: %d" % i)
-        main(str(i), True)
+        medium = main(str(i), False)
+        for comp in medium.get_components():
+            if comp in nutrient_dist:
+                nutrient_dist[comp] += 1
+            else:
+                nutrient_dist[comp] = 1
+
+    else:
+        with open("U:/Masterarbeit/GA_Results/nutrient_heatmap.txt", 'w') as file:
+            file.write("Number of Runs: %d\n" % runs)
+            for key in nutrient_dist:
+                nutrient_dist[key] /= runs
+                file.write("%s;%f\n" % (key, nutrient_dist[key]))
