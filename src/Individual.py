@@ -44,6 +44,8 @@ class Individual:
         for key in growth:
             plt.plot(xAxis, growth[key], label=key)
         #plt.xticks(xAxis)
+        plt.xlabel("Time")
+        plt.ylabel("Abundance")
         plt.legend()
         plt.show()
 
