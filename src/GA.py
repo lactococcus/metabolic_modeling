@@ -3,7 +3,7 @@ from Medium import *
 from Species import Species
 from Chromosome import Chromosome
 from Individual import Individual
-import multiprocessing as mp
+from multiprocessing import Process, Queue
 import itertools
 from cobra.flux_analysis import find_essential_reactions
 from copy import deepcopy
@@ -100,29 +100,9 @@ def generate_population(founder, pop_size, cpu_count, proc_num, queue=None):
 
     queue.put(population)
 
-def main(suffix="", graphs=False):
-    num_cpu = 4 #mp.cpu_count()
-    medium_volume = 0.05
-    simulation_time = 12
-    timestep = 1
-    info_file_path = "U:/Masterarbeit/GA_Results/run_info%s.txt" % suffix
+def run_GA(culture, objective, medium_volume, output_dir, num_essentials, essential_nutrients, queue_fitness, queue_founder, callback, num_cpu=1, simulation_time=12, timestep=1, pop_size=50, iter=10, suffix=""):
 
-    spec1 = Species('Lactococcus', "U:/Masterarbeit/iNF517.xml", 1.0)
-    spec2 = Species('Klebsiella', "U:/Masterarbeit/Klebsiella/Klebsiella.xml", 1.0)
-
-    data_watcher = DataWatcher()
-
-    culture = Culture()
-    culture.register_data_watcher(data_watcher)
-
-    culture.innoculate_species(spec1, 50000000)
-    culture.innoculate_species(spec2, 50000000)
-
-    objective = {"Lactococcus": 0.1, "Klebsiella": 0.9}
-
-    print("Finding Essential Nutrients...")
-    num_essentials, essential_nutrients = find_essential_nutrients(culture.species_list, num_cpu)
-    print("Found %d Essential Nutrients!\n" % num_essentials)
+    info_file_path = "%s/run_info_%s.txt" % (output_dir, suffix)
 
     with open(info_file_path, 'w') as file:
         file.write("Starting Run\n")
@@ -132,17 +112,21 @@ def main(suffix="", graphs=False):
     names_to_index = dicts[0]
     index_to_names = dicts[1]
 
-    founder = Individual(culture, Chromosome(index_to_names, num_essentials), objective, medium_volume, simulation_time, timestep, data_watcher)
+    founder = Individual(culture, Chromosome(index_to_names, num_essentials), objective, medium_volume, simulation_time, timestep, culture.data_watcher)
     founder.chromosome.initialize_all_true()
 
-    pop_size = 100
-    fitness = [founder.get_fitness()]
-    for i in range(10):
+    print("pre callback")
+    queue_fitness.put_nowait(founder.get_fitness())
+    queue_founder.put_nowait(founder)
+    callback.update_graphs()
+    print("post callback")
+
+    for i in range(iter):
         population = []
-        res = mp.Queue()
+        res = Queue()
 
         if num_cpu > 1:
-            processes = [mp.Process(target=generate_population, args=(founder, pop_size, num_cpu, x, res)) for x in range(num_cpu)]
+            processes = [Process(target=generate_population, args=(founder, pop_size, num_cpu, x, res)) for x in range(num_cpu)]
             #processes = [(mp.Process(target=test, args=(res, x))) for x in range(10)]
 
             for process in processes:
@@ -165,7 +149,10 @@ def main(suffix="", graphs=False):
 
         population.sort(reverse=True)
         founder = population[0]
-        fitness.append(founder.get_fitness())
+        queue_founder.put_nowait(founder)
+        queue_fitness.put_nowait(founder.get_fitness())
+        callback.update_graphs()
+
         founder.register_data_watcher(founder.data_watcher)
         #print infos
         with open(info_file_path, 'a') as file:
@@ -186,19 +173,10 @@ def main(suffix="", graphs=False):
             break
 
     #Medium.export_medium(founder.chromosome.to_medium(0.05), "U:/Masterarbeit/GA_Results/medium_founder%s.txt" % suffix)
-    founder.chromosome.export_chromosome("U:/Masterarbeit/GA_Results/chromosome%s.txt" % suffix)
-
-    if graphs:
-        founder.plot()
-        plt.plot(fitness, label="fitness")
-        plt.legend()
-        plt.show()
+    founder.chromosome.export_chromosome("%s/chromosome_%s.txt" % (output_dir, suffix))
 
     medium = minimize_medium(founder)
-    Medium.export_medium(medium, "U:/Masterarbeit/GA_Results/medium_minimized%s.txt" % suffix)
-
-    if graphs:
-        founder.plot(medium)
+    Medium.export_medium(medium, "%s/medium_minimized_%s.txt" % (output_dir, suffix))
 
     return medium
 
@@ -206,12 +184,12 @@ def main(suffix="", graphs=False):
 
 if __name__ == '__main__':
 
-    runs = 30
+    runs = 10
     nutrient_dist = {}
 
     for i in range(runs):
         print("Run: %d" % i)
-        medium = main(str(i), False)
+        medium = run_GA(species_list, objective,  medium_volume, output_dir, num_essentials, essential_nutrients, num_cpu, simulation_time, timestep, pop_size, iteration, str(i), False)
         for comp in medium.get_components():
             if comp in nutrient_dist:
                 nutrient_dist[comp] += 1
