@@ -29,7 +29,7 @@ class Species:
 
         try:
             solution = self.model.optimize(objective_sense='maximize', raise_error=True)
-            #self.model.summary()
+            #solution = cobra.flux_analysis.pfba(self.model)
         except OptimizationError:
             print(self.name + " Model infeasible")
             return
