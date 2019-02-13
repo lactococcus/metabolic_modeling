@@ -8,11 +8,16 @@ from multiprocessing import Process, Queue
 from threading import Thread
 import queue
 import matplotlib
-#import matplotlib.animation as animation
+import matplotlib.animation as animation
 matplotlib.use("TkAgg")
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from matplotlib.figure import Figure
 matplotlib.style.use("ggplot")
+
+def _quit():
+    app.quit()
+    app.destroy()
+    #exit()
 
 def choose_file(entry):
     entry.insert(0, filedialog.askopenfilename())
@@ -26,19 +31,57 @@ def new_bacteria(parent, controller, parent_page):
     bacteria_page.tkraise()
 
 def add_bacterium(parent, controller, bacterium):
-    for widget in bacterium.parent_page.widgets:
-        if widget.species == bacterium:
-            widget.update()
-            break
+    flag = True
+    bg_right = "white"
+    bg_wrong = "red"
+
+    if bacterium.entry_name.get() == "":
+        flag = False
+        bacterium.entry_name.config(bg=bg_wrong)
     else:
-        species_widget = SpeciesWidget(parent, controller, bacterium)
-        bacterium.parent_page.widgets.append(species_widget)
-    bacterium.parent_page.update()
-    bacterium.controller.show_frame(SetupPage)
+        bacterium.entry_name.config(bg=bg_right)
+
+    if bacterium.entry_model.get() == "":
+        flag = False
+        bacterium.entry_model.config(bg=bg_wrong)
+    else:
+        bacterium.entry_model.config(bg=bg_right)
+
+    try:
+        float(bacterium.entry_radius.get())
+        bacterium.entry_radius.config(bg=bg_right)
+    except ValueError:
+        flag = False
+        bacterium.entry_radius.config(bg=bg_wrong)
+
+    try:
+        float(bacterium.entry_dryweight.get())
+        bacterium.entry_dryweight.config(bg=bg_right)
+    except ValueError:
+        flag = False
+        bacterium.entry_dryweight.config(bg=bg_wrong)
+
+    try:
+        int(bacterium.entry_innoculation.get())
+        bacterium.entry_innoculation.config(bg=bg_right)
+    except ValueError:
+        flag = False
+        bacterium.entry_innoculation.config(bg=bg_wrong)
+
+    if flag:
+        for widget in bacterium.parent_page.widgets:
+            if widget.species == bacterium:
+                widget.update()
+                break
+        else:
+            species_widget = SpeciesWidget(parent, controller, bacterium)
+            bacterium.parent_page.widgets.append(species_widget)
+        bacterium.parent_page.update()
+        bacterium.controller.show_frame(SetupPage)
 
 def run_GA(culture, objective, medium_volume, output_dir, queue_fitness, queue_founder,  callback, num_cpus, sim_time, timestep, pop_size, iterations, run_name):
     print("Finding Essential Nutrients...")
-    num_essentials, essential_nutrients = GA.find_essential_nutrients(culture.species_list, num_cpus)
+    num_essentials, essential_nutrients = GA.find_essential_nutrients(culture.species_list, 1)
     print("Found %d Essential Nutrients!\n" % num_essentials)
 
     GA.run_GA(culture, objective, medium_volume, output_dir, num_essentials, essential_nutrients, queue_fitness, queue_founder, callback, num_cpus, sim_time, timestep, pop_size, iterations, run_name)
@@ -48,35 +91,102 @@ def quit_and_back():
     app.show_frame(SetupPage)
 
 def start(setup):
-    #app.frames[RunPage].start_animations()
-    app.show_frame(RunPage)
+    flag = False
+    bg_wrong = "red"
+    bg_right = "white"
 
     run.run_name = setup.entry_run_name.get()
-    run.num_cpus = int(setup.entry_cpus.get())
-    run.medium_volume = float(setup.entry_medium.get())
-    run.sim_time = int(setup.entry_sim_time.get())
-    run.timestep = float(setup.entry_timestep.get())
-    run.pop_size = int(setup.entry_pop_size.get())
-    run.iterations = int(setup.entry_iter.get())
+    if run.run_name == "":
+        flag = True
+        setup.entry_run_name.config(bg=bg_wrong)
+    else:
+        setup.entry_run_name.config(bg=bg_right)
+
+    try:
+        run.num_cpus = int(setup.entry_cpus.get())
+        setup.entry_cpus.config(bg=bg_right)
+    except ValueError:
+        flag = True
+        setup.entry_cpus.config(bg=bg_wrong)
+
+    try:
+        run.medium_volume = float(setup.entry_medium.get())
+        setup.entry_medium.config(bg=bg_right)
+    except ValueError:
+        flag = True
+        setup.entry_medium.config(bg=bg_wrong)
+
+    try:
+        run.sim_time = int(setup.entry_sim_time.get())
+        setup.entry_sim_time.config(bg=bg_right)
+    except ValueError:
+        flag = True
+        setup.entry_sim_time.config(bg=bg_wrong)
+
+    try:
+        run.timestep = float(setup.entry_timestep.get())
+        setup.entry_timestep.config(bg=bg_right)
+    except ValueError:
+        flag = True
+        setup.entry_timestep.config(bg=bg_wrong)
+
+    try:
+        run.pop_size = int(setup.entry_pop_size.get())
+        setup.entry_pop_size.config(bg=bg_right)
+    except ValueError:
+        flag = True
+        setup.entry_pop_size.config(bg=bg_wrong)
+
+    try:
+        run.iterations = int(setup.entry_iter.get())
+        setup.entry_iter.config(bg=bg_right)
+    except ValueError:
+        flag = True
+        setup.entry_iter.config(bg=bg_wrong)
+
     run.output_dir = setup.entry_output.get()
+    if run.output_dir == "":
+        flag = True
+        setup.entry_output.config(bg=bg_wrong)
+    else:
+        setup.entry_output.config(bg=bg_right)
+
+    if flag:
+        return
 
     objective = {}
     data_watcher = DataWatcher()
     culture = Culture()
     culture.register_data_watcher(data_watcher)
 
+    if len(setup.widgets) < 2:
+        flag = True
+
     for widget in setup.widgets:
-        objective[widget.species.entry_name.get()] = float(widget.entry_objective.get())
+        try:
+            objective[widget.species.entry_name.get()] = float(widget.entry_objective.get())
+            widget.entry_objective.config(bg=bg_right)
+        except ValueError:
+            flag = True
+            widget.entry_objective.config(bg=bg_wrong)
+
+        if flag:
+            return
+        print("Loading Model of Species: %s" % widget.species.entry_name.get())
         species = Species(widget.species.entry_name.get(), widget.species.entry_model.get(), float(widget.species.entry_radius.get()), float(widget.species.entry_dryweight.get()))
         culture.innoculate_species(species, int(widget.species.entry_innoculation.get()))
 
     run.objective = objective
     run.culture = culture
 
+    if flag:
+        return
+
+    app.show_frame(RunPage)
+
     run.graph_page = app.frames[RunPage]
 
     run.start_process()
-    #process = Process(target=run_GA, args=(culture, objective, medium_volume, output_dir, queue_fitness, queue_founder, num_cpus, sim_time, timestep, pop_size, iterations, run_name))
 
 
 class Application(tk.Tk):
@@ -115,7 +225,7 @@ class StartPage(tk.Frame):
         self.logo_image = tk.PhotoImage(file="U:/Bilder/logo.gif")
         label = tk.Label(self, image=self.logo_image, bg=bg_colour).grid(row=0, column=0)
         button = tk.Button(self, text="New Run", font="none 18 bold", bg=bg_colour, command=lambda :controller.show_frame(SetupPage)).grid(row=1, column=0)
-        button = tk.Button(self, text="Exit", font="none 18 bold", bg=bg_colour, command=exit).grid(row=2, column=0)
+        button = tk.Button(self, text="Exit", font="none 18 bold", bg=bg_colour, command=_quit).grid(row=2, column=0)
 
 class SetupPage(tk.Frame):
     def __init__(self, parent, controller):
@@ -139,8 +249,8 @@ class SetupPage(tk.Frame):
         label = tk.Label(self, text="Iterations:", bg=bg_colour).grid(row=995, column=0)
         label = tk.Label(self, text="Output directory", bg=bg_colour).grid(row=996, column=0)
         start_button = tk.Button(self, text="Start Run", image=self.start_image, bg=bg_colour, command=lambda :start(self), compound="left").grid(row=1000, column=0)
-        exit_button = tk.Button(self, text="Exit", command=exit, bg=bg_colour).grid(row=1000, column=1)
-        #button = tk.Button(self, text="Test", command=lambda :controller.show_frame(RunPage), bg=bg_colour).grid(row=1000, column=2)
+        exit_button = tk.Button(self, text="Exit", command=_quit, bg=bg_colour).grid(row=1000, column=1)
+        button = tk.Button(self, text="Test", command=lambda :controller.show_frame(RunPage), bg=bg_colour).grid(row=1000, column=2)
 
         self.entry_run_name = tk.Entry(self)
         self.entry_run_name.grid(row=1, column=1)
@@ -238,46 +348,50 @@ class RunPage(tk.Frame):
         self.fig2 = Figure(figsize=(4,4), dpi=100)
         self.plot_founder = self.fig2.add_subplot(111)
 
-        self.queue_fitness = Queue()
-        self.queue_founder = Queue()
+        self.queue_fitness = Queue(maxsize=2)
+        self.queue_founder = Queue(maxsize=2)
         self.fitness = []
 
-        self.canvas1 = FigureCanvasTkAgg(self.fig1, self)
-        self.canvas2 = FigureCanvasTkAgg(self.fig2, self)
+        self.canvas1 = FigureCanvasTkAgg(self.fig1, master=self)
+        self.canvas2 = FigureCanvasTkAgg(self.fig2, master=self)
         self.canvas1.draw()
         self.canvas2.draw()
         self.canvas1.get_tk_widget().grid(row=1, column=0)
         self.canvas2.get_tk_widget().grid(row=3, column=0)
+
         label = tk.Label(self, text="Fitness", font="none 14 bold", bg=bg_colour).grid(row=0, column=0)
         label = tk.Label(self, text="Current Best:", font="none 14 bold", bg=bg_colour).grid(row=2, column=0)
         button = tk.Button(self, text="Back", bg=bg_colour, command=quit_and_back).grid(row=0, column=1)
+        button = tk.Button(self, text="Test", bg=bg_colour, command=self.update_fitness_plot).grid(row=1, column=1)
 
     def __getstate__(self):
-        return (self.queue_fitness, self.queue_founder)
+        return (self.plot_fitness, self.plot_founder, self.fig1, self.fig2, self.canvas1, self.canvas2, self.fitness)
 
     def __setstate__(self, state):
-        self.queue_fitness, self.queue_founder = state
+        self.plot_fitness, self.plot_founder, self.fig1, self.fig2, self.canvas1, self.canvas2, self.fitness = state
 
     def update_fitness_plot(self):
         fit = None
         try:
-            fit = self.queue_fitness.get(timeout=1.0)
+            fit = self.queue_fitness.get(timeout=0.1)
         except queue.Empty:
             pass
         if fit is not None:
             self.fitness.append(fit)
             self.plot_fitness.clear()
             self.plot_fitness.plot(range(1, len(self.fitness)+1), self.fitness)
+            self.canvas1.draw()
 
     def update_founder_plot(self):
         founder = None
         try:
-            founder = self.queue_founder.get(timeout=1.0)
+            founder = self.queue_founder.get(timeout=0.1)
         except queue.Empty:
             pass
         if founder is not None:
             self.plot_founder.clear()
             founder.plot(sub_plot=self.plot_founder)
+            self.canvas2.draw()
 
 class RunObject:
     def __init__(self):
@@ -295,25 +409,27 @@ class RunObject:
         self.graph_page = None
         self.process = None
 
+        self.flag = False
+
     def start_process(self):
-        self.process = Process(target=run_GA, args=(self.culture, self.objective, self.medium_volume, self.output_dir, self.graph_page.queue_fitness, self.graph_page.queue_founder, self, self.num_cpus, self.sim_time, self.timestep, self.pop_size, self.iterations, self.run_name))
+        self.process = Thread(target=run_GA, args=(self.culture, self.objective, self.medium_volume, self.output_dir, self.graph_page.queue_fitness, self.graph_page.queue_founder, self, self.num_cpus, self.sim_time, self.timestep, self.pop_size, self.iterations, self.run_name))
         self.process.start()
 
     def terminate_process(self):
         if self.process is not None:
-            self.process.terminate()
+            self.flag = True
             self.process.join()
-
+            print("Tasks terminated")
+    '''
     def __getstate__(self):
         return (self.run_name, self.num_cpus, self.medium_volume, self.sim_time, self.timestep, self.pop_size, self.iterations, self.output_dir, self.objective, self.culture)
 
     def __setstate__(self, state):
         self.run_name, self.num_cpus, self.medium_volume, self.sim_time, self.timestep, self.pop_size, self.iterations, self.output_dir, self.objective, self.culture = state
-
+    '''
     def update_graphs(self):
         self.graph_page.update_fitness_plot()
         self.graph_page.update_founder_plot()
-        print("graphs")
 
 
 if __name__ == '__main__':

@@ -100,9 +100,15 @@ def generate_population(founder, pop_size, cpu_count, proc_num, queue=None):
 
     queue.put(population)
 
-def run_GA(culture, objective, medium_volume, output_dir, num_essentials, essential_nutrients, queue_fitness, queue_founder, callback, num_cpu=1, simulation_time=12, timestep=1, pop_size=50, iter=10, suffix=""):
+def run_GA(culture, objective, medium_volume, output_dir, num_essentials, essential_nutrients, queue_fitness, queue_founder, pipe, num_cpu=1, simulation_time=12, timestep=1, pop_size=50, iter=10, suffix=""):
 
     info_file_path = "%s/run_info_%s.txt" % (output_dir, suffix)
+    callback = pipe
+    #print(pipe)
+    #pipe.close()
+
+    if callback.flag:
+        return
 
     with open(info_file_path, 'w') as file:
         file.write("Starting Run\n")
@@ -115,11 +121,9 @@ def run_GA(culture, objective, medium_volume, output_dir, num_essentials, essent
     founder = Individual(culture, Chromosome(index_to_names, num_essentials), objective, medium_volume, simulation_time, timestep, culture.data_watcher)
     founder.chromosome.initialize_all_true()
 
-    print("pre callback")
-    queue_fitness.put_nowait(founder.get_fitness())
-    queue_founder.put_nowait(founder)
+    queue_fitness.put(founder.get_fitness())
+    queue_founder.put(founder)
     callback.update_graphs()
-    print("post callback")
 
     for i in range(iter):
         population = []
@@ -130,6 +134,7 @@ def run_GA(culture, objective, medium_volume, output_dir, num_essentials, essent
             #processes = [(mp.Process(target=test, args=(res, x))) for x in range(10)]
 
             for process in processes:
+                process.daemon = True
                 process.start()
             #print("started")
 
@@ -149,8 +154,8 @@ def run_GA(culture, objective, medium_volume, output_dir, num_essentials, essent
 
         population.sort(reverse=True)
         founder = population[0]
-        queue_founder.put_nowait(founder)
-        queue_fitness.put_nowait(founder.get_fitness())
+        queue_founder.put(founder)
+        queue_fitness.put(founder.get_fitness())
         callback.update_graphs()
 
         founder.register_data_watcher(founder.data_watcher)
@@ -170,6 +175,9 @@ def run_GA(culture, objective, medium_volume, output_dir, num_essentials, essent
             file.write("Average # Nutrients: %f Founder: %d\n\n" % (average_num_nutrients(population), len(founder.chromosome)))
 
         if founder.get_fitness() < 0.005:
+            break
+
+        if callback.flag:
             break
 
     #Medium.export_medium(founder.chromosome.to_medium(0.05), "U:/Masterarbeit/GA_Results/medium_founder%s.txt" % suffix)
