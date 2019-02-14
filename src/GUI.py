@@ -17,7 +17,7 @@ matplotlib.style.use("ggplot")
 def _quit():
     app.quit()
     app.destroy()
-    #exit()
+    exit()
 
 def choose_file(entry):
     entry.insert(0, filedialog.askopenfilename())
@@ -161,6 +161,9 @@ def start(setup):
 
     if len(setup.widgets) < 2:
         flag = True
+        setup.add_bacteria_button.config(bg=bg_wrong)
+    else:
+        setup.add_bacteria_button.config(bg=bg_colour)
 
     for widget in setup.widgets:
         try:
@@ -357,12 +360,23 @@ class RunPage(tk.Frame):
         self.canvas1.draw()
         self.canvas2.draw()
         self.canvas1.get_tk_widget().grid(row=1, column=0)
-        self.canvas2.get_tk_widget().grid(row=3, column=0)
+        self.canvas2.get_tk_widget().grid(row=4, column=0)
 
         label = tk.Label(self, text="Fitness", font="none 14 bold", bg=bg_colour).grid(row=0, column=0)
-        label = tk.Label(self, text="Current Best:", font="none 14 bold", bg=bg_colour).grid(row=2, column=0)
+        label = tk.Label(self, text="Current Best:", font="none 14 bold", bg=bg_colour).grid(row=3, column=0)
         button = tk.Button(self, text="Back", bg=bg_colour, command=quit_and_back).grid(row=0, column=1)
-        button = tk.Button(self, text="Test", bg=bg_colour, command=self.update_fitness_plot).grid(row=1, column=1)
+
+        self.anim_fitness = animation.FuncAnimation(self.fig1, self._draw_fitness, interval=1000)
+        self.anim_founder = animation.FuncAnimation(self.fig2, self._draw_founder, interval=2000)
+
+        self.text = tk.Text(self, state=tk.DISABLED)
+        self.text.grid(row=1, column=2)
+
+    def _draw_fitness(self, i):
+        self.canvas1.draw()
+
+    def _draw_founder(self, i):
+        self.canvas2.draw()
 
     def __getstate__(self):
         return (self.plot_fitness, self.plot_founder, self.fig1, self.fig2, self.canvas1, self.canvas2, self.fitness)
@@ -379,8 +393,7 @@ class RunPage(tk.Frame):
         if fit is not None:
             self.fitness.append(fit)
             self.plot_fitness.clear()
-            self.plot_fitness.plot(range(1, len(self.fitness)+1), self.fitness)
-            self.canvas1.draw()
+            self.plot_fitness.plot(range(len(self.fitness)), self.fitness)
 
     def update_founder_plot(self):
         founder = None
@@ -391,7 +404,6 @@ class RunPage(tk.Frame):
         if founder is not None:
             self.plot_founder.clear()
             founder.plot(sub_plot=self.plot_founder)
-            self.canvas2.draw()
 
 class RunObject:
     def __init__(self):
@@ -412,6 +424,9 @@ class RunObject:
         self.flag = False
 
     def start_process(self):
+        self.graph_page.fitness = []
+        self.graph_page.plot_fitness.clear()
+        self.graph_page.plot_founder.clear()
         self.process = Thread(target=run_GA, args=(self.culture, self.objective, self.medium_volume, self.output_dir, self.graph_page.queue_fitness, self.graph_page.queue_founder, self, self.num_cpus, self.sim_time, self.timestep, self.pop_size, self.iterations, self.run_name))
         self.process.start()
 
@@ -430,7 +445,6 @@ class RunObject:
     def update_graphs(self):
         self.graph_page.update_fitness_plot()
         self.graph_page.update_founder_plot()
-
 
 if __name__ == '__main__':
     bg_colour = "#8f9eb7"
