@@ -9,7 +9,7 @@ from cobra.flux_analysis import find_essential_reactions
 from copy import deepcopy
 from matplotlib import pyplot as plt
 from DataWatcher import DataWatcher
-#import threading as th
+from tkinter import END, DISABLED, NORMAL
 
 def generate_dicts(species_list, essentials):
     names_to_index = {}
@@ -104,15 +104,9 @@ def run_GA(culture, objective, medium_volume, output_dir, num_essentials, essent
 
     info_file_path = "%s/run_info_%s.txt" % (output_dir, suffix)
     callback = pipe
-    #print(pipe)
-    #pipe.close()
 
     if callback.flag:
         return
-
-    with open(info_file_path, 'w') as file:
-        file.write("Starting Run\n")
-        file.write("Found %d Essential Nutrients!\n" % num_essentials)
 
     dicts = generate_dicts(culture.species_list, essential_nutrients)
     names_to_index = dicts[0]
@@ -159,27 +153,34 @@ def run_GA(culture, objective, medium_volume, output_dir, num_essentials, essent
         callback.update_graphs()
 
         founder.register_data_watcher(founder.data_watcher)
-        #print infos
+        callback.graph_page.text.config(state=NORMAL)
         with open(info_file_path, 'a') as file:
-            print("Iteration: %d Fitness: %f" % (i+1, founder.get_fitness()))
-            print("Feasible: %d/%d" % (len(population),pop_size+1))
+            #print("Iteration: %d Fitness: %f" % (i+1, founder.get_fitness()))
+            #print("Feasible: %d/%d" % (len(population),pop_size+1))
+            callback.graph_page.text.insert(END, "Iteration: %d Fitness: %f\n" % (i+1, founder.get_fitness()))
+            callback.graph_page.text.insert(END, "Feasible: %d/%d\n" % (len(population),pop_size+1))
             file.write("Iteration: %d Fitness: %f\n" % (i+1, founder.get_fitness()))
             file.write("Feasible: %d/%d\n" % (len(population),pop_size+1))
             total = 0
             for spec in founder.culture.species_list:
                 total += spec.get_abundance()
             for spec in founder.culture.species_list:
-                print("%s : %d : %f" % (spec.name, spec.get_abundance(), spec.get_abundance() / total))
+                #print("%s : %d : %f" % (spec.name, spec.get_abundance(), spec.get_abundance() / total))
+                callback.graph_page.text.insert(END, "%s : %d : %f\n" % (spec.name, spec.get_abundance(), spec.get_abundance() / total))
                 file.write("%s : %d : %f\n" % (spec.name, spec.get_abundance(), spec.get_abundance() / total))
-            print("Average # Nutrients: %f Founder: %d\n" % (average_num_nutrients(population), len(founder.chromosome)))
+            #print("Average # Nutrients: %f Founder: %d\n" % (average_num_nutrients(population), len(founder.chromosome)))
+            callback.graph_page.text.insert(END, "Average # Nutrients: %f Founder: %d\n\n" % (average_num_nutrients(population), len(founder.chromosome)))
             file.write("Average # Nutrients: %f Founder: %d\n\n" % (average_num_nutrients(population), len(founder.chromosome)))
+        callback.graph_page.text.config(state=DISABLED)
 
-        if founder.get_fitness() < 0.005:
+        if founder.get_fitness() <= 0.01:
             break
 
         if callback.flag:
             break
-
+    callback.graph_page.text.config(state=NORMAL)
+    callback.graph_page.text.insert(END, "Finished")
+    callback.graph_page.text.config(state=DISABLED)
     #Medium.export_medium(founder.chromosome.to_medium(0.05), "U:/Masterarbeit/GA_Results/medium_founder%s.txt" % suffix)
     founder.chromosome.export_chromosome("%s/chromosome_%s.txt" % (output_dir, suffix))
 
