@@ -109,6 +109,9 @@ class Culture:
         for species in self.species_list:
             species.data_watcher = data_watcher
 
+    def __len__(self):
+        return len(self.species_list)
+
 
 
 
