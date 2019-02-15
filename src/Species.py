@@ -13,8 +13,6 @@ class Species:
         self.dry_weight = dry_weight_pg
         self.surface_area = 4 * math.pi * radius_microm ** 2
         self.volume = 4 / 3 * math.pi * radius_microm ** 3
-        #self.biomass = 0.0
-        #self.init_abundance = 0
         self.data_watcher = None
 
         for reaction in self.model.exchanges:
@@ -34,38 +32,40 @@ class Species:
             print(self.name + " Model infeasible")
             return
 
-        if solution.objective_value > 0.0001:
-            self.set_biomass(self.get_biomass() * solution.objective_value * timestep + self.get_biomass())
+        #if solution.objective_value > 0.0001:
+        self.set_biomass(self.get_biomass() * solution.objective_value * timestep + self.get_biomass())
 
-            for i in range(len(solution.fluxes.index)):
-                name = solution.fluxes.index[i]
-                if name[:3] == "EX_":
-                    solution.fluxes.iloc[i] *= (self.get_biomass() * timestep)
+        for i in range(len(solution.fluxes.index)):
+            name = solution.fluxes.index[i]
+            if name[:3] == "EX_":
+                solution.fluxes.iloc[i] *= (self.get_biomass() * timestep)
 
         return solution
 
+    def get_growth_curve(self):
+        return self.data_watcher.get_growth_curve(self.name)
+
     def set_data_watcher(self, data_watcher):
         self.data_watcher = data_watcher
-        self.data_watcher.data["species"][self.name] = [None, None]  # [init_abundance, biomass]
+        self.data_watcher.data["species"][self.name] = [None, []]  # [init_abundance, biomass]
 
     def set_biomass(self, biomass):
-        self.data_watcher.data["species"][self.name][1] = biomass // self.get_dryweight()
+        self.data_watcher.set_abundance(self.name, biomass // self.get_dryweight())
 
     def set_abundance(self, abundance):
-        self.data_watcher.data["species"][self.name][1] = abundance
-        #print(self.data_watcher.data["species"][self.name][1])
+        self.data_watcher.set_abundance(self.name, abundance)
 
     def set_init_abundance(self, abundance):
-        self.data_watcher.data["species"][self.name][0] = abundance
+        self.data_watcher.set_init_abundance(self.name, abundance)
 
     def get_init_abundance(self):
-        return self.data_watcher.data["species"][self.name][0]
+        return self.data_watcher.get_init_abundance(self.name)
 
     def get_abundance(self):
-        return self.data_watcher.data["species"][self.name][1]
+        return self.data_watcher.get_abundance(self.name)
 
     def get_biomass(self):
-        return self.data_watcher.data["species"][self.name][1] * self.get_dryweight()
+        return self.data_watcher.get_abundance(self.name) * self.get_dryweight()
 
     def get_dryweight(self):
         return self.dry_weight / 1000000000000

@@ -148,15 +148,15 @@ def run_GA(culture, objective, medium_volume, output_dir, num_essentials, essent
 
         population.sort(reverse=True)
         founder = population[0]
+
+        founder.register_data_watcher(founder.data_watcher)
+
         queue_founder.put(founder)
         queue_fitness.put(founder.get_fitness())
         callback.update_graphs()
 
-        founder.register_data_watcher(founder.data_watcher)
         callback.graph_page.text.config(state=NORMAL)
         with open(info_file_path, 'a') as file:
-            #print("Iteration: %d Fitness: %f" % (i+1, founder.get_fitness()))
-            #print("Feasible: %d/%d" % (len(population),pop_size+1))
             callback.graph_page.text.insert(END, "Iteration: %d Fitness: %f\n" % (i+1, founder.get_fitness()))
             callback.graph_page.text.insert(END, "Feasible: %d/%d\n" % (len(population),pop_size+1))
             file.write("Iteration: %d Fitness: %f\n" % (i+1, founder.get_fitness()))
@@ -165,23 +165,23 @@ def run_GA(culture, objective, medium_volume, output_dir, num_essentials, essent
             for spec in founder.culture.species_list:
                 total += spec.get_abundance()
             for spec in founder.culture.species_list:
-                #print("%s : %d : %f" % (spec.name, spec.get_abundance(), spec.get_abundance() / total))
                 callback.graph_page.text.insert(END, "%s : %d : %f\n" % (spec.name, spec.get_abundance(), spec.get_abundance() / total))
                 file.write("%s : %d : %f\n" % (spec.name, spec.get_abundance(), spec.get_abundance() / total))
-            #print("Average # Nutrients: %f Founder: %d\n" % (average_num_nutrients(population), len(founder.chromosome)))
             callback.graph_page.text.insert(END, "Average # Nutrients: %f Founder: %d\n\n" % (average_num_nutrients(population), len(founder.chromosome)))
             file.write("Average # Nutrients: %f Founder: %d\n\n" % (average_num_nutrients(population), len(founder.chromosome)))
         callback.graph_page.text.config(state=DISABLED)
 
-        if founder.get_fitness() <= 0.01:
+        if founder.get_fitness() <= 0.01 * len(founder.culture):
             break
 
         if callback.flag:
             break
-    callback.graph_page.text.config(state=NORMAL)
-    callback.graph_page.text.insert(END, "Finished")
-    callback.graph_page.text.config(state=DISABLED)
-    #Medium.export_medium(founder.chromosome.to_medium(0.05), "U:/Masterarbeit/GA_Results/medium_founder%s.txt" % suffix)
+
+    if not callback.flag:
+        callback.graph_page.text.config(state=NORMAL)
+        callback.graph_page.text.insert(END, "Finished")
+        callback.graph_page.text.config(state=DISABLED)
+
     founder.chromosome.export_chromosome("%s/chromosome_%s.txt" % (output_dir, suffix))
 
     medium = minimize_medium(founder)

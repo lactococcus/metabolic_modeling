@@ -17,7 +17,7 @@ matplotlib.style.use("ggplot")
 def _quit():
     app.quit()
     app.destroy()
-    exit()
+    exit(0)
 
 def choose_file(entry):
     entry.insert(0, filedialog.askopenfilename())
@@ -225,9 +225,9 @@ class StartPage(tk.Frame):
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent)
         self.configure(bg=bg_colour)
-        self.logo_image = tk.PhotoImage(file="U:/Bilder/logo.gif")
+        self.logo_image = tk.PhotoImage(file="U:/Bilder/logo.png")
         label = tk.Label(self, image=self.logo_image, bg=bg_colour).grid(row=0, column=0)
-        button = tk.Button(self, text="New Run", font="none 18 bold", bg=bg_colour, command=lambda :controller.show_frame(SetupPage)).grid(row=1, column=0)
+        button = tk.Button(self, text="New Run", bg=bg_colour, font="none 18 bold", command=lambda :controller.show_frame(SetupPage)).grid(row=1, column=0)
         button = tk.Button(self, text="Exit", font="none 18 bold", bg=bg_colour, command=_quit).grid(row=2, column=0)
 
 class SetupPage(tk.Frame):
@@ -244,13 +244,13 @@ class SetupPage(tk.Frame):
         self.add_bacteria_button = tk.Button(self, text="Add Bacteria", image=self.bacteria_image, bg=bg_colour, height=20, width=100, compound="left", command=lambda :new_bacteria(parent, controller, self))
         self.add_bacteria_button.grid(row=3+len(self.widgets), column=0)
         label = tk.Label(self, text="General Settings:", bg=bg_colour, font="none 14").grid(row=989, column=0)
-        label = tk.Label(self, text="Number of CPUs", bg=bg_colour).grid(row=990, column=0)
-        label = tk.Label(self, text="Medium volume", bg=bg_colour).grid(row=991, column=0)
-        label = tk.Label(self, text="Simulation time", bg=bg_colour).grid(row=992, column=0)
-        label = tk.Label(self, text="Timestep", bg=bg_colour).grid(row=993, column=0)
+        label = tk.Label(self, text="Number of CPUs:", bg=bg_colour).grid(row=990, column=0)
+        label = tk.Label(self, text="Medium volume:", bg=bg_colour).grid(row=991, column=0)
+        label = tk.Label(self, text="Simulation time:", bg=bg_colour).grid(row=992, column=0)
+        label = tk.Label(self, text="Timestep:", bg=bg_colour).grid(row=993, column=0)
         label = tk.Label(self, text="Population size:", bg=bg_colour).grid(row=994, column=0)
         label = tk.Label(self, text="Iterations:", bg=bg_colour).grid(row=995, column=0)
-        label = tk.Label(self, text="Output directory", bg=bg_colour).grid(row=996, column=0)
+        label = tk.Label(self, text="Output directory:", bg=bg_colour).grid(row=996, column=0)
         start_button = tk.Button(self, text="Start Run", image=self.start_image, bg=bg_colour, command=lambda :start(self), compound="left").grid(row=1000, column=0)
         exit_button = tk.Button(self, text="Exit", command=_quit, bg=bg_colour).grid(row=1000, column=1)
         button = tk.Button(self, text="Test", command=lambda :controller.show_frame(RunPage), bg=bg_colour).grid(row=1000, column=2)
@@ -324,7 +324,7 @@ class BacteriaPage(tk.Frame):
         label = tk.Label(self, text="Dryweight in picogram:", bg=bg_colour).grid(row=4, column=0)
         label = tk.Label(self, text="Innoculation size:", bg=bg_colour).grid(row=5, column=0)
         button = tk.Button(self, text="Save Bacterium", bg=bg_colour, command=lambda :add_bacterium(parent_page, controller, self)).grid(row=6, column=0)
-        button = tk.Button(self, text="back", bg=bg_colour, command=lambda :controller.show_frame(SetupPage)).grid(row=100, column=0)
+        button = tk.Button(self, text="Back", bg=bg_colour, command=lambda :controller.show_frame(SetupPage)).grid(row=100, column=0)
 
         self.entry_name = tk.Entry(self)
         self.entry_name.grid(row=1, column=1)
@@ -347,9 +347,11 @@ class RunPage(tk.Frame):
         tk.Frame.__init__(self, parent)
         self.configure(bg=bg_colour)
         self.fig1 = Figure(figsize=(4,4), dpi=100)
-        self.plot_fitness = self.fig1.add_subplot(111)
+        self.plot_fitness = self.fig1.add_subplot(111, xlabel="Iteration", ylabel="Fitness")
+        self.fig1.align_labels(self.plot_fitness)
         self.fig2 = Figure(figsize=(4,4), dpi=100)
-        self.plot_founder = self.fig2.add_subplot(111)
+        self.plot_founder = self.fig2.add_subplot(111, xlabel="Time", ylabel="Abundance")
+        self.fig2.align_labels(self.plot_founder)
 
         self.queue_fitness = Queue(maxsize=2)
         self.queue_founder = Queue(maxsize=2)
@@ -359,8 +361,8 @@ class RunPage(tk.Frame):
         self.canvas2 = FigureCanvasTkAgg(self.fig2, master=self)
         self.canvas1.draw()
         self.canvas2.draw()
-        self.canvas1.get_tk_widget().grid(row=1, column=0)
-        self.canvas2.get_tk_widget().grid(row=4, column=0)
+        self.canvas1.get_tk_widget().grid(row=1, column=0, padx=10)
+        self.canvas2.get_tk_widget().grid(row=4, column=0, padx=10)
 
         label = tk.Label(self, text="Fitness", font="none 14 bold", bg=bg_colour).grid(row=0, column=0)
         label = tk.Label(self, text="Current Best:", font="none 14 bold", bg=bg_colour).grid(row=3, column=0)
@@ -393,6 +395,7 @@ class RunPage(tk.Frame):
         if fit is not None:
             self.fitness.append(fit)
             self.plot_fitness.clear()
+            self.fig1.align_labels(self.plot_fitness)
             self.plot_fitness.plot(range(len(self.fitness)), self.fitness)
 
     def update_founder_plot(self):
@@ -403,6 +406,7 @@ class RunPage(tk.Frame):
             pass
         if founder is not None:
             self.plot_founder.clear()
+            self.fig2.align_labels(self.plot_founder)
             founder.plot(sub_plot=self.plot_founder)
 
 class RunObject:
@@ -447,7 +451,8 @@ class RunObject:
         self.graph_page.update_founder_plot()
 
 if __name__ == '__main__':
-    bg_colour = "#8f9eb7"
+    #bg_colour = "#8f9eb7"
+    bg_colour = "#DDDDDD"
     app = Application()
     run = RunObject()
     app.mainloop()

@@ -23,39 +23,27 @@ class Individual:
             self.register_data_watcher(data_watcher2)
 
     def plot(self, medium=None, sub_plot=None):
-        if medium == None:
-            self.culture.set_medium(self.chromosome.to_medium(self.medium_volume))
+        if medium is not None:
+            self.score_fitness(self.fitness_function, medium)
         else:
-            self.culture.set_medium(medium)
-        #self.culture.medium.print_content()
-        growth = {}
-
-        for spec in self.culture.species_list:
-            spec.set_abundance(spec.get_init_abundance())
-            growth[spec.name] = [spec.get_abundance()]
-
-        xAxis = [0]
-        for i in range(math.floor(self.simulation_time / self.timestep)):
-            xAxis.append(self.timestep * i + self.timestep)
-            self.culture.update_biomass(self.timestep)
-            for spec in self.culture.species_list:
-                growth[spec.name].append(spec.get_abundance())
+            self.get_fitness()
 
         if sub_plot is not None:
-            for key in growth:
-                sub_plot.plot(xAxis, growth[key], label=key)
+            for spec in self.culture.species_list:
+                curve = spec.get_growth_curve()
+                sub_plot.plot(range(len(curve)), curve, label=spec.name)
             sub_plot.legend()
         else:
-            for key in growth:
-                plt.plot(xAxis, growth[key], label=key)
-            #plt.xticks(xAxis)
+            for spec in self.culture.species_list:
+                curve = spec.get_growth_curve()
+                sub_plot.plot(range(len(curve)), curve, label=spec.name)
             plt.xlabel("Time")
             plt.ylabel("Abundance")
             plt.legend()
             plt.show()
 
     def score_fitness(self, fitness_func, medium=None):
-        if medium == None:
+        if medium is None:
             self.culture.set_medium(self.chromosome.to_medium(self.medium_volume))
         else:
             self.culture.set_medium(medium)
@@ -71,16 +59,15 @@ class Individual:
 
     def fitness_function(self):
         total_abundance = 0
-        for spec in self.data_watcher.get_species():
-            total_abundance += self.data_watcher.get_species()[spec][1]
+        for spec in self.culture.species_list:
+            total_abundance += spec.get_abundance()
         fitness = 0.0
-        #fitness += len(self.chromosome) * 0.01
-        for key in self.objective:
-            init_abundance = self.data_watcher.get_species()[key][0]
-            abundance = self.data_watcher.get_species()[key][1]
+        for spec_name in self.objective:
+            init_abundance = self.data_watcher.get_init_abundance(spec_name)
+            abundance = self.data_watcher.get_abundance(spec_name)
             rel_abundance = abundance / total_abundance
             if abundance > init_abundance:
-                fitness += abs(self.objective[key] - rel_abundance) * 100
+                fitness += abs(self.objective[spec_name] - rel_abundance) * 100
             else:
                 fitness = -1.0
                 break
@@ -97,9 +84,6 @@ class Individual:
     def __lt__(self, other):
         """an indicidual is lesser than another when its fitness score is higher. higher fitness == bad"""
         return self.get_fitness() > other.get_fitness()
-
-    def sort_med_fitness(ind):
-        return ind.get_medium_fitness()
 
     def register_data_watcher(self, data_watcher):
         self.data_watcher = data_watcher
