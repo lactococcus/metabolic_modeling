@@ -177,6 +177,8 @@ def run_GA(culture, objective, medium_volume, output_dir, num_essentials, essent
         if callback.flag:
             break
 
+    callback.update_graphs()
+
     if not callback.flag:
         callback.graph_page.text.config(state=NORMAL)
         callback.graph_page.text.insert(END, "Finished")

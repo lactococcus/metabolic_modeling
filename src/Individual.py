@@ -48,8 +48,8 @@ class Individual:
         else:
             self.culture.set_medium(medium)
 
-        for spec in self.culture.species_list:
-            spec.set_abundance(spec.get_init_abundance())
+        data_watcher = DataWatcher.create_new_watcher(self.data_watcher)
+        self.register_data_watcher(data_watcher)
 
         for i in range(math.floor(self.simulation_time / self.timestep)):
             if not self.culture.update_biomass(self.timestep):
@@ -71,15 +71,12 @@ class Individual:
             else:
                 fitness = -1.0
                 break
-        self.set_fitness(round(fitness, 6))
+        self.data_watcher.set_fitness(round(fitness, 6))
 
     def get_fitness(self):
         if self.data_watcher.get_fitness() == None:
             self.score_fitness(fitness_func=self.fitness_function)
         return self.data_watcher.get_fitness()
-
-    def set_fitness(self, fitness):
-        self.data_watcher.set_fitness(fitness)
 
     def __lt__(self, other):
         """an indicidual is lesser than another when its fitness score is higher. higher fitness == bad"""
