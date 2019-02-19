@@ -14,7 +14,6 @@ class AbstactEntry(Entry):
         self['validate'] = 'focusout'
         self['validatecommand'] = self.vcmd, '%P',
         self['invalidcommand'] = self.ivcmd,
-        self['style'] = 'checked.TEntry'
 
     def validate(self, inp):
         raise NotImplementedError
@@ -80,11 +79,9 @@ class FileEntry(AbstactEntry):
 
     def validate(self, inp):
         if os.path.exists(inp):
-            self.state(['!invalid'])
             self.last_valid_value = inp
             return True
         else:
-            self.state(['invalid'])
             return False
 
 
