@@ -77,7 +77,7 @@ def minimize_medium(individual):
 
     return Medium.from_dict(min_medium, individual.medium_volume)
 
-def generate_population(founder, pop_size, cpu_count, proc_num, queue=None):
+def generate_population(founder, pop_size, cpu_count, proc_num, queue=None, pfba=False):
     population = []
     population_size = 0
 
@@ -92,7 +92,7 @@ def generate_population(founder, pop_size, cpu_count, proc_num, queue=None):
         chromosome.mutate_with_chance(0.01)
         individual = Individual(founder.culture, chromosome, founder.objective, founder.medium_volume, founder.simulation_time, founder.timestep, founder.data_watcher)
         #print(individual.get_fitness())
-        if individual.get_fitness() >= 0.0:
+        if individual.get_fitness(pfba) >= 0.0:
             population.append(individual)
 
     if proc_num == 0:
@@ -100,7 +100,7 @@ def generate_population(founder, pop_size, cpu_count, proc_num, queue=None):
 
     queue.put(population)
 
-def run_GA(culture, objective, medium_volume, output_dir, num_essentials, essential_nutrients, queue_fitness, queue_founder, pipe, num_cpu=1, simulation_time=12, timestep=1, pop_size=50, iter=10, suffix=""):
+def run_GA(culture, objective, medium_volume, output_dir, num_essentials, essential_nutrients, queue_fitness, queue_founder, pipe, num_cpu=1, simulation_time=12, timestep=1, pop_size=50, iter=10, suffix="", pfba=False):
 
     info_file_path = "%s/run_info_%s.txt" % (output_dir, suffix)
     callback = pipe
@@ -115,7 +115,7 @@ def run_GA(culture, objective, medium_volume, output_dir, num_essentials, essent
     founder = Individual(culture, Chromosome(index_to_names, num_essentials), objective, medium_volume, simulation_time, timestep, culture.data_watcher)
     founder.chromosome.initialize_all_true()
 
-    queue_fitness.put(founder.get_fitness())
+    queue_fitness.put(founder.get_fitness(pfba))
     queue_founder.put(founder)
     callback.update_graphs()
 
@@ -124,7 +124,7 @@ def run_GA(culture, objective, medium_volume, output_dir, num_essentials, essent
         res = Queue()
 
         if num_cpu > 1:
-            processes = [Process(target=generate_population, args=(founder, pop_size, num_cpu, x, res)) for x in range(num_cpu)]
+            processes = [Process(target=generate_population, args=(founder, pop_size, num_cpu, x, res, pfba)) for x in range(num_cpu)]
             #processes = [(mp.Process(target=test, args=(res, x))) for x in range(10)]
 
             for process in processes:
