@@ -14,6 +14,7 @@ class AbstactEntry(Entry):
         self['validate'] = 'focusout'
         self['validatecommand'] = self.vcmd, '%P',
         self['invalidcommand'] = self.ivcmd,
+        self['style'] = 'checked.TEntry'
 
     def validate(self, inp):
         raise NotImplementedError
@@ -36,9 +37,7 @@ class FloatEntry(AbstactEntry):
     def validate(self, inp):
         try:
             float(inp)
-            self.state(['!invalid'])
         except ValueError:
-            self.state(['invalid'])
             return False
         self.last_valid_value = inp
         return True
@@ -54,29 +53,21 @@ class IntEntry(AbstactEntry):
     def validate(self, inp):
         try:
             int(inp)
-            self.state(['!invalid'])
         except ValueError:
-            self.state(['invalid'])
             return False
         self.last_valid_value = inp
         return True
 
 class StringEntry(AbstactEntry):
     def __init__(self, *args, **kwargs):
-        initial_value = kwargs.pop('initial_value', 'None')
+        initial_value = kwargs.pop('initial_value', '')
         self.last_valid_value = initial_value
         self.text = StringVar(value=initial_value)
 
         AbstactEntry.__init__(self, *args, initial_value=initial_value, **kwargs)
 
     def validate(self, inp):
-        if inp is "":
-            self.state(['invalid'])
-            return False
-        else:
-            self.last_valid_value = inp
-            self.state(['!invalid'])
-            return True
+        return True
 
 class FileEntry(AbstactEntry):
     def __init__(self, *args, **kwargs):

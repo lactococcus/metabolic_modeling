@@ -42,7 +42,7 @@ class Individual:
             plt.legend()
             plt.show()
 
-    def score_fitness(self, fitness_func, medium=None):
+    def score_fitness(self, fitness_func, medium=None, pfba=False):
         if medium is None:
             self.culture.set_medium(self.chromosome.to_medium(self.medium_volume))
         else:
@@ -52,7 +52,7 @@ class Individual:
         self.register_data_watcher(data_watcher)
 
         for i in range(math.floor(self.simulation_time / self.timestep)):
-            if not self.culture.update_biomass(self.timestep):
+            if not self.culture.update_biomass(self.timestep, pfba):
                 break
 
         fitness_func()
@@ -73,9 +73,9 @@ class Individual:
                 break
         self.data_watcher.set_fitness(round(fitness, 6))
 
-    def get_fitness(self):
+    def get_fitness(self, pfba=False):
         if self.data_watcher.get_fitness() == None:
-            self.score_fitness(fitness_func=self.fitness_function)
+            self.score_fitness(fitness_func=self.fitness_function, pfba=pfba)
         return self.data_watcher.get_fitness()
 
     def __lt__(self, other):
