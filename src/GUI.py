@@ -155,11 +155,11 @@ class SetupPage(tk.Frame):
         self.info_image = tk.PhotoImage(file="U:/Bilder/info.gif")
 
         ttk.Label(self, text="Setup Run", style='bigger.TLabel').grid(row=0, column=1)
-        ttk.Label(self, text="Run Name:", style='big.TLabel').grid(row=1, column=0)
+        ttk.Label(self, text="Run Name:", style='big.TLabel').grid(row=1, column=0, sticky='w')
         ttk.Separator(self, orient="horizontal").grid(row=2, columnspan=5, sticky='ew')
-        ttk.Label(self, text="Bacteria:", style='big.TLabel').grid(row=3, column=0)
+        ttk.Label(self, text="Bacteria:", style='big.TLabel').grid(row=3, column=0, sticky='w')
         self.add_bacteria_button = ttk.Button(self, text="Add Bacteria", image=self.bacteria_image, compound="left", command=lambda :new_bacteria(parent, controller, self))
-        self.add_bacteria_button.grid(row=3+len(self.widgets), column=0)
+        self.add_bacteria_button.grid(row=4+len(self.widgets), column=0)
         ttk.Separator(self, orient="horizontal").grid(row=989, columnspan=5, sticky='ew')
         ttk.Label(self, text="General Settings:", style='big.TLabel').grid(row=990, column=0)
         ttk.Label(self, text="Number of CPUs:").grid(row=991, column=0, sticky='w')
@@ -169,13 +169,13 @@ class SetupPage(tk.Frame):
         ttk.Label(self, text="Population size:").grid(row=995, column=0, sticky='w')
         ttk.Label(self, text="Iterations:").grid(row=996, column=0, sticky='w')
         ttk.Label(self, text="Output directory:").grid(row=997, column=0, sticky='w')
-        ttk.Label(self, text="pFBA").grid(row=998, column=0, sticky='w')
+        ttk.Label(self, text="pFBA:").grid(row=998, column=0, sticky='w')
         ttk.Separator(self, orient="horizontal").grid(row=999, columnspan=5, sticky='ew')
         ttk.Button(self, text="Start Run", image=self.start_image, command=lambda :start(self), compound="left").grid(row=1000, column=0)
         ttk.Button(self, text="Exit", command=_quit).grid(row=1000, column=1)
         #ttk.Button(self, text="Test", command=lambda :controller.show_frame(RunPage)).grid(row=1000, column=2)
-        ttk.Button(self, image=self.file_image, command=lambda: choose_directory(self.entry_output)).grid(row=996, column=2, sticky='w')
-        ttk.Button(self, image=self.info_image).grid(row=997, column=2, sticky='w')
+        ttk.Button(self, image=self.file_image, command=lambda: choose_directory(self.entry_output)).grid(row=997, column=2, sticky='w')
+        ttk.Button(self, image=self.info_image, command=lambda :tk.messagebox.showinfo("Info pFBA", "pFBA also minimizes the amount of metabolites used. However it takes 2x as long.")).grid(row=998, column=2, sticky='w')
 
         self.entry_run_name = StringEntry(self)
         self.entry_run_name.grid(row=1, column=1)
@@ -207,7 +207,7 @@ class SetupPage(tk.Frame):
         self.radio_button_pfba_no.grid(row=998, column=1, sticky='w')
 
     def update(self):
-        self.add_bacteria_button.grid(row=3 + len(self.widgets), column=0)
+        self.add_bacteria_button.grid(row=4 + len(self.widgets), column=0)
         for i, widget in enumerate(self.widgets):
             widget.grid(row=4+i, column=0, columnspan=6, sticky="nsew")
 
@@ -331,7 +331,7 @@ class RunPage(tk.Frame):
             pass
         if founder is not None:
             self.plot_founder.clear()
-            self.plot_founder.set_xlabel("Time")
+            self.plot_founder.set_xlabel("Time [h]")
             self.plot_founder.set_ylabel("Abundance")
             self.fig2.align_labels(self.plot_founder)
             founder.plot(sub_plot=self.plot_founder)
@@ -375,6 +375,7 @@ class RunObject:
 if __name__ == '__main__':
     bg_blue = "#8f9eb7"
     bg_grey = "#DDDDDD"
+
     app = Application()
 
     style = ttk.Style()
@@ -383,7 +384,6 @@ if __name__ == '__main__':
     style.configure('bigger.TLabel', font=('Helvetica', 18))
     style.configure('bigger.TButton', font=('Helvetica', 18, 'bold'))
     style.configure('TButton', font=('bold'))
-    style.map('checked.TEntry', background=[('invalid', 'red')])
 
     run = RunObject()
 
