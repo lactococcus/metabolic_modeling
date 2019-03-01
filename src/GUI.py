@@ -16,6 +16,8 @@ from matplotlib.figure import Figure
 matplotlib.style.use("ggplot")
 from CustomEntryWidgets import *
 import os.path
+from MediumTreeView import MediumTreeView
+from Medium import Medium
 
 def _quit():
     app.quit()
@@ -149,7 +151,7 @@ class SetupPage(tk.Frame):
 
         self.widgets = []
 
-        self.bacteria_image = tk.PhotoImage(file="U:/Bilder/bacterium.gif").subsample(3)
+        self.bacteria_image = tk.PhotoImage(file="U:/Bilder/add.gif")
         self.start_image = tk.PhotoImage(file="U:/Bilder/start.gif")
         self.file_image = tk.PhotoImage(file="U:/Bilder/file.gif")
         self.info_image = tk.PhotoImage(file="U:/Bilder/info.gif")
@@ -173,7 +175,7 @@ class SetupPage(tk.Frame):
         ttk.Separator(self, orient="horizontal").grid(row=999, columnspan=5, sticky='ew')
         ttk.Button(self, text="Start Run", image=self.start_image, command=lambda :start(self), compound="left").grid(row=1000, column=0)
         ttk.Button(self, text="Exit", command=_quit).grid(row=1000, column=1)
-        #ttk.Button(self, text="Test", command=lambda :controller.show_frame(RunPage)).grid(row=1000, column=2)
+        ttk.Button(self, text="Test", command=lambda :controller.show_frame(RunPage)).grid(row=1000, column=2)
         ttk.Button(self, image=self.file_image, command=lambda: choose_directory(self.entry_output)).grid(row=997, column=2, sticky='w')
         ttk.Button(self, image=self.info_image, command=lambda :tk.messagebox.showinfo("Info pFBA", "pFBA also minimizes the amount of metabolites used. However it takes 2x as long.")).grid(row=998, column=2, sticky='w')
 
@@ -276,8 +278,8 @@ class RunPage(tk.Frame):
         self.fig2 = Figure(figsize=(4,4), dpi=100)
         self.plot_founder = self.fig2.add_subplot(111)
 
-        self.queue_fitness = Queue(maxsize=2)
-        self.queue_founder = Queue(maxsize=2)
+        self.queue_fitness = Queue(maxsize=3)
+        self.queue_founder = Queue(maxsize=3)
         self.fitness = []
 
         self.canvas1 = FigureCanvasTkAgg(self.fig1, master=self)
@@ -296,6 +298,9 @@ class RunPage(tk.Frame):
 
         self.text = tk.Text(self, state=tk.DISABLED)
         self.text.grid(row=1, column=2)
+
+        self.medium_control = MediumTreeView(self, parent)
+        self.medium_control.grid(row=1, column=3, padx=30, rowspan=4, columnspan=3)
 
     def _draw_fitness(self, i):
         self.canvas1.draw()

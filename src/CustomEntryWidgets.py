@@ -41,6 +41,9 @@ class FloatEntry(AbstactEntry):
         self.last_valid_value = inp
         return True
 
+    def get(self):
+        return float(self.text.get())
+
 class IntEntry(AbstactEntry):
     def __init__(self, *args, **kwargs):
         initial_value = kwargs.pop('initial_value', '1')
@@ -56,6 +59,9 @@ class IntEntry(AbstactEntry):
             return False
         self.last_valid_value = inp
         return True
+
+    def get(self):
+        return int(self.text.get())
 
 class StringEntry(AbstactEntry):
     def __init__(self, *args, **kwargs):

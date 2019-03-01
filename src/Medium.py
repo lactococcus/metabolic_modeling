@@ -95,14 +95,15 @@ class Medium:
 
     def export_medium(medium, file_path):
         file = open(file_path, 'w')
-
+        file.write("volume: " + medium.volume + '\n')
         for c in medium.components:
             file.write(c + ":" + str(medium.components[c]) + "\n")
         file.close()
 
-    def import_medium(file_path, volume):
+    def import_medium(file_path):
         file = open(file_path, 'r')
-
+        volume = file.readline()
+        volume = volume.split(' ')[1]
         components = {}
         for line in file:
             tmp = line.split(":")
