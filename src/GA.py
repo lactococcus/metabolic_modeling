@@ -171,7 +171,7 @@ def run_GA(culture, objective, medium_volume, output_dir, num_essentials, essent
             file.write("Average # Nutrients: %f Founder: %d\n\n" % (average_num_nutrients(population), len(founder.chromosome)))
         callback.graph_page.text.config(state=DISABLED)
 
-        if founder.get_fitness() <= 0.01 * len(founder.culture):
+        if founder.get_fitness() <= 0.02 * len(founder.culture):
             break
 
         if callback.flag:
