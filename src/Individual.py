@@ -29,14 +29,16 @@ class Individual:
             self.get_fitness()
 
         if sub_plot is not None:
+            sub_plot.clear()
             for spec in self.culture.species_list:
                 curve = spec.get_growth_curve()
                 sub_plot.plot(range(len(curve)), curve, label=spec.name)
             sub_plot.legend()
+
         else:
             for spec in self.culture.species_list:
                 curve = spec.get_growth_curve()
-                sub_plot.plot(range(len(curve)), curve, label=spec.name)
+                plt.plot(range(len(curve)), curve, label=spec.name)
             plt.xlabel("Time")
             plt.ylabel("Abundance")
             plt.legend()
@@ -85,3 +87,6 @@ class Individual:
     def register_data_watcher(self, data_watcher):
         self.data_watcher = data_watcher
         self.culture.register_data_watcher(data_watcher)
+
+    def __len__(self):
+        return len(self.culture)

@@ -54,6 +54,7 @@ def average_num_nutrients(population):
     return round(average, 3)
 
 def minimize_medium(individual):
+    """removes unused components from the medium"""
     ref_medium = individual.chromosome.to_medium(individual.medium_volume).get_components()
     size_before = len(ref_medium)
     #individual.score_fitness()
@@ -70,12 +71,35 @@ def minimize_medium(individual):
                 if timepoint < start:
                     min_medium[key] = ref_medium[key]
                     break
-                start = timepoint
+                #start = timepoint
     #med.plot_nutrients_over_time()
     size_after = len(min_medium)
     print("Before: " + str(size_before) + " After: " + str(size_after))
 
     return Medium.from_dict(min_medium, individual.medium_volume)
+
+def minimize_medium2(individual, medium, threshold):
+    original = medium.copy()
+    med = original.copy()
+    #original.print_content()
+    print(len(original))
+    individual.score_fitness(individual.fitness_function, medium=med)
+    old_fitness = individual.get_fitness()
+    print("old fitness: %f" % old_fitness)
+
+    for component in medium.get_components():
+        med = original.copy()
+        med.remove_component(component)
+        individual.score_fitness(individual.fitness_function, medium=med)
+        new_fitness = individual.get_fitness()
+        print(component)
+        print("New fitness: %f diff: %f\n" % (new_fitness, new_fitness - old_fitness))
+        if new_fitness < 0.0:
+            continue
+        if (new_fitness - old_fitness) <= threshold * len(individual):
+            original.remove_component(component)
+    print("Now: %d" % len(original))
+    return original
 
 def generate_population(founder, pop_size, cpu_count, proc_num, queue=None, pfba=False):
     population = []
@@ -167,8 +191,8 @@ def run_GA(culture, objective, medium_volume, output_dir, num_essentials, essent
             for spec in founder.culture.species_list:
                 callback.graph_page.text.insert(END, "%s : %d : %f\n" % (spec.name, spec.get_abundance(), spec.get_abundance() / total))
                 file.write("%s : %d : %f\n" % (spec.name, spec.get_abundance(), spec.get_abundance() / total))
-            callback.graph_page.text.insert(END, "Average # Nutrients: %f Founder: %d\n\n" % (average_num_nutrients(population), len(founder.chromosome)))
-            file.write("Average # Nutrients: %f Founder: %d\n\n" % (average_num_nutrients(population), len(founder.chromosome)))
+            #callback.graph_page.text.insert(END, "Average # Nutrients: %f Founder: %d\n\n" % (average_num_nutrients(population), len(founder.chromosome)))
+            #file.write("Average # Nutrients: %f Founder: %d\n\n" % (average_num_nutrients(population), len(founder.chromosome)))
         callback.graph_page.text.config(state=DISABLED)
 
         if founder.get_fitness() <= 0.02 * len(founder.culture):
@@ -179,15 +203,18 @@ def run_GA(culture, objective, medium_volume, output_dir, num_essentials, essent
 
     callback.update_graphs()
 
-    if not callback.flag:
-        callback.graph_page.text.config(state=NORMAL)
-        callback.graph_page.text.insert(END, "Finished")
-        callback.graph_page.text.config(state=DISABLED)
-
     founder.chromosome.export_chromosome("%s/chromosome_%s.txt" % (output_dir, suffix))
 
     medium = minimize_medium(founder)
-    Medium.export_medium(medium, "%s/medium_minimized_%s.txt" % (output_dir, suffix))
+    #medium.print_content()
+    small_medium = minimize_medium2(founder, medium, 0.01)
+    Medium.export_medium(small_medium, "%s/medium_minimized_%s.txt" % (output_dir, suffix))
+
+    callback.graph_page.text.config(state=NORMAL)
+    callback.graph_page.text.insert(END, "Finished")
+    callback.graph_page.text.config(state=DISABLED)
+
+    callback.graph_page.medium_control.add_medium(small_medium)
 
     return medium
 

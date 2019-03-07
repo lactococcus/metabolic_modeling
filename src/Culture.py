@@ -63,21 +63,25 @@ class Culture:
 
         solutions = []
 
-        threads = [threading.Thread(target=self._update_biomass, args=(i, species, solutions, timestep, pfba)) for i, species in
-                     enumerate(self.species_list)]
+        if len(self.species_list) >= 4:
 
-        for thread in threads:
-            thread.start()
+            threads = [threading.Thread(target=self._update_biomass, args=(i, species, solutions, timestep, pfba)) for i, species in
+                         enumerate(self.species_list)]
 
-        for thread in threads:
-            thread.join()
-        '''
-        for i, species in enumerate(self.species_list):
-            for component in self.rations:
-                components[component] = self.rations[component][i]
-            solution = self.species[species.name].optimize(Medium.from_dict(components, self.medium.volume), timestep)
-            solutions.append(solution)
-        '''
+            for thread in threads:
+                thread.start()
+
+            for thread in threads:
+                thread.join()
+
+        else:
+            components = {}
+            for i, species in enumerate(self.species_list):
+                for component in self.rations:
+                    components[component] = self.rations[component][i]
+                solution = self.species[species.name].optimize(Medium.from_dict(components, self.medium.volume), timestep, pfba)
+                solutions.append(solution)
+
         counter = 0
         if len(solutions) != len(self.species_list):
             print("Not all Speciesa have a Solution in FBA")

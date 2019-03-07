@@ -16,7 +16,7 @@ class Chromosome:
 
         for i, bool in enumerate(self.chromosome):
             if bool:
-                med_dict[self.index_to_names[i]] = 10.0 * volume
+                med_dict[self.index_to_names[i]] = 1000.0 * volume
 
         return Medium.from_dict(med_dict, volume)
 
