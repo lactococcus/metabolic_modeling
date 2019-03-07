@@ -277,36 +277,49 @@ class RunPage(tk.Frame):
         self.plot_fitness = self.fig1.add_subplot(111)
         self.fig2 = Figure(figsize=(4,4), dpi=100)
         self.plot_founder = self.fig2.add_subplot(111)
+        self.fig3 = Figure(figsize=(4, 4), dpi=100)
+        self.plot_test_medium = self.fig3.add_subplot(111)
 
-        self.queue_fitness = Queue(maxsize=3)
-        self.queue_founder = Queue(maxsize=3)
+        self.queue_fitness = Queue(maxsize=2)
+        self.queue_founder = Queue(maxsize=2)
         self.fitness = []
 
         self.canvas1 = FigureCanvasTkAgg(self.fig1, master=self)
         self.canvas2 = FigureCanvasTkAgg(self.fig2, master=self)
+        self.canvas3 = FigureCanvasTkAgg(self.fig3, master=self)
         self.canvas1.draw()
         self.canvas2.draw()
+        self.canvas3.draw()
         self.canvas1.get_tk_widget().grid(row=1, column=0, padx=10)
         self.canvas2.get_tk_widget().grid(row=4, column=0, padx=10)
+        self.canvas3.get_tk_widget().grid(row=4, column=2, padx=10)
+
 
         ttk.Label(self, text="Fitness:", style='big.TLabel').grid(row=0, column=0)
         ttk.Label(self, text="Current Best:", style='big.TLabel').grid(row=3, column=0)
+        ttk.Label(self, text="Minimized Medium:", style='big.TLabel').grid(row=3, column=2)
         ttk.Button(self, text="Back", command=quit_and_back).grid(row=0, column=1)
 
         self.anim_fitness = animation.FuncAnimation(self.fig1, self._draw_fitness, interval=2000)
         self.anim_founder = animation.FuncAnimation(self.fig2, self._draw_founder, interval=2000)
+        self.anim_medium = animation.FuncAnimation(self.fig3, self._draw_medium, interval=2000)
 
         self.text = tk.Text(self, state=tk.DISABLED)
         self.text.grid(row=1, column=2)
 
-        self.medium_control = MediumTreeView(self, parent)
-        self.medium_control.grid(row=1, column=3, padx=30, rowspan=4, columnspan=3)
+        #medium = Medium.import_medium("U:\Masterarbeit\GA_Results\medium_minimized_9901.txt")
+        self.medium_control = MediumTreeView(self, parent, run_object=run)
+        #self.medium_control.add_medium(medium)
+        self.medium_control.grid(row=1, column=3, padx=30, rowspan=4, columnspan=3, sticky='n')
 
     def _draw_fitness(self, i):
         self.canvas1.draw()
 
     def _draw_founder(self, i):
         self.canvas2.draw()
+
+    def _draw_medium(self, i):
+        self.canvas3.draw()
 
     def __getstate__(self):
         return (self.plot_fitness, self.plot_founder, self.fig1, self.fig2, self.canvas1, self.canvas2, self.fitness)
@@ -323,10 +336,10 @@ class RunPage(tk.Frame):
         if fit is not None:
             self.fitness.append(fit)
             self.plot_fitness.clear()
+            self.plot_fitness.plot(range(len(self.fitness)), self.fitness)
             self.plot_fitness.set_xlabel("Iteration")
             self.plot_fitness.set_ylabel("Fitness")
             self.fig1.align_labels(self.plot_fitness)
-            self.plot_fitness.plot(range(len(self.fitness)), self.fitness)
 
     def update_founder_plot(self):
         founder = None
@@ -335,11 +348,10 @@ class RunPage(tk.Frame):
         except queue.Empty:
             pass
         if founder is not None:
-            self.plot_founder.clear()
+            founder.plot(sub_plot=self.plot_founder)
             self.plot_founder.set_xlabel("Time [h]")
             self.plot_founder.set_ylabel("Abundance")
             self.fig2.align_labels(self.plot_founder)
-            founder.plot(sub_plot=self.plot_founder)
 
 class RunObject:
     def __init__(self):
@@ -381,6 +393,8 @@ if __name__ == '__main__':
     bg_blue = "#8f9eb7"
     bg_grey = "#DDDDDD"
 
+    run = RunObject()
+
     app = Application()
 
     style = ttk.Style()
@@ -389,7 +403,5 @@ if __name__ == '__main__':
     style.configure('bigger.TLabel', font=('Helvetica', 18))
     style.configure('bigger.TButton', font=('Helvetica', 18, 'bold'))
     style.configure('TButton', font=('bold'))
-
-    run = RunObject()
 
     app.mainloop()

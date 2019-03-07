@@ -1,4 +1,4 @@
-import copy
+from copy import deepcopy
 import matplotlib.pyplot as plt
 
 class StockMedium:
@@ -36,6 +36,15 @@ class Medium:
             for component in self.stock.components:
                 self.components[component] = self.stock.components[component] * self.volume
                 self.components_over_time[component] = [self.stock.components[component] * self.volume]
+
+    def copy(self):
+        medium = Medium(None, 0.0)
+        medium.stock = self.stock
+        medium.volume = self.volume
+        medium.components = deepcopy(self.components)
+        medium.components_over_time = deepcopy(self.components_over_time)
+        medium.time = deepcopy(self.time)
+        return medium
 
     def from_dict(components_as_dict, volume_in_litre):
         """creates a medium from a dictionary containing component names as keys and amounts as values"""
@@ -90,23 +99,23 @@ class Medium:
 
     def print_content(self):
         for component in self.components:
-            print(component + ": " + str(round(self.components[component], 3)) + " mmol")
+            print("%s: %f mmol" % (component, self.components[component]))
         print()
 
     def export_medium(medium, file_path):
         file = open(file_path, 'w')
-        file.write("volume: " + medium.volume + '\n')
+        file.write("volume;%f\n" % medium.volume)
         for c in medium.components:
-            file.write(c + ":" + str(medium.components[c]) + "\n")
+            file.write("%s;%f\n" % (c, medium.components[c]))
         file.close()
 
     def import_medium(file_path):
         file = open(file_path, 'r')
         volume = file.readline()
-        volume = volume.split(' ')[1]
+        volume = volume.split(';')[1]
         components = {}
         for line in file:
-            tmp = line.split(":")
+            tmp = line.split(";")
             components[tmp[0]] = float(tmp[1])
         file.close()
         return Medium.from_dict(components, volume)

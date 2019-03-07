@@ -2,15 +2,11 @@ from copy import deepcopy
 
 class DataWatcher:
     def __init__(self):
-        self.data = {"species": {}, "individual": None, "medium": {}}
+        self.data = {"species": {}, "individual": None}
 
     def init_data_watcher(self, individual):
         self.init_species(individual.culture.species_list)
-        self.init_medium()
         self.init_individual()
-
-    def init_medium(self):
-        pass
 
     def init_species(self, specs):
         for spec in specs:
@@ -45,8 +41,7 @@ class DataWatcher:
 
     def create_new_watcher(data_watcher):
         new_watcher = DataWatcher()
-        new_watcher.init_individual()
-        new_watcher.init_medium()
+        #new_watcher.init_individual()
         new_watcher.data["species"] = deepcopy(data_watcher.data["species"])
         for key in new_watcher.data["species"]:
             new_watcher.data["species"][key][1] = [new_watcher.data["species"][key][0]]
