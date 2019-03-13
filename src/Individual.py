@@ -5,7 +5,7 @@ import math
 
 
 class Individual:
-    def __init__(self, culture, chromosome, objective, medium_volume, simulation_time=24, timestep=1, data_watcher=None):
+    def __init__(self, culture, chromosome, objective, medium_volume, simulation_time=24, timestep=1, data_watcher=None, enforce_growth=True, oxigen=True):
         self.culture = culture
         self.chromosome = chromosome
         self.objective = objective
@@ -16,10 +16,14 @@ class Individual:
 
         if data_watcher == None:
             data_watcher = DataWatcher()
+            data_watcher.set_oxigen(oxigen)
+            data_watcher.set_enforce_growth(enforce_growth)
             self.register_data_watcher(data_watcher)
             self.data_watcher.init_data_watcher(self)
         else:
             data_watcher2 = DataWatcher.create_new_watcher(data_watcher)
+            data_watcher2.set_oxigen(oxigen)
+            data_watcher2.set_enforce_growth(enforce_growth)
             self.register_data_watcher(data_watcher2)
 
     def plot(self, medium=None, sub_plot=None):
@@ -68,9 +72,8 @@ class Individual:
             init_abundance = self.data_watcher.get_init_abundance(spec_name)
             abundance = self.data_watcher.get_abundance(spec_name)
             rel_abundance = abundance / total_abundance
-            if abundance > init_abundance:
-                fitness += abs(self.objective[spec_name] - rel_abundance) * 100
-            else:
+            fitness += abs(self.objective[spec_name] - rel_abundance) * 100
+            if abundance <= init_abundance and not self.data_watcher.get_enforce_growth():
                 fitness = -1.0
                 break
         self.data_watcher.set_fitness(round(fitness, 6))
