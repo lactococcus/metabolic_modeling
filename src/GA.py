@@ -101,7 +101,7 @@ def minimize_medium2(individual, medium, threshold):
     print("Now: %d" % len(original))
     return original
 
-def generate_population(founder, pop_size, cpu_count, proc_num, queue=None, pfba=False):
+def generate_population(founder, pop_size, cpu_count, proc_num, queue=None, pfba=False, enforce_growth=True, oxigen=True):
     population = []
     population_size = 0
 
@@ -114,7 +114,7 @@ def generate_population(founder, pop_size, cpu_count, proc_num, queue=None, pfba
         chromosome = Chromosome(founder.chromosome.index_to_names, founder.chromosome.num_essentials)
         chromosome.chromosome = deepcopy(founder.chromosome.chromosome)
         chromosome.mutate_with_chance(0.01)
-        individual = Individual(founder.culture, chromosome, founder.objective, founder.medium_volume, founder.simulation_time, founder.timestep, founder.data_watcher)
+        individual = Individual(founder.culture, chromosome, founder.objective, founder.medium_volume, founder.simulation_time, founder.timestep, founder.data_watcher, enforce_growth, oxigen)
         #print(individual.get_fitness())
         if individual.get_fitness(pfba) >= 0.0:
             population.append(individual)
@@ -124,7 +124,7 @@ def generate_population(founder, pop_size, cpu_count, proc_num, queue=None, pfba
 
     queue.put(population)
 
-def run_GA(culture, objective, medium_volume, output_dir, num_essentials, essential_nutrients, queue_fitness, queue_founder, pipe, num_cpu=1, simulation_time=12, timestep=1, pop_size=50, iter=10, suffix="", pfba=False):
+def run_GA(culture, objective, medium_volume, output_dir, num_essentials, essential_nutrients, queue_fitness, queue_founder, pipe, num_cpu=1, simulation_time=12, timestep=1, pop_size=50, iter=10, suffix="", pfba=False, enforce_growth=True, oxigen=True):
 
     info_file_path = "%s/run_info_%s.txt" % (output_dir, suffix)
     callback = pipe
@@ -148,7 +148,7 @@ def run_GA(culture, objective, medium_volume, output_dir, num_essentials, essent
         res = Queue()
 
         if num_cpu > 1:
-            processes = [Process(target=generate_population, args=(founder, pop_size, num_cpu, x, res, pfba)) for x in range(num_cpu)]
+            processes = [Process(target=generate_population, args=(founder, pop_size, num_cpu, x, res, pfba, enforce_growth, oxigen)) for x in range(num_cpu)]
             #processes = [(mp.Process(target=test, args=(res, x))) for x in range(10)]
 
             for process in processes:
@@ -165,7 +165,7 @@ def run_GA(culture, objective, medium_volume, output_dir, num_essentials, essent
                 #process.terminate()
             #print("joined")
         else:
-            generate_population(founder, pop_size, num_cpu, 0, res)
+            generate_population(founder, pop_size, num_cpu, 0, res, pfba, enforce_growth, oxigen)
             population.append(res.get())
 
         population = list(itertools.chain.from_iterable(population))
@@ -191,7 +191,7 @@ def run_GA(culture, objective, medium_volume, output_dir, num_essentials, essent
             for spec in founder.culture.species_list:
                 callback.graph_page.text.insert(END, "%s : %d : %f\n" % (spec.name, spec.get_abundance(), spec.get_abundance() / total))
                 file.write("%s : %d : %f\n" % (spec.name, spec.get_abundance(), spec.get_abundance() / total))
-            #callback.graph_page.text.insert(END, "Average # Nutrients: %f Founder: %d\n\n" % (average_num_nutrients(population), len(founder.chromosome)))
+            callback.graph_page.text.insert(END, "Founder: %d\n\n" % len(founder.chromosome))
             #file.write("Average # Nutrients: %f Founder: %d\n\n" % (average_num_nutrients(population), len(founder.chromosome)))
         callback.graph_page.text.config(state=DISABLED)
 
