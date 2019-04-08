@@ -63,7 +63,7 @@ class Culture:
 
         solutions = []
 
-        if len(self.species_list) >= 4:
+        if len(self.species_list) >= 2:
 
             threads = [threading.Thread(target=self._update_biomass, args=(i, species, solutions, timestep, pfba)) for i, species in
                          enumerate(self.species_list)]

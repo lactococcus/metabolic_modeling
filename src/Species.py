@@ -27,7 +27,7 @@ class Species:
 
         try:
             if pfba:
-                solution = cobra.flux_analysis.pfba(self.model)
+                solution = cobra.flux_analysis.pfba(self.model, reactions=self.model.exchanges)
             else:
                 solution = self.model.optimize(objective_sense='maximize', raise_error=True)
         except OptimizationError:

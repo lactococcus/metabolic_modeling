@@ -1,7 +1,7 @@
 from Culture import Culture
 from Medium import *
 from Species import Species
-from Chromosome import Chromosome
+from Chromosome import *
 from Individual import Individual
 from multiprocessing import Process, Queue
 import itertools
@@ -111,8 +111,7 @@ def generate_population(founder, pop_size, cpu_count, proc_num, queue=None, pfba
         population_size = pop_size // cpu_count
 
     for i in range(population_size):
-        chromosome = Chromosome(founder.chromosome.index_to_names, founder.chromosome.num_essentials)
-        chromosome.chromosome = deepcopy(founder.chromosome.chromosome)
+        chromosome = founder.chromosome.copy()
         chromosome.mutate_with_chance(0.01)
         individual = Individual(founder.culture, chromosome, founder.objective, founder.medium_volume, founder.simulation_time, founder.timestep, founder.data_watcher, enforce_growth, oxigen)
         #print(individual.get_fitness())
@@ -124,24 +123,24 @@ def generate_population(founder, pop_size, cpu_count, proc_num, queue=None, pfba
 
     queue.put(population)
 
-def run_GA(culture, objective, medium_volume, output_dir, num_essentials, essential_nutrients, queue_fitness, queue_founder, pipe, num_cpu=1, simulation_time=12, timestep=1, pop_size=50, iter=10, suffix="", pfba=False, enforce_growth=True, oxigen=True):
+def run_GA(culture, objective, medium_volume, output_dir, num_essentials, essential_nutrients, queue_fitness, queue_founder, callback=None, num_cpu=1, simulation_time=12, timestep=1, pop_size=50, iter=10, suffix="", pfba=False, enforce_growth=True, oxigen=True):
 
     info_file_path = "%s/run_info_%s.txt" % (output_dir, suffix)
-    callback = pipe
 
-    if callback.flag:
+    if callback is not None and callback.flag:
         return
 
     dicts = generate_dicts(culture.species_list, essential_nutrients)
     names_to_index = dicts[0]
     index_to_names = dicts[1]
 
-    founder = Individual(culture, Chromosome(index_to_names, num_essentials), objective, medium_volume, simulation_time, timestep, culture.data_watcher)
+    founder = Individual(culture, Chromosome_Quantitative(index_to_names, names_to_index, num_essentials), objective, medium_volume, simulation_time, timestep, culture.data_watcher)
     founder.chromosome.initialize_all_true()
 
-    queue_fitness.put(founder.get_fitness(pfba))
-    queue_founder.put(founder)
-    callback.update_graphs()
+    if callback is not None:
+        queue_fitness.put(founder.get_fitness(pfba))
+        queue_founder.put(founder)
+        callback.update_graphs()
 
     for i in range(iter):
         population = []
@@ -175,9 +174,10 @@ def run_GA(culture, objective, medium_volume, output_dir, num_essentials, essent
 
         founder.register_data_watcher(founder.data_watcher)
 
-        queue_founder.put(founder)
-        queue_fitness.put(founder.get_fitness())
-        callback.update_graphs()
+        if callback is not None:
+            queue_founder.put(founder)
+            queue_fitness.put(founder.get_fitness())
+            callback.update_graphs()
 
         callback.graph_page.text.config(state=NORMAL)
         with open(info_file_path, 'a') as file:
@@ -195,26 +195,27 @@ def run_GA(culture, objective, medium_volume, output_dir, num_essentials, essent
             #file.write("Average # Nutrients: %f Founder: %d\n\n" % (average_num_nutrients(population), len(founder.chromosome)))
         callback.graph_page.text.config(state=DISABLED)
 
-        if founder.get_fitness() <= 0.02 * len(founder.culture):
+        if founder.get_fitness() <= 0.00002 * len(founder.culture):
             break
 
-        if callback.flag:
+        if callback is not None and callback.flag:
             break
 
-    callback.update_graphs()
+    if callback is not None:
+       callback.update_graphs()
 
     founder.chromosome.export_chromosome("%s/chromosome_%s.txt" % (output_dir, suffix))
 
     medium = minimize_medium(founder)
-    #medium.print_content()
-    small_medium = minimize_medium2(founder, medium, 0.01)
-    Medium.export_medium(small_medium, "%s/medium_minimized_%s.txt" % (output_dir, suffix))
+    #small_medium = minimize_medium2(founder, medium, 0.01)
+    #Medium.export_medium(small_medium, "%s/medium_minimized_%s.txt" % (output_dir, suffix))
 
-    callback.graph_page.text.config(state=NORMAL)
-    callback.graph_page.text.insert(END, "Finished")
-    callback.graph_page.text.config(state=DISABLED)
+    if callback is not None:
+        callback.graph_page.text.config(state=NORMAL)
+        callback.graph_page.text.insert(END, "Finished")
+        callback.graph_page.text.config(state=DISABLED)
 
-    callback.graph_page.medium_control.add_medium(small_medium)
+        callback.graph_page.medium_control.add_medium(medium)
 
     return medium
 
