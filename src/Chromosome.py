@@ -1,11 +1,60 @@
 from Medium import Medium
 import random
+from copy import deepcopy
 
 class Chromosome:
-    def __init__(self, index_to_names, num_essentials=0):
-        #self.names_to_index = names_to_index
+    def __init__(self, index_to_names, names_to_index, num_essentials=0):
+        self.names_to_index = names_to_index
         self.index_to_names = index_to_names
         self.num_essentials = num_essentials
+        self.chromosome = None
+
+    def to_medium(self, volume):
+        pass
+
+    def export_chromosome(self, file_path):
+        pass
+
+    def import_chromosome(file_path):
+        pass
+
+    def mutate(self, number_of_mutation):
+        pass
+
+    def deletion(self, number_of_mutation):
+        pass
+
+    def mutate_with_chance(self, mutation_chance):
+        pass
+
+    def delete_with_chance(self, mutation_chance):
+        pass
+
+    def initialize_random(self):
+        pass
+
+    def initialize_all_true(self):
+        pass
+
+    def initialize_medium(self, stock_medium, volume=1.0):
+        pass
+
+    def make_new_chromosome(self):
+        pass
+
+    def copy(self):
+        pass
+
+    def __len__(self):
+        counter = 0
+        for boolean in self.chromosome:
+            if boolean:
+                counter += 1
+        return counter
+
+class Chromosome_Qualitative(Chromosome):
+    def __init__(self, index_to_names, names_to_index, num_essentials=0):
+        Chromosome.__init__(self, index_to_names, names_to_index, num_essentials)
         self.chromosome = [False for i in range(len(self.index_to_names))]
 
         for i in range(self.num_essentials):
@@ -49,7 +98,6 @@ class Chromosome:
             index = random.randrange(self.num_essentials, len(self.chromosome))
             self.chromosome[index] = False
 
-
     def mutate_with_chance(self, mutation_chance):
         for i, bool in enumerate(self.chromosome):
             if i >= self.num_essentials:
@@ -62,16 +110,110 @@ class Chromosome:
 
     def initialize_random(self):
         for i in range(self.num_essentials, len(self.chromosome)):
-            self.chromosome[i] = True if random.random() <= 0.8 else False
+            self.chromosome[i] = True if random.random() <= 0.5 else False
 
     def initialize_all_true(self):
         for i, bool in enumerate(self.chromosome):
             self.chromosome[i] = True
 
+    def initialize_medium(self, stock_medium, volume):
+        medium = stock_medium.create_medium(volume)
+        for component in medium.get_components():
+            if component in self.names_to_index:
+                self.chromosome[self.names_to_index[component]] = True
+
+    def make_new_chromosome(self):
+        chr = Chromosome_Qualitative(self.index_to_names, self.names_to_index, self.num_essentials)
+        return chr
+
+    def copy(self):
+        chr = Chromosome_Qualitative(self.index_to_names, self.names_to_index, self.num_essentials)
+        chr.chromosome = deepcopy(self.chromosome)
+        return chr
+
+class Chromosome_Quantitative(Chromosome):
+    def __init__(self, index_to_names, names_to_index, num_essentials=0):
+        Chromosome.__init__(self, index_to_names, names_to_index, num_essentials)
+        self.chromosome = [1000.0 for i in range(len(self.index_to_names))]
+
+        for i in range(self.num_essentials):
+            self.chromosome[i] = 1000.0
+
+    def to_medium(self, volume):
+        med_dict = {}
+
+        for i, amount in enumerate(self.chromosome):
+            name = self.index_to_names[i]
+            med_dict[name] = amount * volume
+
+        return Medium.from_dict(med_dict, volume)
+
+    def export_chromosome(self, file_path):
+        with open(file_path, 'w') as file:
+            for key in self.index_to_names:
+                file.write("%s:%s:%f\n" % (key, self.index_to_names[key], self.chromosome[int(key)]))
+
+    def import_chromosome(file_path):
+        index_to_names = {}
+        chromosome = []
+        with open(file_path, 'r') as file:
+            for line in file:
+                line = line.strip("\n")
+                words = line.split(":")
+                index_to_names[int(words[0])] = words[1]
+                chromosome.append(float(words[2]))
+        chr = Chromosome(index_to_names)
+        chr.chromosome = chromosome
+        return chr
+
+    def mutate(self, number_of_mutation):
+        for i in range(number_of_mutation):
+            index = random.randrange(self.num_essentials, len(self.chromosome))
+            self.chromosome[index] = round(random.uniform(0.0, 1000.0),1)
+
+    def deletion(self, number_of_mutation):
+        for i in range(number_of_mutation):
+            index = random.randrange(self.num_essentials, len(self.chromosome))
+            self.chromosome[index] = 0.0
+
+    def mutate_with_chance(self, mutation_chance):
+        for i, amount in enumerate(self.chromosome):
+            if i >= self.num_essentials:
+                if random.random() <= mutation_chance:
+                    self.chromosome[i] = round(random.uniform(0.0, 1000.0),1)
+
+    def delete_with_chance(self, mutation_chance):
+        for i, amount in enumerate(self.chromosome):
+            if i >= self.num_essentials:
+                if random.random() <= mutation_chance:
+                    self.chromosome[i] = 0.0
+
+    def initialize_random(self):
+        for i in range(self.num_essentials, len(self.chromosome)):
+            self.chromosome[i] = round(random.uniform(0.0, 1000.0),1)
+
+    def initialize_all_true(self):
+        for i in range(self.num_essentials, len(self.chromosome)):
+            self.chromosome[i] = 1000.0
+
+    def initialize_medium(self, stock_medium, volume):
+        medium = stock_medium.create_medium(volume)
+        for component in medium.get_components():
+            if component in self.names_to_index:
+                self.chromosome[self.names_to_index[component]] = medium.get_components()[component]
+
+    def make_new_chromosome(self):
+        chr = Chromosome_Quantitative(self.index_to_names, self.names_to_index, self.num_essentials)
+        return chr
+
+    def copy(self):
+        chr = Chromosome_Quantitative(self.index_to_names, self.names_to_index, self.num_essentials)
+        chr.chromosome = deepcopy(self.chromosome)
+        return chr
+
     def __len__(self):
         counter = 0
-        for boolean in self.chromosome:
-            if boolean:
+        for amount in self.chromosome:
+            if amount != 0.0:
                 counter += 1
         return counter
-

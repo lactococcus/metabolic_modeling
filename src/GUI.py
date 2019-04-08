@@ -179,7 +179,7 @@ class SetupPage(tk.Frame):
         ttk.Separator(self, orient="horizontal").grid(row=991, columnspan=5, sticky='ew')
         ttk.Button(self, text="Start Run", image=self.start_image, command=lambda :start(self), compound="left").grid(row=1000, column=0)
         ttk.Button(self, text="Exit", command=_quit).grid(row=1000, column=1)
-        ttk.Button(self, text="Test", command=lambda :controller.show_frame(RunPage)).grid(row=1000, column=2)
+        #ttk.Button(self, text="Test", command=lambda :controller.show_frame(RunPage)).grid(row=1000, column=2)
         ttk.Button(self, image=self.file_image, command=lambda: choose_directory(self.entry_output)).grid(row=987, column=2, sticky='w')
         ttk.Button(self, image=self.info_image, command=lambda :tk.messagebox.showinfo("Info pFBA", "pFBA also minimizes the amount of metabolites used. However it takes 2x as long.")).grid(row=988, column=2, sticky='w')
 
@@ -213,16 +213,18 @@ class SetupPage(tk.Frame):
         self.radio_button_pfba_no.grid(row=988, column=1, sticky='w')
 
         self.var_growth = tk.IntVar()
-        self.radio_button_pfba_no = ttk.Radiobutton(self, text="No", variable=self.var_growth, value=0)
-        self.radio_button_pfba_no.grid(row=989, column=1, sticky='w')
-        self.radio_button_pfba_yes = ttk.Radiobutton(self, text="Yes", variable=self.var_growth, value=1)
-        self.radio_button_pfba_yes.grid(row=989, column=1, sticky='e')
+        self.var_growth.set(1)
+        self.radio_button_growth_no = ttk.Radiobutton(self, text="No", variable=self.var_growth, value=0)
+        self.radio_button_growth_no.grid(row=989, column=1, sticky='w')
+        self.radio_button_growth_yes = ttk.Radiobutton(self, text="Yes", variable=self.var_growth, value=1)
+        self.radio_button_growth_yes.grid(row=989, column=1, sticky='e')
 
         self.var_oxigen = tk.IntVar()
-        self.radio_button_pfba_no = ttk.Radiobutton(self, text="No", variable=self.var_oxigen, value=0)
-        self.radio_button_pfba_no.grid(row=990, column=1, sticky='w')
-        self.radio_button_pfba_yes = ttk.Radiobutton(self, text="Yes", variable=self.var_oxigen, value=1)
-        self.radio_button_pfba_yes.grid(row=990, column=1, sticky='e')
+        self.var_oxigen.set(1)
+        self.radio_button_oxigen_no = ttk.Radiobutton(self, text="No", variable=self.var_oxigen, value=0)
+        self.radio_button_oxigen_no.grid(row=990, column=1, sticky='w')
+        self.radio_button_oxigen_yes = ttk.Radiobutton(self, text="Yes", variable=self.var_oxigen, value=1)
+        self.radio_button_oxigen_yes.grid(row=990, column=1, sticky='e')
 
     def update(self):
         self.add_bacteria_button.grid(row=4 + len(self.widgets), column=0)
@@ -296,8 +298,8 @@ class RunPage(tk.Frame):
         self.fig3 = Figure(figsize=(4, 4), dpi=100)
         self.plot_test_medium = self.fig3.add_subplot(111)
 
-        self.queue_fitness = Queue(maxsize=2)
-        self.queue_founder = Queue(maxsize=2)
+        self.queue_fitness = None
+        self.queue_founder = None
         self.fitness = []
 
         self.canvas1 = FigureCanvasTkAgg(self.fig1, master=self)
@@ -354,7 +356,7 @@ class RunPage(tk.Frame):
             self.plot_fitness.clear()
             self.plot_fitness.plot(range(len(self.fitness)), self.fitness)
             self.plot_fitness.set_xlabel("Iteration")
-            self.plot_fitness.set_ylabel("Fitness")
+            self.plot_fitness.set_ylabel("Fitness Score")
             self.fig1.align_labels(self.plot_fitness)
 
     def update_founder_plot(self):
@@ -394,6 +396,8 @@ class RunObject:
         self.graph_page.fitness = []
         self.graph_page.plot_fitness.clear()
         self.graph_page.plot_founder.clear()
+        self.graph_page.queue_fitness = Queue(maxsize=2)
+        self.graph_page.queue_founder = Queue(maxsize=2)
         self.process = Thread(target=run_GA, args=(self.culture, self.objective, self.medium_volume, self.output_dir, self.graph_page.queue_fitness, self.graph_page.queue_founder, self, self.num_cpus, self.sim_time, self.timestep, self.pop_size, self.iterations, self.run_name, self.pfba, self.enforce_growth, self.oxigen))
         self.process.start()
 

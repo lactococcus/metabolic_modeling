@@ -127,4 +127,21 @@ class Medium:
         return len(self.components)
 
 
+m9 = {"EX_nh4_e": 1000.0,
+      "EX_cl_e": 1000.0,
+      "EX_na1_e": 1000.0,
+      "EX_mn2_e": 1000.0,
+      "EX_zn2_e": 1000.0,
+      "EX_co2_e": 1000.0,
+      "EX_cu_e": 1000.0,
+      "EX_ca2_e": 1000.0,
+      "EX_mg2_e": 1000.0,
+      "EX_so4_e": 1000.0,
+      "EX_fe3_e": 1000.0,
+      "EX_cit_e": 1000.0,
+      "EX_glc__D_e": 1000.0}
+
+M9 = StockMedium(m9)
+
+
 

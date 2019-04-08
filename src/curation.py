@@ -4,49 +4,42 @@ from cobra.flux_analysis import flux_variability_analysis
 from cobra.medium import minimal_medium
 
 
-model = cobra.io.read_sbml_model("U:\Masterarbeit\Genomes\Lactococcus.GFF___FASTA\Lactococcus.xml")
+#model1 = cobra.io.read_sbml_model("U:\Masterarbeit\Lactococcus/reconstuction/Lactococcus_model2.xml")
+#model2 = cobra.io.read_sbml_model("U:\Masterarbeit\Klebsiella/Klebsiella.xml")
+#model3 = cobra.io.read_sbml_model("U:\Masterarbeit\iYL1228.xml")
+model4 = cobra.io.read_sbml_model("U:\Masterarbeit\iNF517.xml")
+#model5 = cobra.io.read_sbml_model("U:/Masterarbeit/Klebsiella/reconstuction/Klebsiella_model.sbml")
 
-#for reaction in model.reactions:
-    #print(reaction.check_mass_balance())
+model = model4
+
+for exchanges in model.reactions:
+    print("%s | %s" % (exchanges.id, exchanges.bounds))
+
+
+
+#for reaction in model.exchanges:
+    #reaction.upper_bound = 1000.0
+    #reaction.lower_bound = -1000.0
+
+#medium = minimal_medium(model, min_objective_value=1.0,minimize_components=True, exports=False, open_exchanges=True)
+#model.medium = medium
+#print(medium)
+#model.optimize()
+#print(model.summary())
 
 '''
-model.reactions.L_LACD2.lower_bound = 0
-model.reactions.L_LACD2.upper_bound = 0
-model.reactions.L_LACD3.lower_bound = 0
-model.reactions.L_LACD3.upper_bound = 0
-'''
-
-reac_lac_transport = Reaction('L_lac')
-reac_lac_exchange = Reaction('EX_lac__L_e')
-lac__L_e = Metabolite('lac__L_e', formula='C3H5O3', name='L-lactate', compartment='e')
-
-model.add_reactions([reac_lac_exchange, reac_lac_transport])
-model.add_metabolites([lac__L_e])
-
-reac_lac_transport.name = 'L-lactate transport'
-reac_lac_transport.upper_bound = 1000.0
-reac_lac_transport.lower_bound = 0.0
-
-reac_lac_transport.add_metabolites({'lac__L_c': -1.0, 'lac__L_e': 1.0})
-
-reac_lac_exchange.name = 'L-lactate exchange'
-reac_lac_exchange.upper_bound = 1000.0
-reac_lac_exchange.lower_bound = -1000.0
-
-reac_lac_exchange.add_metabolites({'lac__L_e': -1.0})
-
+counter = 0
 for reaction in model.reactions:
-    # print(reaction.id, reaction.bounds)
-    if reaction.id[:3] == "EX_":
-        reaction.upper_bound = 1000.0
-        reaction.lower_bound = -1000.0
-
-print(minimal_medium(model,0.001, exports=False, open_exchanges=True))
-
+    balance = reaction.check_mass_balance()
+    if len(balance) == 0:
+        counter += 1
+    print("ID: %s | %s" % (reaction.id, balance))
+print("%d/%d | %2.1f%%" % (counter, len(model.reactions), counter/len(model.reactions)*100))
+'''
 '''
 fva = flux_variability_analysis(model, model.reactions, loopless=True)
 
-file = open("U:\Masterarbeit\Lactococcus\lacto_fva.csv", 'w')
+file = open("U:\Masterarbeit\Klebsiella\kleb_fva.csv", 'w')
 
 file.write("Name;minimum;maximum\n")
 
