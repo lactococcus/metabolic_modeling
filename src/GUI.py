@@ -53,14 +53,14 @@ def add_bacterium(parent, controller, bacterium):
 
 def run_GA(culture, objective, medium_volume, output_dir, queue_fitness, queue_founder,  callback, num_cpus, sim_time, timestep, pop_size, iterations, run_name, pfba=False, enforce_growth=True, oxigen=True):
     print("Finding Essential Nutrients...")
-    num_essentials, essential_nutrients = GA.find_essential_nutrients(culture.species_list, 1)
+    num_essentials, essential_nutrients = GA.find_essential_nutrients(culture.species_list, len(culture.species_list)//2)
     print("Found %d Essential Nutrients!\n" % num_essentials)
 
     GA.run_GA(culture, objective, medium_volume, output_dir, num_essentials, essential_nutrients, queue_fitness, queue_founder, callback, num_cpus, sim_time, timestep, pop_size, iterations, run_name, pfba, enforce_growth, oxigen)
 
 def quit_and_back():
-    run.terminate_process()
     app.show_frame(SetupPage)
+    run.terminate_process()
 
 def start(setup):
 
@@ -192,7 +192,7 @@ class SetupPage(tk.Frame):
         self.entry_medium.set("0.04")
         self.entry_medium.grid(row=982, column=1)
         self.entry_sim_time = IntEntry(self)
-        self.entry_sim_time.set( "24")
+        self.entry_sim_time.set( "48")
         self.entry_sim_time.grid(row=983, column=1)
         self.entry_timestep = FloatEntry(self)
         self.entry_timestep.set("1")

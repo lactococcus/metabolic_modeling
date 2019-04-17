@@ -5,7 +5,6 @@ from Chromosome import *
 from Individual import Individual
 from multiprocessing import Process, Queue
 import itertools
-from cobra.flux_analysis import find_essential_reactions
 from copy import deepcopy
 from matplotlib import pyplot as plt
 from DataWatcher import DataWatcher
@@ -31,6 +30,7 @@ def generate_dicts(species_list, essentials):
     return names_to_index, index_to_names
 
 def find_essential_nutrients(species_list, cpu_count):
+    from cobra.flux_analysis import find_essential_reactions
     essentials = {}
     counter = 0
     for species in species_list:
@@ -135,7 +135,7 @@ def run_GA(culture, objective, medium_volume, output_dir, num_essentials, essent
     index_to_names = dicts[1]
 
     founder = Individual(culture, Chromosome_Quantitative(index_to_names, names_to_index, num_essentials), objective, medium_volume, simulation_time, timestep, culture.data_watcher)
-    founder.chromosome.initialize_all_true()
+    founder.chromosome.initialize_medium(M9_oxic, medium_volume)
 
     if callback is not None:
         queue_fitness.put(founder.get_fitness(pfba))
@@ -195,7 +195,7 @@ def run_GA(culture, objective, medium_volume, output_dir, num_essentials, essent
             #file.write("Average # Nutrients: %f Founder: %d\n\n" % (average_num_nutrients(population), len(founder.chromosome)))
         callback.graph_page.text.config(state=DISABLED)
 
-        if founder.get_fitness() <= 0.00002 * len(founder.culture):
+        if founder.get_fitness() <= 0.001 * len(founder.culture):
             break
 
         if callback is not None and callback.flag:
@@ -207,8 +207,7 @@ def run_GA(culture, objective, medium_volume, output_dir, num_essentials, essent
     founder.chromosome.export_chromosome("%s/chromosome_%s.txt" % (output_dir, suffix))
 
     medium = minimize_medium(founder)
-    #small_medium = minimize_medium2(founder, medium, 0.01)
-    #Medium.export_medium(small_medium, "%s/medium_minimized_%s.txt" % (output_dir, suffix))
+    Medium.export_medium(medium, "%s/medium_minimized_%s.txt" % (output_dir, suffix))
 
     if callback is not None:
         callback.graph_page.text.config(state=NORMAL)

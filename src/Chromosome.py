@@ -45,6 +45,9 @@ class Chromosome:
     def copy(self):
         pass
 
+    def __str__(self):
+        return str(self.chromosome)
+
     def __len__(self):
         counter = 0
         for boolean in self.chromosome:
@@ -58,7 +61,7 @@ class Chromosome_Qualitative(Chromosome):
         self.chromosome = [False for i in range(len(self.index_to_names))]
 
         for i in range(self.num_essentials):
-            self.chromosome[i] = True
+            self.chromosome[i] = False
 
     def to_medium(self, volume):
         med_dict = {}
@@ -134,7 +137,7 @@ class Chromosome_Qualitative(Chromosome):
 class Chromosome_Quantitative(Chromosome):
     def __init__(self, index_to_names, names_to_index, num_essentials=0):
         Chromosome.__init__(self, index_to_names, names_to_index, num_essentials)
-        self.chromosome = [1000.0 for i in range(len(self.index_to_names))]
+        self.chromosome = [0.0 for i in range(len(self.index_to_names))]
 
         for i in range(self.num_essentials):
             self.chromosome[i] = 1000.0
