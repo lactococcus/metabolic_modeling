@@ -1,8 +1,10 @@
 from copy import deepcopy
 import matplotlib.pyplot as plt
 
+
 class StockMedium:
     """ Class for creating a stock solution of a given medium used to create a working medium """
+
     def __init__(self, medium_as_dict={}, volume_in_litre=1.0):
         self.components = medium_as_dict
         self.volume = volume_in_litre
@@ -16,7 +18,7 @@ class StockMedium:
 
     def remove_component(self, id):
         if id in self.components:
-            del(self.components[id])
+            del (self.components[id])
 
     def create_medium(self, volume_in_litre):
         return Medium(self, volume_in_litre)
@@ -24,6 +26,7 @@ class StockMedium:
 
 class Medium:
     """ Class for creating a working medium """
+
     def __init__(self, stock_medium, volume_in_litre):
         self.stock = stock_medium
         self.volume = volume_in_litre
@@ -48,7 +51,7 @@ class Medium:
 
     def from_dict(components_as_dict, volume_in_litre):
         """creates a medium from a dictionary containing component names as keys and amounts as values"""
-        medium = Medium(None,volume_in_litre)
+        medium = Medium(None, volume_in_litre)
         medium.components = components_as_dict
         for comp in medium.components:
             medium.components_over_time[comp] = [medium.components[comp]]
@@ -58,7 +61,7 @@ class Medium:
         """updates the medium components after doing fba"""
         self.time += 1
         for i in range(len(fluxes_pandas.index)):
-            #print(fluxes_pandas.index[i])
+            # print(fluxes_pandas.index[i])
             key = fluxes_pandas.index[i]
 
             if key[:3] == "EX_":
@@ -72,15 +75,13 @@ class Medium:
                         self.components_over_time[key].append(0)
                     self.components_over_time[key].append(self.components[key])
 
-
     def remove_component(self, component):
         if component in self.components:
-            del(self.components[component])
+            del (self.components[component])
             del (self.components_over_time[component])
             return True
         else:
             return False
-
 
     def get_component(self, id):
         if id in self.components:
@@ -127,21 +128,46 @@ class Medium:
         return len(self.components)
 
 
-m9 = {"EX_nh4_e": 1000.0,
-      "EX_cl_e": 1000.0,
-      "EX_na1_e": 1000.0,
-      "EX_mn2_e": 1000.0,
-      "EX_zn2_e": 1000.0,
-      "EX_co2_e": 1000.0,
-      "EX_cu_e": 1000.0,
-      "EX_ca2_e": 1000.0,
-      "EX_mg2_e": 1000.0,
-      "EX_so4_e": 1000.0,
-      "EX_fe3_e": 1000.0,
-      "EX_cit_e": 1000.0,
-      "EX_glc__D_e": 1000.0}
+m9_anoxic = {"EX_nh4_e": 18.7,
+             "EX_cl_e": 10.0,
+             "EX_na1_e": 10.0,
+             "EX_mn2_e": 0.005,
+             "EX_zn2_e": 0.0125,
+             "EX_cobalt2_e": 0.0025,
+             "EX_cu2_e": 0.0025,
+             "EX_ca2_e": 0.01,
+             "EX_mg2_e": 1.0,
+             "EX_so4_e": 1.0,
+             "EX_fe3_e": 0.005,
+             "EX_fe2_e": 0.005,
+             "EX_h_e": 100.0,
+             "EX_k_e": 100.0,
+             "EX_mobd_e": 0.0025,
+             "EX_ni2_e": 0.0,
+             "EX_pi_e": 10.0,
+             "EX_glc__D_e": 16.65,
+             "EX_h2o_e": 1000.0}
 
-M9 = StockMedium(m9)
+m9_oxic = {"EX_nh4_e": 18.7,
+           "EX_cl_e": 10.0,
+           "EX_na1_e": 10.0,
+           "EX_mn2_e": 0.005,
+           "EX_zn2_e": 0.0125,
+           "EX_cobalt2_e": 0.0025,
+           "EX_cu2_e": 0.0025,
+           "EX_ca2_e": 0.01,
+           "EX_mg2_e": 1.0,
+           "EX_so4_e": 1.0,
+           "EX_fe3_e": 0.005,
+           "EX_fe2_e": 0.005,
+           "EX_h_e": 100.0,
+           "EX_k_e": 100.0,
+           "EX_mobd_e": 0.0025,
+           "EX_ni2_e": 0.0,
+           "EX_pi_e": 10.0,
+           "EX_glc__D_e": 16.65,
+           "EX_h2o_e": 1000.0,
+           "EX_o2_e": 1000.0}
 
-
-
+M9_anoxic = StockMedium(m9_anoxic)
+M9_oxic = StockMedium(m9_oxic)
