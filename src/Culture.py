@@ -103,7 +103,8 @@ class Culture:
             components[component] = self.rations[component][i]
 
         solution = self.species[species.name].optimize(Medium.from_dict(components, self.medium.volume), timestep, pfba)
-        list.append(solution)
+        if solution != None:
+            list.append(solution)
 
     def set_medium(self, medium):
         self.medium = medium

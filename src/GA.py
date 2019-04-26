@@ -101,7 +101,7 @@ def minimize_medium2(individual, medium, threshold):
     print("Now: %d" % len(original))
     return original
 
-def generate_population(founder, pop_size, cpu_count, proc_num, queue=None, pfba=False, enforce_growth=True, oxigen=True):
+def generate_population(founder, pop_size, cpu_count, proc_num, mutation_chance, deletion_chance, queue=None, pfba=False, enforce_growth=True, oxigen=True):
     population = []
     population_size = 0
 
@@ -112,7 +112,10 @@ def generate_population(founder, pop_size, cpu_count, proc_num, queue=None, pfba
 
     for i in range(population_size):
         chromosome = founder.chromosome.copy()
-        chromosome.mutate_with_chance(0.01)
+        if mutation_chance > 0.0:
+            chromosome.mutate_with_chance(mutation_chance)
+        if deletion_chance > 0.0:
+            chromosome.delete_with_chance(deletion_chance)
         individual = Individual(founder.culture, chromosome, founder.objective, founder.medium_volume, founder.simulation_time, founder.timestep, founder.data_watcher, enforce_growth, oxigen)
         #print(individual.get_fitness())
         if individual.get_fitness(pfba) >= 0.0:
@@ -123,98 +126,106 @@ def generate_population(founder, pop_size, cpu_count, proc_num, queue=None, pfba
 
     queue.put(population)
 
-def run_GA(culture, objective, medium_volume, output_dir, num_essentials, essential_nutrients, queue_fitness, queue_founder, callback=None, num_cpu=1, simulation_time=12, timestep=1, pop_size=50, iter=10, suffix="", pfba=False, enforce_growth=True, oxigen=True):
+def run_GA(culture, objective, medium_volume, output_dir, num_essentials, essential_nutrients, queue_fitness, queue_founder, callback=None, num_cpu=1, simulation_time=12, timestep=1, pop_size=50, iter=10, suffix="", pfba=False, enforce_growth=True, oxigen=True, mutation_chance=0.01, deletion_chance=0.0, loop=1):
 
-    info_file_path = "%s/run_info_%s.txt" % (output_dir, suffix)
+    ind_solutions = []
 
-    if callback is not None and callback.flag:
-        return
+    for n in range(loop):
 
-    dicts = generate_dicts(culture.species_list, essential_nutrients)
-    names_to_index = dicts[0]
-    index_to_names = dicts[1]
+        info_file_path = f"{output_dir}/run_info_{suffix}{loop}.txt"
 
-    founder = Individual(culture, Chromosome_Quantitative(index_to_names, names_to_index, num_essentials), objective, medium_volume, simulation_time, timestep, culture.data_watcher)
-    founder.chromosome.initialize_medium(M9_oxic, medium_volume)
+        if callback != None and callback.flag:
+            return
 
-    if callback is not None:
-        queue_fitness.put(founder.get_fitness(pfba))
-        queue_founder.put(founder)
-        callback.update_graphs()
+        dicts = generate_dicts(culture.species_list, essential_nutrients)
+        names_to_index = dicts[0]
+        index_to_names = dicts[1]
 
-    for i in range(iter):
-        population = []
-        res = Queue()
+        founder = Individual(culture, Chromosome_Quantitative(index_to_names, names_to_index, num_essentials), objective, medium_volume, simulation_time, timestep, culture.data_watcher)
+        founder.chromosome.initialize_medium(M9_oxic, medium_volume)
 
-        if num_cpu > 1:
-            processes = [Process(target=generate_population, args=(founder, pop_size, num_cpu, x, res, pfba, enforce_growth, oxigen)) for x in range(num_cpu)]
-            #processes = [(mp.Process(target=test, args=(res, x))) for x in range(10)]
-
-            for process in processes:
-                process.daemon = True
-                process.start()
-            #print("started")
-
-            for process in processes:
-                population.append(res.get())
-            #print("got data")
-
-            for process in processes:
-                process.join()
-                #process.terminate()
-            #print("joined")
-        else:
-            generate_population(founder, pop_size, num_cpu, 0, res, pfba, enforce_growth, oxigen)
-            population.append(res.get())
-
-        population = list(itertools.chain.from_iterable(population))
-
-        population.sort(reverse=True)
-        founder = population[0]
-
-        founder.register_data_watcher(founder.data_watcher)
-
-        if callback is not None:
+        if callback != None:
+            queue_fitness.put(founder.get_fitness(pfba))
             queue_founder.put(founder)
-            queue_fitness.put(founder.get_fitness())
             callback.update_graphs()
 
-        callback.graph_page.text.config(state=NORMAL)
-        with open(info_file_path, 'a') as file:
-            callback.graph_page.text.insert(END, "Iteration: %d Fitness: %f\n" % (i+1, founder.get_fitness()))
-            callback.graph_page.text.insert(END, "Feasible: %d/%d\n" % (len(population),pop_size+1))
-            file.write("Iteration: %d Fitness: %f\n" % (i+1, founder.get_fitness()))
-            file.write("Feasible: %d/%d\n" % (len(population),pop_size+1))
-            total = 0
-            for spec in founder.culture.species_list:
-                total += spec.get_abundance()
-            for spec in founder.culture.species_list:
-                callback.graph_page.text.insert(END, "%s : %d : %f\n" % (spec.name, spec.get_abundance(), spec.get_abundance() / total))
-                file.write("%s : %d : %f\n" % (spec.name, spec.get_abundance(), spec.get_abundance() / total))
-            callback.graph_page.text.insert(END, "Founder: %d\n\n" % len(founder.chromosome))
-            #file.write("Average # Nutrients: %f Founder: %d\n\n" % (average_num_nutrients(population), len(founder.chromosome)))
-        callback.graph_page.text.config(state=DISABLED)
+        for i in range(iter):
+            population = []
+            res = Queue()
 
-        if founder.get_fitness() <= 0.001 * len(founder.culture):
-            break
+            if num_cpu > 1:
+                processes = [Process(target=generate_population, args=(founder, pop_size, num_cpu, x, mutation_chance, deletion_chance, res, pfba, enforce_growth, oxigen)) for x in range(num_cpu)]
+                #processes = [(mp.Process(target=test, args=(res, x))) for x in range(10)]
 
-        if callback is not None and callback.flag:
-            break
+                for process in processes:
+                    process.daemon = True
+                    process.start()
+                #print("started")
 
-    if callback is not None:
-       callback.update_graphs()
+                for process in processes:
+                    population.append(res.get())
+                #print("got data")
 
-    founder.chromosome.export_chromosome("%s/chromosome_%s.txt" % (output_dir, suffix))
+                for process in processes:
+                    process.join()
+                    #process.terminate()
+                #print("joined")
+            else:
+                generate_population(founder, pop_size, num_cpu, 0, res, pfba, enforce_growth, oxigen)
+                population.append(res.get())
 
-    medium = minimize_medium(founder)
-    Medium.export_medium(medium, "%s/medium_minimized_%s.txt" % (output_dir, suffix))
+            population = list(itertools.chain.from_iterable(population))
 
-    if callback is not None:
-        callback.graph_page.text.config(state=NORMAL)
-        callback.graph_page.text.insert(END, "Finished")
-        callback.graph_page.text.config(state=DISABLED)
+            population.sort(reverse=True)
+            founder = population[0]
 
-        callback.graph_page.medium_control.add_medium(medium)
+            founder.register_data_watcher(founder.data_watcher)
+
+            if callback != None:
+                queue_founder.put(founder)
+                queue_fitness.put(founder.get_fitness())
+                callback.update_graphs()
+
+            callback.graph_page.text.config(state=NORMAL)
+            with open(info_file_path, 'a') as file:
+                callback.graph_page.text.insert(END, f"Iteration: {i+1} Fitness: {founder.get_fitness()}\n")
+                callback.graph_page.text.insert(END, f"Feasible: {len(population)}{pop_size+1}\n")
+                file.write(f"Iteration: {i+1} Fitness: {founder.get_fitness()}\n")
+                file.write(f"Feasible: {len(population)}{pop_size+1}\n")
+                total = 0
+                for spec in founder.culture.species_list:
+                    total += spec.get_abundance()
+                for spec in founder.culture.species_list:
+                    callback.graph_page.text.insert(END, f"{spec.name} : {spec.get_abundance()} : {spec.get_abundance() / total}\n")
+                    file.write(f"{spec.name} : {spec.get_abundance()} : {spec.get_abundance() / total}\n")
+                callback.graph_page.text.insert(END, f"Founder: {len(founder.chromosome)}\n\n")
+                #file.write("Average # Nutrients: %f Founder: %d\n\n" % (average_num_nutrients(population), len(founder.chromosome)))
+            callback.graph_page.text.config(state=DISABLED)
+
+            if founder.get_fitness() <= 0.001 * len(founder.culture):
+                break
+
+            if callback != None and callback.flag:
+                break
+
+        if callback != None:
+           callback.update_graphs()
+
+        founder.chromosome.export_chromosome(f"{output_dir}/chromosome_{suffix}{loop}.txt")
+
+        medium = minimize_medium(founder)
+        Medium.export_medium(medium, f"{output_dir}/medium_minimized_{suffix}{loop}.txt")
+
+        if callback is not None:
+            callback.graph_page.text.config(state=NORMAL)
+            callback.graph_page.text.insert(END, "Finished")
+            callback.graph_page.text.config(state=DISABLED)
+
+            callback.graph_page.medium_control.add_medium(medium)
+
+        ind_solutions.append(medium)
+
+
 
     return medium
 

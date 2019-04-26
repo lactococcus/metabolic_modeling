@@ -6,26 +6,22 @@ from cobra.medium import minimal_medium
 
 #model1 = cobra.io.read_sbml_model("U:\Masterarbeit\Lactococcus/reconstuction/Lactococcus_model2.xml")
 #model2 = cobra.io.read_sbml_model("U:\Masterarbeit\Klebsiella/Klebsiella.xml")
-#model3 = cobra.io.read_sbml_model("U:\Masterarbeit\iYL1228.xml")
-model4 = cobra.io.read_sbml_model("U:\Masterarbeit\iNF517.xml")
+#model3 = cobra.io.read_sbml_model("U:\Masterarbeit\Lactococcus\Lactococcus_lactis.xml")
+model4 = cobra.io.read_sbml_model("U:\Masterarbeit\Lactococcus\Lactococcus_lactis_subsp_lactis_Il1403_IL1403.xml")
 #model5 = cobra.io.read_sbml_model("U:/Masterarbeit/Klebsiella/reconstuction/Klebsiella_model.sbml")
 
 model = model4
-
-for exchanges in model.reactions:
-    print("%s | %s" % (exchanges.id, exchanges.bounds))
-
 
 
 #for reaction in model.exchanges:
     #reaction.upper_bound = 1000.0
     #reaction.lower_bound = -1000.0
 
-#medium = minimal_medium(model, min_objective_value=1.0,minimize_components=True, exports=False, open_exchanges=True)
-#model.medium = medium
-#print(medium)
-#model.optimize()
-#print(model.summary())
+medium = minimal_medium(model, min_objective_value=10.0,minimize_components=True, exports=False, open_exchanges=True)
+model.medium = medium
+print(medium)
+model.optimize()
+print(model.summary())
 
 '''
 counter = 0

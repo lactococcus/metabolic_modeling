@@ -22,6 +22,7 @@ from Medium import Medium
 def _quit():
     app.quit()
     app.destroy()
+    run.terminate_process()
     exit(0)
 
 def choose_file(entry):
@@ -37,9 +38,6 @@ def new_bacteria(parent, controller, parent_page):
 
 def add_bacterium(parent, controller, bacterium):
     flag = True
-    bg_right = "white"
-    bg_wrong = "red"
-
     if flag:
         for widget in bacterium.parent_page.widgets:
             if widget.species == bacterium:
@@ -51,12 +49,12 @@ def add_bacterium(parent, controller, bacterium):
         bacterium.parent_page.update()
         bacterium.controller.show_frame(SetupPage)
 
-def run_GA(culture, objective, medium_volume, output_dir, queue_fitness, queue_founder,  callback, num_cpus, sim_time, timestep, pop_size, iterations, run_name, pfba=False, enforce_growth=True, oxigen=True):
+def run_GA(culture, objective, medium_volume, output_dir, queue_fitness, queue_founder,  callback, num_cpus, sim_time, timestep, pop_size, iterations, run_name, pfba, enforce_growth, oxigen, mutation_chance, deletion_chance, repeats):
     print("Finding Essential Nutrients...")
     num_essentials, essential_nutrients = GA.find_essential_nutrients(culture.species_list, len(culture.species_list)//2)
-    print("Found %d Essential Nutrients!\n" % num_essentials)
+    print(f"Found {num_essentials} Essential Nutrients!\n")
 
-    GA.run_GA(culture, objective, medium_volume, output_dir, num_essentials, essential_nutrients, queue_fitness, queue_founder, callback, num_cpus, sim_time, timestep, pop_size, iterations, run_name, pfba, enforce_growth, oxigen)
+    GA.run_GA(culture, objective, medium_volume, output_dir, num_essentials, essential_nutrients, queue_fitness, queue_founder, callback, num_cpus, sim_time, timestep, pop_size, iterations, run_name, pfba, enforce_growth, oxigen, mutation_chance, deletion_chance, repeats)
 
 def quit_and_back():
     app.show_frame(SetupPage)
@@ -65,19 +63,22 @@ def quit_and_back():
 def start(setup):
 
     run.run_name = setup.entry_run_name.get()
-    run.num_cpus = int(setup.entry_cpus.get())
-    run.medium_volume = float(setup.entry_medium.get())
-    run.sim_time = int(setup.entry_sim_time.get())
-    run.timestep = float(setup.entry_timestep.get())
-    run.pop_size = int(setup.entry_pop_size.get())
-    run.iterations = int(setup.entry_iter.get())
+    run.num_cpus = setup.entry_cpus.get()
+    run.medium_volume = setup.entry_medium.get()
+    run.sim_time = setup.entry_sim_time.get()
+    run.timestep = setup.entry_timestep.get()
+    run.pop_size = setup.entry_pop_size.get()
+    run.iterations = setup.entry_iter.get()
     run.output_dir = setup.entry_output.get()
     run.pfba = False if setup.var_pfba.get() is 0 else True
     run.enforce_growth = False if setup.var_growth.get() is 0 else True
     run.oxigen = False if setup.var_oxigen.get() is 0 else True
+    run.mutation_chance = setup.entry_mutation_chance.get()
+    run.deletion_chance = setup.entry_deletion_chance.get()
+    run.repeats = setup.entry_repeats.get()
 
     if not os.path.isdir(run.output_dir):
-        print("'%s' is not a valid directory" % run.output_dir)
+        print(f"'{run.output_dir}' is not a valid directory")
         return
 
     objective = {}
@@ -93,18 +94,20 @@ def start(setup):
         objective[widget.species.entry_name.get()] = float(widget.entry_objective.get())
         model = widget.species.entry_model.get()
         if not os.path.isfile(model):
-            print("Can not find file: %s" % model)
+            print(f"Can not find file: {model}")
             return
-        print("Loading Model of Species: %s" % widget.species.entry_name.get())
+        print(f"Loading Model of Species: {widget.species.entry_name.get()}")
         species = Species(widget.species.entry_name.get(), model, float(widget.species.entry_radius.get()), float(widget.species.entry_dryweight.get()))
         culture.innoculate_species(species, int(widget.species.entry_innoculation.get()))
 
     run.objective = objective
     run.culture = culture
 
-    app.show_frame(RunPage)
+    run_page = RunPage(app.container, app)
+    run_page.grid(row=0, column=0, sticky="nsew")
+    run.graph_page = run_page
 
-    run.graph_page = app.frames[RunPage]
+    run_page.tkraise()
 
     run.start_process()
 
@@ -112,7 +115,7 @@ def start(setup):
 class Application(tk.Tk):
     def __init__(self, *args, **kwargs):
         tk.Tk.__init__(self, *args, **kwargs)
-        self.geometry("500x500")
+        self.geometry("500x600")
         self.iconbitmap("U:/Bilder/icon.ico")
 
         self.title("Bac Co-Med")
@@ -123,7 +126,7 @@ class Application(tk.Tk):
 
         self.frames = {}
 
-        for F in (SetupPage, StartPage, RunPage):
+        for F in (SetupPage, StartPage):
             frame = F(self.container, self)
             self.frames[F] = frame
             frame.grid(row=0, column=0, sticky="nsew")
@@ -132,8 +135,7 @@ class Application(tk.Tk):
 
     def show_frame(self, frame):
         if frame in self.frames:
-            frame = self.frames[frame]
-            frame.tkraise()
+            self.frames[frame].tkraise()
         else:
             print("Frame %s not existing!" % frame)
 
@@ -164,67 +166,90 @@ class SetupPage(tk.Frame):
         ttk.Label(self, text="Bacteria:", style='big.TLabel').grid(row=3, column=0, sticky='w')
         self.add_bacteria_button = ttk.Button(self, text="Add Bacteria", image=self.bacteria_image, compound="left", command=lambda :new_bacteria(parent, controller, self))
         self.add_bacteria_button.grid(row=4+len(self.widgets), column=0)
-        ttk.Separator(self, orient="horizontal").grid(row=979, columnspan=5, sticky='ew')
-        ttk.Label(self, text="General Settings:", style='big.TLabel').grid(row=980, column=0)
-        ttk.Label(self, text="Number of CPUs:").grid(row=981, column=0, sticky='w')
-        ttk.Label(self, text="Medium volume:").grid(row=982, column=0, sticky='w')
-        ttk.Label(self, text="Simulation time:").grid(row=983, column=0, sticky='w')
-        ttk.Label(self, text="Timestep:").grid(row=984, column=0, sticky='w')
-        ttk.Label(self, text="Population size:").grid(row=985, column=0, sticky='w')
-        ttk.Label(self, text="Iterations:").grid(row=986, column=0, sticky='w')
-        ttk.Label(self, text="Output directory:").grid(row=987, column=0, sticky='w')
-        ttk.Label(self, text="pFBA:").grid(row=988, column=0, sticky='w')
-        ttk.Label(self, text="Enforce growth:").grid(row=989, column=0, sticky='w')
-        ttk.Label(self, text="Aerob growth:").grid(row=990, column=0, sticky='w')
-        ttk.Separator(self, orient="horizontal").grid(row=991, columnspan=5, sticky='ew')
+
+        ttk.Separator(self, orient="horizontal").grid(row=678, columnspan=5, sticky='ew')
+        ttk.Label(self, text="General Settings:", style='big.TLabel').grid(row=679, column=0, sticky='w')
+        ttk.Label(self, text="Number of runs: ").grid(row=680, column=0, sticky='w')
+        ttk.Label(self, text="Number of CPUs:").grid(row=681, column=0, sticky='w')
+        ttk.Label(self, text="Output directory:").grid(row=682, column=0, sticky='w')
+        ttk.Separator(self, orient="horizontal").grid(row=699, columnspan=5, sticky='ew')
+
+        ttk.Label(self, text="FBA Settings:", style='big.TLabel').grid(row=700, column=0, sticky='w')
+        ttk.Label(self, text="Medium volume:").grid(row=787, column=0, sticky='w')
+        ttk.Label(self, text="Simulation time:").grid(row=783, column=0, sticky='w')
+        ttk.Label(self, text="Timestep:").grid(row=784, column=0, sticky='w')
+        ttk.Label(self, text="pFBA:").grid(row=788, column=0, sticky='w')
+        ttk.Label(self, text="Enforce growth:").grid(row=789, column=0, sticky='w')
+        ttk.Label(self, text="Aerob growth:").grid(row=790, column=0, sticky='w')
+        ttk.Separator(self, orient="horizontal").grid(row=799, columnspan=5, sticky='ew')
+
+        ttk.Label(self, text="GA Settings:", style='big.TLabel').grid(row=800, column=0, sticky='w')
+        ttk.Label(self, text="Population size:").grid(row=885, column=0, sticky='w')
+        ttk.Label(self, text="Iterations:").grid(row=886, column=0, sticky='w')
+        ttk.Label(self, text="Mutation chance:").grid(row=887, column=0, sticky='w')
+        ttk.Label(self, text="Deletion chance:").grid(row=888, column=0, sticky='w')
+        ttk.Separator(self, orient="horizontal").grid(row=891, columnspan=5, sticky='ew')
+
         ttk.Button(self, text="Start Run", image=self.start_image, command=lambda :start(self), compound="left").grid(row=1000, column=0)
         ttk.Button(self, text="Exit", command=_quit).grid(row=1000, column=1)
         #ttk.Button(self, text="Test", command=lambda :controller.show_frame(RunPage)).grid(row=1000, column=2)
-        ttk.Button(self, image=self.file_image, command=lambda: choose_directory(self.entry_output)).grid(row=987, column=2, sticky='w')
-        ttk.Button(self, image=self.info_image, command=lambda :tk.messagebox.showinfo("Info pFBA", "pFBA also minimizes the amount of metabolites used. However it takes 2x as long.")).grid(row=988, column=2, sticky='w')
+        ttk.Button(self, image=self.file_image, command=lambda: choose_directory(self.entry_output)).grid(row=682, column=2, sticky='w')
+        ttk.Button(self, image=self.info_image, command=lambda :tk.messagebox.showinfo("Info pFBA", "pFBA also minimizes the amount of metabolites used. However it takes 2x as long.")).grid(row=788, column=2, sticky='w')
 
         self.entry_run_name = StringEntry(self)
         self.entry_run_name.grid(row=1, column=1)
+
+        self.entry_repeats = IntEntry(self)
+        self.entry_repeats.set("1")
+        self.entry_repeats.grid(row=680, column=1)
         self.entry_cpus = IntEntry(self)
         self.entry_cpus.set("4")
-        self.entry_cpus.grid(row=981, column=1)
+        self.entry_cpus.grid(row=681, column=1)
+        self.entry_output = FileEntry(self)
+        self.entry_output.grid(row=682, column=1)
+
         self.entry_medium = FloatEntry(self)
         self.entry_medium.set("0.04")
-        self.entry_medium.grid(row=982, column=1)
+        self.entry_medium.grid(row=787, column=1)
         self.entry_sim_time = IntEntry(self)
         self.entry_sim_time.set( "48")
-        self.entry_sim_time.grid(row=983, column=1)
+        self.entry_sim_time.grid(row=783, column=1)
         self.entry_timestep = FloatEntry(self)
         self.entry_timestep.set("1")
-        self.entry_timestep.grid(row=984, column=1)
+        self.entry_timestep.grid(row=784, column=1)
         self.entry_pop_size = IntEntry(self)
         self.entry_pop_size.set("50")
-        self.entry_pop_size.grid(row=985, column=1)
+
+        self.entry_pop_size.grid(row=885, column=1)
         self.entry_iter = IntEntry(self)
         self.entry_iter.set("10")
-        self.entry_iter.grid(row=986, column=1)
-        self.entry_output = FileEntry(self)
-        self.entry_output.grid(row=987, column=1)
+        self.entry_iter.grid(row=886, column=1)
+        self.entry_mutation_chance = FloatEntry(self)
+        self.entry_mutation_chance.set("0.01")
+        self.entry_mutation_chance.grid(row=887, column=1)
+        self.entry_deletion_chance = FloatEntry(self)
+        self.entry_deletion_chance.set("0.0")
+        self.entry_deletion_chance.grid(row=888, column=1)
 
         self.var_pfba = tk.IntVar()
         self.radio_button_pfba_yes = ttk.Radiobutton(self, text="Yes", variable=self.var_pfba, value=1)
-        self.radio_button_pfba_yes.grid(row=988, column=1, sticky='e')
+        self.radio_button_pfba_yes.grid(row=788, column=1, sticky='e')
         self.radio_button_pfba_no = ttk.Radiobutton(self, text="No", variable=self.var_pfba, value=0)
-        self.radio_button_pfba_no.grid(row=988, column=1, sticky='w')
+        self.radio_button_pfba_no.grid(row=788, column=1, sticky='w')
 
         self.var_growth = tk.IntVar()
         self.var_growth.set(1)
         self.radio_button_growth_no = ttk.Radiobutton(self, text="No", variable=self.var_growth, value=0)
-        self.radio_button_growth_no.grid(row=989, column=1, sticky='w')
+        self.radio_button_growth_no.grid(row=789, column=1, sticky='w')
         self.radio_button_growth_yes = ttk.Radiobutton(self, text="Yes", variable=self.var_growth, value=1)
-        self.radio_button_growth_yes.grid(row=989, column=1, sticky='e')
+        self.radio_button_growth_yes.grid(row=789, column=1, sticky='e')
 
         self.var_oxigen = tk.IntVar()
         self.var_oxigen.set(1)
         self.radio_button_oxigen_no = ttk.Radiobutton(self, text="No", variable=self.var_oxigen, value=0)
-        self.radio_button_oxigen_no.grid(row=990, column=1, sticky='w')
+        self.radio_button_oxigen_no.grid(row=790, column=1, sticky='w')
         self.radio_button_oxigen_yes = ttk.Radiobutton(self, text="Yes", variable=self.var_oxigen, value=1)
-        self.radio_button_oxigen_yes.grid(row=990, column=1, sticky='e')
+        self.radio_button_oxigen_yes.grid(row=790, column=1, sticky='e')
 
     def update(self):
         self.add_bacteria_button.grid(row=4 + len(self.widgets), column=0)
@@ -241,7 +266,7 @@ class SpeciesWidget(tk.Frame):
         self.edit_image = tk.PhotoImage(file="U:/Bilder/pencil.gif")
         self.name = tk.StringVar()
         self.name.set(self.species.entry_name.get())
-        tk.Label(self, textvariable=self.name, width=10).grid(row=0, column=0, sticky='w')
+        tk.Label(self, textvariable=self.name).grid(row=0, column=0, sticky='w')
         tk.Label(self, text="Objective:").grid(row=0, column=2, sticky='e')
         self.entry_objective = FloatEntry(self)
         self.entry_objective.grid(row=0, column=3, sticky='e')
@@ -386,6 +411,9 @@ class RunObject:
         self.pfba = False
         self.enforce_growth = True
         self.oxigen = True
+        self.mutation_chance = None
+        self.deletion_chance = None
+        self.repeats=1
 
         self.graph_page = None
         self.process = None
@@ -398,18 +426,20 @@ class RunObject:
         self.graph_page.plot_founder.clear()
         self.graph_page.queue_fitness = Queue(maxsize=2)
         self.graph_page.queue_founder = Queue(maxsize=2)
-        self.process = Thread(target=run_GA, args=(self.culture, self.objective, self.medium_volume, self.output_dir, self.graph_page.queue_fitness, self.graph_page.queue_founder, self, self.num_cpus, self.sim_time, self.timestep, self.pop_size, self.iterations, self.run_name, self.pfba, self.enforce_growth, self.oxigen))
+        self.process = Thread(target=run_GA, args=(self.culture, self.objective, self.medium_volume, self.output_dir, self.graph_page.queue_fitness, self.graph_page.queue_founder, self, self.num_cpus, self.sim_time, self.timestep, self.pop_size, self.iterations, self.run_name, self.pfba, self.enforce_growth, self.oxigen, self.mutation_chance, self.deletion_chance, self.repeats))
         self.process.start()
 
     def terminate_process(self):
         if self.process is not None:
             self.flag = True
             self.process.join()
+            self.graph_page = None
             print("Tasks terminated")
 
     def update_graphs(self):
-        self.graph_page.update_fitness_plot()
-        self.graph_page.update_founder_plot()
+        if self.graph_page != None:
+            self.graph_page.update_fitness_plot()
+            self.graph_page.update_founder_plot()
 
 if __name__ == '__main__':
     bg_blue = "#8f9eb7"
