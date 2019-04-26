@@ -72,8 +72,8 @@ class Individual:
             init_abundance = self.data_watcher.get_init_abundance(spec_name)
             abundance = self.data_watcher.get_abundance(spec_name)
             rel_abundance = abundance / total_abundance
-            fitness += 1000 * (self.objective[spec_name] - rel_abundance) * (self.objective[spec_name] - rel_abundance)
-            if abundance <= init_abundance and not self.data_watcher.get_enforce_growth():
+            fitness += 1000 * (self.objective[spec_name] - rel_abundance) ** 2
+            if abundance <= init_abundance and self.data_watcher.get_enforce_growth():
                 fitness = -1.0
                 break
         self.data_watcher.set_fitness(round(fitness, 6))
