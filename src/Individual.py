@@ -5,7 +5,7 @@ import math
 
 
 class Individual:
-    def __init__(self, culture, chromosome, objective, medium_volume, simulation_time=24, timestep=1, data_watcher=None, enforce_growth=True, oxigen=True):
+    def __init__(self, culture, chromosome, objective, medium_volume, simulation_time=24, timestep=1, data_watcher=None):
         self.culture = culture
         self.chromosome = chromosome
         self.objective = objective
@@ -16,14 +16,10 @@ class Individual:
 
         if data_watcher == None:
             data_watcher = DataWatcher()
-            data_watcher.set_oxigen(oxigen)
-            data_watcher.set_enforce_growth(enforce_growth)
             self.register_data_watcher(data_watcher)
             self.data_watcher.init_data_watcher(self)
         else:
             data_watcher2 = DataWatcher.create_new_watcher(data_watcher)
-            data_watcher2.set_oxigen(oxigen)
-            data_watcher2.set_enforce_growth(enforce_growth)
             self.register_data_watcher(data_watcher2)
 
     def plot(self, medium=None, sub_plot=None):
@@ -48,7 +44,7 @@ class Individual:
             plt.legend()
             plt.show()
 
-    def score_fitness(self, fitness_func, medium=None, pfba=False):
+    def score_fitness(self, fitness_func, medium=None):
         if medium is None:
             self.culture.set_medium(self.chromosome.to_medium(self.medium_volume))
         else:
@@ -58,7 +54,7 @@ class Individual:
         self.register_data_watcher(data_watcher)
 
         for i in range(math.floor(self.simulation_time / self.timestep)):
-            if not self.culture.update_biomass(self.timestep, pfba):
+            if not self.culture.update_biomass(self.timestep):
                 break
 
         fitness_func()
@@ -78,9 +74,9 @@ class Individual:
                 break
         self.data_watcher.set_fitness(round(fitness, 6))
 
-    def get_fitness(self, pfba=False):
+    def get_fitness(self):
         if self.data_watcher.get_fitness() == None:
-            self.score_fitness(fitness_func=self.fitness_function, pfba=pfba)
+            self.score_fitness(fitness_func=self.fitness_function)
         return self.data_watcher.get_fitness()
 
     def __lt__(self, other):

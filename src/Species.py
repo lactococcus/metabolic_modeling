@@ -18,7 +18,7 @@ class Species:
         for reaction in self.model.exchanges:
             reaction.bounds = (0.0, 1000.0)
 
-    def optimize(self, medium, timestep, pfba):
+    def optimize(self, medium, timestep):
         """does FBA for the bacterial species. sets bounds of exchange reactions based on medium"""
         if medium != None:
             for reaction in self.model.exchanges:
@@ -26,7 +26,7 @@ class Species:
                     reaction.lower_bound = max(-1 * medium.get_component(reaction.id) / self.get_biomass(), -10.0)
 
         try:
-            if pfba:
+            if self.data_watcher.get_pfba():
                 solution = cobra.flux_analysis.pfba(self.model, reactions=self.model.exchanges)
             else:
                 solution = self.model.optimize(objective_sense='maximize', raise_error=True)
@@ -34,7 +34,7 @@ class Species:
             print(self.name + " Model infeasible")
             return
 
-        self.set_biomass(self.get_biomass() * solution.objective_value * timestep + self.get_biomass())
+        self.set_biomass((self.get_biomass() * solution.objective_value * timestep + self.get_biomass()) * (1 - self.data_watcher.get_death_rate()))
 
         for i in range(len(solution.fluxes.index)):
             name = solution.fluxes.index[i]
