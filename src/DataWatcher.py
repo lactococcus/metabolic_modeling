@@ -2,7 +2,7 @@ from copy import deepcopy
 
 class DataWatcher:
     def __init__(self):
-        self.data = {"species": {}, "individual": None, "settings": [True, True]}
+        self.data = {"species": {}, "individual": None, "settings": [None, None, None, 0.0]}
 
     def init_data_watcher(self, individual):
         self.init_species(individual.culture.species_list)
@@ -50,6 +50,18 @@ class DataWatcher:
 
     def set_enforce_growth(self, boolean):
         self.data["settings"][0] = boolean
+
+    def get_pfba(self):
+        return self.data["settings"][2]
+
+    def set_pfba(self, boolean):
+        self.data["settings"][2] = boolean
+
+    def get_death_rate(self):
+        return self.data["settings"][3]
+
+    def set_death_rate(self, boolean):
+        self.data["settings"][3] = boolean
 
     def create_new_watcher(data_watcher):
         new_watcher = DataWatcher()

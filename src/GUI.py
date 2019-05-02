@@ -49,12 +49,13 @@ def add_bacterium(parent, controller, bacterium):
         bacterium.parent_page.update()
         bacterium.controller.show_frame(SetupPage)
 
-def run_GA(culture, objective, medium_volume, output_dir, queue_fitness, queue_founder,  callback, num_cpus, sim_time, timestep, pop_size, iterations, run_name, pfba, enforce_growth, oxigen, mutation_chance, deletion_chance, repeats):
+def run_GA(culture, objective, medium_volume, output_dir, queue_fitness, queue_founder,  callback, num_cpus, sim_time, timestep, pop_size, iterations, run_name, mutation_chance, deletion_chance, repeats):
     print("Finding Essential Nutrients...")
     num_essentials, essential_nutrients = GA.find_essential_nutrients(culture.species_list, len(culture.species_list)//2)
     print(f"Found {num_essentials} Essential Nutrients!\n")
-
-    GA.run_GA(culture, objective, medium_volume, output_dir, num_essentials, essential_nutrients, queue_fitness, queue_founder, callback, num_cpus, sim_time, timestep, pop_size, iterations, run_name, pfba, enforce_growth, oxigen, mutation_chance, deletion_chance, repeats)
+    print("Starting Genetic Algorithm")
+    GA.run_GA(culture, objective, medium_volume, output_dir, num_essentials, essential_nutrients, queue_fitness, queue_founder, callback, num_cpus, sim_time, timestep, pop_size, iterations, run_name, mutation_chance, deletion_chance, repeats)
+    print("Finished Genetic Algorithm")
 
 def quit_and_back():
     app.show_frame(SetupPage)
@@ -76,6 +77,7 @@ def start(setup):
     run.mutation_chance = setup.entry_mutation_chance.get()
     run.deletion_chance = setup.entry_deletion_chance.get()
     run.repeats = setup.entry_repeats.get()
+    run.death_rate = setup.entry_death_rate.get()
 
     if not os.path.isdir(run.output_dir):
         print(f"'{run.output_dir}' is not a valid directory")
@@ -83,6 +85,10 @@ def start(setup):
 
     objective = {}
     data_watcher = DataWatcher()
+    data_watcher.set_oxigen(run.oxigen)
+    data_watcher.set_enforce_growth(run.enforce_growth)
+    data_watcher.set_pfba(run.pfba)
+    data_watcher.set_death_rate(run.death_rate)
     culture = Culture()
     culture.register_data_watcher(data_watcher)
 
@@ -178,6 +184,7 @@ class SetupPage(tk.Frame):
         ttk.Label(self, text="Medium volume:").grid(row=787, column=0, sticky='w')
         ttk.Label(self, text="Simulation time:").grid(row=783, column=0, sticky='w')
         ttk.Label(self, text="Timestep:").grid(row=784, column=0, sticky='w')
+        ttk.Label(self, text="Death rate:").grid(row=785, column=0, sticky='w')
         ttk.Label(self, text="pFBA:").grid(row=788, column=0, sticky='w')
         ttk.Label(self, text="Enforce growth:").grid(row=789, column=0, sticky='w')
         ttk.Label(self, text="Aerob growth:").grid(row=790, column=0, sticky='w')
@@ -217,9 +224,12 @@ class SetupPage(tk.Frame):
         self.entry_timestep = FloatEntry(self)
         self.entry_timestep.set("1")
         self.entry_timestep.grid(row=784, column=1)
+        self.entry_death_rate = FloatEntry(self)
+        self.entry_death_rate.set("0.0")
+        self.entry_death_rate.grid(row=785, column=1)
+
         self.entry_pop_size = IntEntry(self)
         self.entry_pop_size.set("50")
-
         self.entry_pop_size.grid(row=885, column=1)
         self.entry_iter = IntEntry(self)
         self.entry_iter.set("10")
@@ -325,7 +335,7 @@ class RunPage(tk.Frame):
 
         self.queue_fitness = None
         self.queue_founder = None
-        self.fitness = []
+        self.fitness = None
 
         self.canvas1 = FigureCanvasTkAgg(self.fig1, master=self)
         self.canvas2 = FigureCanvasTkAgg(self.fig2, master=self)
@@ -376,10 +386,11 @@ class RunPage(tk.Frame):
             fit = self.queue_fitness.get(timeout=1.0)
         except queue.Empty:
             pass
-        if fit is not None:
-            self.fitness.append(fit)
+        if fit != None:
+            self.fitness[fit[0]].append(fit[1])
             self.plot_fitness.clear()
-            self.plot_fitness.plot(range(len(self.fitness)), self.fitness)
+            for fitness in self.fitness:
+                self.plot_fitness.plot(range(len(fitness)), fitness)
             self.plot_fitness.set_xlabel("Iteration")
             self.plot_fitness.set_ylabel("Fitness Score")
             self.fig1.align_labels(self.plot_fitness)
@@ -390,7 +401,7 @@ class RunPage(tk.Frame):
             founder = self.queue_founder.get(timeout=1.0)
         except queue.Empty:
             pass
-        if founder is not None:
+        if founder != None:
             founder.plot(sub_plot=self.plot_founder)
             self.plot_founder.set_xlabel("Time [h]")
             self.plot_founder.set_ylabel("Abundance")
@@ -400,20 +411,21 @@ class RunObject:
     def __init__(self):
         self.run_name = None
         self.num_cpus = None
-        self.medium_volume = None
-        self.sim_time = None
-        self.timestep = None
-        self.pop_size = None
-        self.iterations = None
+        self.medium_volume = 0.05
+        self.sim_time = 48
+        self.timestep = 0.5
+        self.pop_size = 50
+        self.iterations = 20
         self.output_dir = None
         self.objective = None
         self.culture = None
         self.pfba = False
         self.enforce_growth = True
         self.oxigen = True
-        self.mutation_chance = None
-        self.deletion_chance = None
+        self.mutation_chance = 0.01
+        self.deletion_chance = 0.0
         self.repeats=1
+        self.death_rate=0.0
 
         self.graph_page = None
         self.process = None
@@ -421,12 +433,13 @@ class RunObject:
         self.flag = False
 
     def start_process(self):
-        self.graph_page.fitness = []
+        self.graph_page.fitness = [[] for i in range(self.repeats)]
         self.graph_page.plot_fitness.clear()
         self.graph_page.plot_founder.clear()
         self.graph_page.queue_fitness = Queue(maxsize=2)
         self.graph_page.queue_founder = Queue(maxsize=2)
-        self.process = Thread(target=run_GA, args=(self.culture, self.objective, self.medium_volume, self.output_dir, self.graph_page.queue_fitness, self.graph_page.queue_founder, self, self.num_cpus, self.sim_time, self.timestep, self.pop_size, self.iterations, self.run_name, self.pfba, self.enforce_growth, self.oxigen, self.mutation_chance, self.deletion_chance, self.repeats))
+        self.flag = False
+        self.process = Thread(target=run_GA, args=(self.culture, self.objective, self.medium_volume, self.output_dir, self.graph_page.queue_fitness, self.graph_page.queue_founder, self, self.num_cpus, self.sim_time, self.timestep, self.pop_size, self.iterations, self.run_name, self.mutation_chance, self.deletion_chance, self.repeats))
         self.process.start()
 
     def terminate_process(self):
