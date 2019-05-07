@@ -45,6 +45,13 @@ class Chromosome:
     def copy(self):
         pass
 
+    def crossover(self, other, two_point=False):
+        first = random.randrange(self.num_essentials - 1, len(self.chromosome))
+        second = random.randrange(first, len(self.chromosome)) if two_point == True else len(self.chromosome)
+
+        for i in range(first, second):
+            self.chromosome[i], other.chromosome[i] = other.chromosome[i], self.chromosome[i]
+
     def __str__(self):
         return str(self.chromosome)
 
@@ -55,13 +62,20 @@ class Chromosome:
                 counter += 1
         return counter
 
+    def __del__(self):
+        del self.chromosome
+        self.num_essentials = None
+        self.names_to_index = None
+        self.index_to_names = None
+        #print("Destroyed Chromosome")
+
 class Chromosome_Qualitative(Chromosome):
     def __init__(self, index_to_names, names_to_index, num_essentials=0):
         Chromosome.__init__(self, index_to_names, names_to_index, num_essentials)
         self.chromosome = [False for i in range(len(self.index_to_names))]
 
         for i in range(self.num_essentials):
-            self.chromosome[i] = False
+            self.chromosome[i] = True
 
     def to_medium(self, volume):
         med_dict = {}
@@ -194,6 +208,7 @@ class Chromosome_Quantitative(Chromosome):
     def initialize_random(self):
         for i in range(self.num_essentials, len(self.chromosome)):
             self.chromosome[i] = round(random.uniform(0.0, 1000.0),1)
+        self.delete_with_chance(0.7)
 
     def initialize_all_true(self):
         for i in range(self.num_essentials, len(self.chromosome)):
@@ -213,6 +228,12 @@ class Chromosome_Quantitative(Chromosome):
         chr = Chromosome_Quantitative(self.index_to_names, self.names_to_index, self.num_essentials)
         chr.chromosome = deepcopy(self.chromosome)
         return chr
+
+    def reconstruct(self, other):
+        self.index_to_names = other.index_to_names
+        self.names_to_index = other.names_to_index
+        self.num_essentials = other.num_essentials
+        self.chromosome = deepcopy(self.chromosome)
 
     def __len__(self):
         counter = 0

@@ -9,6 +9,7 @@ from copy import deepcopy
 from matplotlib import pyplot as plt
 from DataWatcher import DataWatcher
 from tkinter import END, DISABLED, NORMAL
+import gc
 
 def generate_dicts(species_list, essentials):
     names_to_index = {}
@@ -78,28 +79,6 @@ def minimize_medium(individual):
 
     return Medium.from_dict(min_medium, individual.medium_volume)
 
-def minimize_medium2(individual, medium, threshold):
-    original = medium.copy()
-    med = original.copy()
-    #original.print_content()
-    print(len(original))
-    individual.score_fitness(individual.fitness_function, medium=med)
-    old_fitness = individual.get_fitness()
-    print("old fitness: %f" % old_fitness)
-
-    for component in medium.get_components():
-        med = original.copy()
-        med.remove_component(component)
-        individual.score_fitness(individual.fitness_function, medium=med)
-        new_fitness = individual.get_fitness()
-        print(component)
-        print("New fitness: %f diff: %f\n" % (new_fitness, new_fitness - old_fitness))
-        if new_fitness < 0.0:
-            continue
-        if (new_fitness - old_fitness) <= threshold * len(individual):
-            original.remove_component(component)
-    print("Now: %d" % len(original))
-    return original
 
 def generate_population(founder, pop_size, cpu_count, proc_num, mutation_chance, deletion_chance, queue=None):
     population = []
@@ -126,7 +105,7 @@ def generate_population(founder, pop_size, cpu_count, proc_num, mutation_chance,
 
     queue.put(population)
 
-def run_GA(culture, objective, medium_volume, output_dir, num_essentials, essential_nutrients, queue_fitness, queue_founder, callback=None, num_cpu=1, simulation_time=12, timestep=1, pop_size=50, iter=10, suffix="", mutation_chance=0.01, deletion_chance=0.0, loop=1):
+def run_GA(population, output_dir, queue_fitness, queue_founder, callback, suffix, iter, loop):
 
     ind_solutions = []
 
@@ -137,81 +116,34 @@ def run_GA(culture, objective, medium_volume, output_dir, num_essentials, essent
         if callback != None and callback.flag:
             return
 
-        dicts = generate_dicts(culture.species_list, essential_nutrients)
-        names_to_index = dicts[0]
-        index_to_names = dicts[1]
-
-        founder = Individual(culture, Chromosome_Quantitative(index_to_names, names_to_index, num_essentials), objective, medium_volume, simulation_time, timestep, culture.data_watcher)
-        founder.chromosome.initialize_random()
-
-        if founder.get_fitness() == -1:
-            print("Initial Founder not viable")
-            return
-
         if callback != None:
-            fit = (n, founder.get_fitness())
+            fit = (n, population.get_best_fitness(), population.get_average_fitness())
             queue_fitness.put(fit)
-            queue_founder.put(founder)
+            queue_founder.put(population.get_best())
             callback.update_graphs()
 
         for i in range(iter):
-            population = []
-            res = Queue()
 
-            if num_cpu > 1:
-                processes = [Process(target=generate_population, args=(founder, pop_size, num_cpu, x, mutation_chance, deletion_chance, res)) for x in range(num_cpu)]
-                #processes = [(mp.Process(target=test, args=(res, x))) for x in range(10)]
-
-                for process in processes:
-                    process.daemon = True
-                    process.start()
-                #print("started")
-
-                for process in processes:
-                    population.append(res.get())
-                #print("got data")
-
-                for process in processes:
-                    process.join()
-                    #process.terminate()
-                #print("joined")
-            else:
-                generate_population(founder, pop_size, num_cpu, 0, res)
-                population.append(res.get())
+            population.new_generation()
 
             if callback != None and callback.flag:
                 return
 
-            population = list(itertools.chain.from_iterable(population))
-
-            population.sort(reverse=True)
-            founder = population[0]
-
-            founder.register_data_watcher(founder.data_watcher)
-
             if callback != None:
-                fit = (n, founder.get_fitness())
-                queue_founder.put(founder)
+                fit = (n, population.get_best_fitness(), population.get_average_fitness())
                 queue_fitness.put(fit)
+                queue_founder.put(population.get_best())
                 callback.update_graphs()
 
-            callback.graph_page.text.config(state=NORMAL)
+
+            callback.graph_page.text.config(state=NORMAL) 
             with open(info_file_path, 'a') as file:
-                callback.graph_page.text.insert(END, f"Iteration: {i+1} Fitness: {founder.get_fitness()}\n")
-                callback.graph_page.text.insert(END, f"Feasible: {len(population)}/{pop_size+1}\n")
-                file.write(f"Iteration: {i+1} Fitness: {founder.get_fitness()}\n")
-                file.write(f"Feasible: {len(population)}/{pop_size+1}\n")
-                total = 0
-                for spec in founder.culture.species_list:
-                    total += spec.get_abundance()
-                for spec in founder.culture.species_list:
-                    callback.graph_page.text.insert(END, f"{spec.name} : {spec.get_abundance()} : {round(spec.get_abundance() / total, 6)}\n")
-                    file.write(f"{spec.name} : {spec.get_abundance()} : {round(spec.get_abundance() / total, 6)}\n")
-                callback.graph_page.text.insert(END, f"Founder: {len(founder.chromosome)}\n\n")
-                #file.write("Average # Nutrients: %f Founder: %d\n\n" % (average_num_nutrients(population), len(founder.chromosome)))
+                callback.graph_page.text.insert(END, f"Iteration: {i+1} Fitness: Best: {population.get_best_fitness()} Average: {population.get_average_fitness()}\n")
+                file.write(f"Iteration: {i+1} Fitness: Best: {population.get_best_fitness()} Average: {population.get_average_fitness()}\n")
             callback.graph_page.text.config(state=DISABLED)
 
-            if founder.get_fitness() <= 0.001 * len(founder.culture):
+            gc.collect()
+            if population.get_best_fitness() <= 0.001:
                 break
 
         if callback != None:
@@ -219,9 +151,9 @@ def run_GA(culture, objective, medium_volume, output_dir, num_essentials, essent
                 return
             callback.update_graphs()
 
-        founder.chromosome.export_chromosome(f"{output_dir}/chromosome_{suffix}{loop}.txt")
+        population.get_best().chromosome.export_chromosome(f"{output_dir}/chromosome_{suffix}{loop}.txt")
 
-        medium = minimize_medium(founder)
+        medium = minimize_medium(population.get_best())
         Medium.export_medium(medium, f"{output_dir}/medium_minimized_{suffix}{loop}.txt")
 
         if callback != None:

@@ -17,6 +17,7 @@ class Species:
 
         for reaction in self.model.exchanges:
             reaction.bounds = (0.0, 1000.0)
+        #print(f"Species {self.name} got created")
 
     def optimize(self, medium, timestep):
         """does FBA for the bacterial species. sets bounds of exchange reactions based on medium"""
@@ -24,6 +25,8 @@ class Species:
             for reaction in self.model.exchanges:
                 if reaction.id in medium:
                     reaction.lower_bound = max(-1 * medium.get_component(reaction.id) / self.get_biomass(), -10.0)
+                else:
+                    reaction.lower_bound = 0.0
 
         try:
             if self.data_watcher.get_pfba():
@@ -34,6 +37,7 @@ class Species:
             print(self.name + " Model infeasible")
             return
 
+        #print(self.name, solution.objective_value)
         self.set_biomass((self.get_biomass() * solution.objective_value * timestep + self.get_biomass()) * (1 - self.data_watcher.get_death_rate()))
 
         for i in range(len(solution.fluxes.index)):
@@ -73,3 +77,14 @@ class Species:
 
     def add_to_culture(self, culture):
         self.culture = culture
+
+    def __del__(self):
+        #print(f"Species {self.name} got destroyed")
+        del self.model
+        del self.name
+        del self.volume
+        del self.dry_weight
+        del self.surface_area
+        self.data_watcher = None
+        self.culture = None
+
