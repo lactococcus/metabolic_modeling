@@ -71,3 +71,7 @@ class DataWatcher:
         for key in new_watcher.data["species"]:
             new_watcher.data["species"][key][1] = [new_watcher.data["species"][key][0]]
         return new_watcher
+
+    def __del__(self):
+        del self.data
+        #print("Destroyed DataWatcher")

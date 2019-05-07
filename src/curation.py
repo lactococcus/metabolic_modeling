@@ -7,19 +7,19 @@ from cobra.medium import minimal_medium
 #model1 = cobra.io.read_sbml_model("U:\Masterarbeit\Lactococcus/reconstuction/Lactococcus_model2.xml")
 #model2 = cobra.io.read_sbml_model("U:\Masterarbeit\Klebsiella/Klebsiella.xml")
 #model3 = cobra.io.read_sbml_model("U:\Masterarbeit\Lactococcus\Lactococcus_lactis.xml")
-model4 = cobra.io.read_sbml_model("U:\Masterarbeit\Lactococcus\Lactococcus_lactis_subsp_lactis_Il1403_IL1403.xml")
-#model5 = cobra.io.read_sbml_model("U:/Masterarbeit/Klebsiella/reconstuction/Klebsiella_model.sbml")
+model4 = cobra.io.read_sbml_model("U:/Masterarbeit/Lactococcus/Lactococcus.xml")
+model5 = cobra.io.read_sbml_model("U:/Masterarbeit/Klebsiella/Klebsiella.xml")
 
 model = model4
 
-
+model.objective = 'EX_cpd11416_c0'
 #for reaction in model.exchanges:
     #reaction.upper_bound = 1000.0
     #reaction.lower_bound = -1000.0
 
-medium = minimal_medium(model, min_objective_value=10.0,minimize_components=True, exports=False, open_exchanges=True)
-model.medium = medium
-print(medium)
+#medium = minimal_medium(model, min_objective_value=10.0,minimize_components=True, exports=False, open_exchanges=True)
+#model.medium = medium
+#print(medium)
 model.optimize()
 print(model.summary())
 

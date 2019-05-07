@@ -19,6 +19,7 @@ class Culture:
         used_volume = 0
 
         for species in self.species_list:
+            #print(species.name, species.data_watcher, species.get_abundance())
             used_volume += species.volume * species.get_abundance()
 
         if total_volume <= used_volume:
@@ -84,11 +85,13 @@ class Culture:
 
         counter = 0
         if len(solutions) != len(self.species_list):
-            print("Not all Speciesa have a Solution in FBA")
+            print("Not all Species have a Solution in FBA")
+            return False
         for solution in solutions:
             self.medium.update_medium(solution.fluxes)
             if solution.objective_value < 0.001:
                 counter += 1
+            del solution
 
         if counter == len(self.species_list):
             return False
@@ -114,8 +117,23 @@ class Culture:
         for species in self.species_list:
             species.data_watcher = data_watcher
 
+    def copy(self):
+        culture = Culture()
+        culture.species = self.species
+        culture.species_list = self.species_list
+        culture.data_watcher = self.data_watcher
+        culture.medium = self.medium
+        return culture
+
     def __len__(self):
         return len(self.species_list)
+
+    def __del__(self):
+        del self.medium
+        del self.rations
+        self.species_list = None
+        self.species = None
+        #print("Destroyed Culture")
 
 
 

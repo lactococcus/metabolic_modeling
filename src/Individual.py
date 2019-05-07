@@ -2,7 +2,7 @@ from Culture import *
 from DataWatcher import DataWatcher
 from matplotlib import pyplot as plt
 import math
-
+import gc
 
 class Individual:
     def __init__(self, culture, chromosome, objective, medium_volume, simulation_time=24, timestep=1, data_watcher=None):
@@ -32,13 +32,13 @@ class Individual:
             sub_plot.clear()
             for spec in self.culture.species_list:
                 curve = spec.get_growth_curve()
-                sub_plot.plot(range(len(curve)), curve, label=spec.name)
+                sub_plot.plot([self.timestep * x for x in range(len(curve))], curve, label=spec.name)
             sub_plot.legend()
 
         else:
             for spec in self.culture.species_list:
                 curve = spec.get_growth_curve()
-                plt.plot(range(len(curve)), curve, label=spec.name)
+                plt.plot([self.timestep * x for x in range(len(curve))], curve, label=spec.name)
             plt.xlabel("Time")
             plt.ylabel("Abundance")
             plt.legend()
@@ -73,9 +73,10 @@ class Individual:
                 fitness = -1.0
                 break
         self.data_watcher.set_fitness(round(fitness, 6))
+        gc.collect()
 
-    def get_fitness(self):
-        if self.data_watcher.get_fitness() == None:
+    def get_fitness(self, force=False):
+        if self.data_watcher.get_fitness() == None or force:
             self.score_fitness(fitness_func=self.fitness_function)
         return self.data_watcher.get_fitness()
 
@@ -87,5 +88,26 @@ class Individual:
         self.data_watcher = data_watcher
         self.culture.register_data_watcher(data_watcher)
 
+    def copy(self):
+        return Individual(self.culture.copy(), self.chromosome.copy(), self.objective, self.medium_volume, self.simulation_time, self.timestep, self.data_watcher)
+
+    def reconstruct(self, other):
+        self.culture = other.culture.copy()
+        self.chromosome.reconstruct(other.chromosome)
+        self.objective = other.objective
+        self.medium_volume = other.medium_volume
+        self.simulation_time = other.simulation_time
+        self.timestep = other.timestep
+
     def __len__(self):
         return len(self.culture)
+
+    def __del__(self):
+        del self.data_watcher
+        del self.chromosome
+        del self.culture
+        self.objective = None
+        self.timestep = None
+        self.simulation_time = None
+        self.medium_volume = None
+        #print("Destroyed Individual")
