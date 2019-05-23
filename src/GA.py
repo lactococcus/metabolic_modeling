@@ -70,10 +70,10 @@ def minimize_medium(individual):
             start = progress[0]
             for timepoint in progress:
                 if timepoint < start:
-                    min_medium[key] = ref_medium[key]
+                    if ref_medium[key] > 0.0:
+                        min_medium[key] = ref_medium[key]
                     break
-                #start = timepoint
-    #med.plot_nutrients_over_time()
+
     size_after = len(min_medium)
     print("Before: " + str(size_before) + " After: " + str(size_after))
 
@@ -143,7 +143,7 @@ def run_GA(population, output_dir, queue_fitness, queue_founder, callback, suffi
             callback.graph_page.text.config(state=DISABLED)
 
             gc.collect()
-            if population.get_best_fitness() <= 0.001:
+            if population.get_best_fitness() <= 0.003:
                 break
 
         if callback != None:
@@ -161,7 +161,7 @@ def run_GA(population, output_dir, queue_fitness, queue_founder, callback, suffi
             callback.graph_page.text.insert(END, "Finished")
             callback.graph_page.text.config(state=DISABLED)
 
-            #callback.graph_page.medium_control.add_medium(medium)
+            callback.graph_page.medium_control.add_medium(medium)
 
         ind_solutions.append(medium)
 

@@ -65,9 +65,11 @@ class Population:
         self.individuals = self.individuals[self.deaths:]
         #print(len(self.individuals))
 
-        total_fitness = sum([ind.get_fitness() for ind in self.individuals])
+        #total_fitness = sum([ind.get_fitness() for ind in self.individuals])
 
-        rel_fitness = [((ind.get_fitness() / total_fitness) if ind != None else 0.0) for ind in self.individuals]
+        rel_fitness = [(len(self.individuals) / ind.get_fitness()) for ind in self.individuals]
+        scale = sum(rel_fitness)
+        rel_fitness = [(fit / scale) for fit in rel_fitness]
 
         offspring = self.pool.map(_reproduce, ([self.individuals, rel_fitness, amount, self.mutation_freq,
                                                 self.deletion_freq, self.crossover_freq, self.mutation_chance,
