@@ -128,7 +128,7 @@ class Medium:
         return len(self.components)
 
 
-m9_anoxic = {"EX_nh4_e": 18.7,
+m9_noO2 = {"EX_nh4_e": 18.7,
              "EX_cl_e": 10.0,
              "EX_na1_e": 10.0,
              "EX_mn2_e": 0.005,
@@ -146,9 +146,9 @@ m9_anoxic = {"EX_nh4_e": 18.7,
              "EX_ni2_e": 0.0,
              "EX_pi_e": 10.0,
              "EX_glc__D_e": 16.65,
-             "EX_h2o_e": 1000.0}
+             "EX_h2o_e": 100.0}
 
-m9_oxic = {"EX_nh4_e": 18.7,
+m9_O2 = {"EX_nh4_e": 18.7,
            "EX_cl_e": 10.0,
            "EX_na1_e": 10.0,
            "EX_mn2_e": 0.005,
@@ -167,7 +167,7 @@ m9_oxic = {"EX_nh4_e": 18.7,
            "EX_pi_e": 10.0,
            "EX_glc__D_e": 16.65,
            "EX_h2o_e": 1000.0,
-           "EX_o2_e": 1000.0}
+           "EX_o2_e": 100.0}
 
-M9_anoxic = StockMedium(m9_anoxic)
-M9_oxic = StockMedium(m9_oxic)
+M9_anoxic = StockMedium(m9_noO2)
+M9_oxic = StockMedium(m9_O2)

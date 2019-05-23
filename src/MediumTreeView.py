@@ -53,6 +53,7 @@ class MediumTreeView(Frame):
             medium = Medium.from_dict(components, self.run_object.medium_volume)
             individual = Individual(self.run_object.culture, None, self.run_object.objective, self.run_object.medium_volume, self.run_object.sim_time, self.run_object.timestep, self.run_object.culture.data_watcher)
             individual.plot(medium=medium, sub_plot=self.run_object.graph_page.plot_test_medium)
+            self.run_object.graph_page._draw_medium(0)
 
 
     def add_medium(self, medium):

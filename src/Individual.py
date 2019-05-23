@@ -23,6 +23,7 @@ class Individual:
             self.register_data_watcher(data_watcher2)
 
     def plot(self, medium=None, sub_plot=None):
+        self.register_data_watcher(self.data_watcher)
         if medium is not None:
             self.score_fitness(self.fitness_function, medium)
         else:
@@ -101,6 +102,9 @@ class Individual:
 
     def __len__(self):
         return len(self.culture)
+
+    def __str__(self):
+        return f"Individual with Fitness: {self.get_fitness()}"
 
     def __del__(self):
         del self.data_watcher
