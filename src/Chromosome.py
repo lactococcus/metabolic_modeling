@@ -186,7 +186,7 @@ class Chromosome_Quantitative(Chromosome):
     def mutate(self, number_of_mutation):
         for i in range(number_of_mutation):
             index = random.randrange(self.num_essentials, len(self.chromosome))
-            self.chromosome[index] = round(random.uniform(0.0, 20.0),1)
+            self.chromosome[index] = round(random.uniform(0.0, 1000.0),1)
 
     def deletion(self, number_of_mutation):
         for i in range(number_of_mutation):
@@ -197,7 +197,7 @@ class Chromosome_Quantitative(Chromosome):
         for i, amount in enumerate(self.chromosome):
             if i >= self.num_essentials:
                 if random.random() <= mutation_chance:
-                    self.chromosome[i] = round(random.uniform(0.0, 20.0),1)
+                    self.chromosome[i] = round(random.uniform(0.0, 1000.0),1)
 
     def delete_with_chance(self, mutation_chance):
         for i, amount in enumerate(self.chromosome):
@@ -207,12 +207,12 @@ class Chromosome_Quantitative(Chromosome):
 
     def initialize_random(self):
         for i in range(self.num_essentials, len(self.chromosome)):
-            self.chromosome[i] = round(random.uniform(0.0, 20.0),1)
-        self.delete_with_chance(0.5)
+            self.chromosome[i] = round(random.uniform(0.0, 1000.0),1)
+        self.delete_with_chance(0.33)
 
     def initialize_all_true(self):
         for i in range(self.num_essentials, len(self.chromosome)):
-            self.chromosome[i] = 20.0
+            self.chromosome[i] = 1000.0
 
     def initialize_medium(self, stock_medium, volume):
         medium = stock_medium.create_medium(volume)

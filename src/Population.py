@@ -19,7 +19,7 @@ class Population:
         self.twopoint = twopoint
         self.num_processes = num_processes
         self.founder = founder
-        self.pool = Pool(processes=self.num_processes, maxtasksperchild=3)
+        self.pool = Pool(processes=self.num_processes, maxtasksperchild=2)
 
         self.individuals = []
 
@@ -49,6 +49,7 @@ class Population:
 
 
     def generate_initial_population(self):
+        self.individuals = []
         args = [self.founder, (self.size + 1) // self.num_processes]
         data = [args for i in range(self.num_processes)]
         #print(data)
@@ -144,9 +145,10 @@ def _gen_individuals(input):
     result = []
     for i in range(amount):
         individual = founder.copy()
-        individual.chromosome.initialize_random()
+        individual.chromosome.mutate_with_chance(0.1)
         while individual.get_fitness(force=True) == -1.0:
-            individual.chromosome.initialize_random()
+            individual.chromosome.mutate_with_chance(0.1)
         result.append(individual)
+        #print(f"Found {i + 1} Individuals")
     return result
 

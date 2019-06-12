@@ -32,7 +32,7 @@ class Culture:
                 ratios[i] = (spec.get_abundance() * spec.volume) / total_volume
 
             for component in self.medium.components:
-                self.rations[component] = [self.medium.components[component] / x for x in ratios]
+                self.rations[component] = [self.medium.components[component] * x for x in ratios]
 
     def innoculate_species(self, species, abundance):
         """adds a species to the culture"""
