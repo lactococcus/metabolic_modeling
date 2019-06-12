@@ -10,6 +10,7 @@ from matplotlib import pyplot as plt
 from DataWatcher import DataWatcher
 from tkinter import END, DISABLED, NORMAL
 import gc
+import time
 
 def generate_dicts(species_list, essentials):
     names_to_index = {}
@@ -80,31 +81,6 @@ def minimize_medium(individual):
     return Medium.from_dict(min_medium, individual.medium_volume)
 
 
-def generate_population(founder, pop_size, cpu_count, proc_num, mutation_chance, deletion_chance, queue=None):
-    population = []
-    population_size = 0
-
-    if proc_num == 0:
-        population_size = pop_size // cpu_count + pop_size % cpu_count
-    else:
-        population_size = pop_size // cpu_count
-
-    for i in range(population_size):
-        chromosome = founder.chromosome.copy()
-        if mutation_chance > 0.0:
-            chromosome.mutate_with_chance(mutation_chance)
-        if deletion_chance > 0.0:
-            chromosome.delete_with_chance(deletion_chance)
-        individual = Individual(founder.culture, chromosome, founder.objective, founder.medium_volume, founder.simulation_time, founder.timestep, founder.data_watcher)
-        #print(individual.get_fitness())
-        if individual.get_fitness() >= 0.0:
-            population.append(individual)
-
-    if proc_num == 0:
-        population.append(founder)
-
-    queue.put(population)
-
 def run_GA(population, output_dir, queue_fitness, queue_founder, callback, suffix, iter, loop):
 
     ind_solutions = []
@@ -116,6 +92,8 @@ def run_GA(population, output_dir, queue_fitness, queue_founder, callback, suffi
         if callback != None and callback.flag:
             return
 
+        population.generate_initial_population()
+
         if callback != None:
             fit = (n, population.get_best_fitness(), population.get_average_fitness())
             queue_fitness.put(fit)
@@ -124,6 +102,7 @@ def run_GA(population, output_dir, queue_fitness, queue_founder, callback, suffi
 
         for i in range(iter):
 
+            start = time.time()
             population.new_generation()
 
             if callback != None and callback.flag:
@@ -145,6 +124,9 @@ def run_GA(population, output_dir, queue_fitness, queue_founder, callback, suffi
             gc.collect()
             if population.get_best_fitness() <= 0.003:
                 break
+
+            end = time.time()
+            print(f"Iteration {i+1} took {round(end-start, 2)} seconds")
 
         if callback != None:
             if callback.flag:

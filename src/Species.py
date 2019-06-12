@@ -24,7 +24,9 @@ class Species:
         if medium != None:
             for reaction in self.model.exchanges:
                 if reaction.id in medium:
-                    reaction.lower_bound = max(-1 * medium.get_component(reaction.id) / self.get_biomass(), -10.0)
+                    reaction.lower_bound = -300 * min(medium.get_component(reaction.id) / self.get_biomass(), 1000.0)
+                    #if self.name == 'Klebsiella':
+                        #print(f"{medium.get_component(reaction.id)}: {self.get_biomass()}: {medium.get_component(reaction.id) / self.get_biomass()}")
                 else:
                     reaction.lower_bound = 0.0
 
@@ -39,11 +41,14 @@ class Species:
 
         #print(self.name, solution.objective_value)
         self.set_biomass((self.get_biomass() * solution.objective_value * timestep + self.get_biomass()) * (1 - self.data_watcher.get_death_rate()))
-
+        #print("New Iteration")
         for i in range(len(solution.fluxes.index)):
             name = solution.fluxes.index[i]
             if name[:3] == "EX_":
                 solution.fluxes.iloc[i] *= (self.get_biomass() * timestep)
+                #if self.name == 'Lactococcus':
+                    #if solution.fluxes.iloc[i] < 0:
+                        #print(name)
 
         return solution
 
@@ -70,9 +75,11 @@ class Species:
         return self.data_watcher.get_abundance(self.name)
 
     def get_biomass(self):
+        """returns biomass in gram"""
         return self.data_watcher.get_abundance(self.name) * self.get_dryweight()
 
     def get_dryweight(self):
+        """returns dryweight in gram"""
         return self.dry_weight / 1000000000000
 
     def add_to_culture(self, culture):

@@ -17,7 +17,7 @@ matplotlib.style.use("ggplot")
 from CustomEntryWidgets import *
 import os.path
 from MediumTreeView import MediumTreeView
-from Medium import Medium
+from Medium import *
 from Population import Population
 from Individual import Individual
 from Chromosome import *
@@ -63,12 +63,11 @@ def run_GA(culture, objective, medium_volume, output_dir, queue_fitness, queue_f
     index_to_names = dicts[1]
 
     founder = Individual(culture, Chromosome_Quantitative(index_to_names, names_to_index, num_essentials), objective, medium_volume, sim_time, timestep, culture.data_watcher)
-    founder.chromosome.initialize_random()
-    while founder.get_fitness(force=True) == -1.0:
-        founder.chromosome.initialize_random()
+    founder.chromosome.initialize_medium(LB, medium_volume)
+    #while founder.get_fitness(force=True) == -1.0:
+        #founder.chromosome.initialize_random()
 
     population = Population(founder, pop_size, death_per_gen, mutation_chance, deletion_chance, crossover_freq, mutation_freq, deletion_freq, twopoint, num_cpus)
-    population.generate_initial_population()
 
     print("Starting Genetic Algorithm")
     GA.run_GA(population, output_dir, queue_fitness, queue_founder, callback, run_name, iterations, repeats)
