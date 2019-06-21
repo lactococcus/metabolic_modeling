@@ -3,7 +3,7 @@ from cobra.exceptions import OptimizationError
 import Medium
 import math
 from cobra.flux_analysis import pfba
-from decimal import *
+from cobra.core.solution import get_solution
 
 class Species:
     """class representing a bacterial species"""
@@ -24,34 +24,35 @@ class Species:
 
     def optimize(self, medium, timestep):
         """does FBA for the bacterial species. sets bounds of exchange reactions based on medium"""
-        if medium != None:
-            for reaction in self.model.exchanges:
-                if reaction.id in medium:
-                    tmp = -1 * float(round(medium.get_component(reaction.id) / Decimal(self.get_biomass()), 3))
-                    reaction.lower_bound = max(tmp, -1000)
-                    #print(reaction.lower_bound)
-                else:
-                    reaction.lower_bound = 0.0
+        with self.model as model:
+            if medium != None:
+                for reaction in model.exchanges:
+                    if reaction.id in medium:
+                        tmp = -1 * round(medium.get_component(reaction.id) / self.get_biomass(), 3)
+                        reaction.lower_bound = max(tmp, -1000)
+                    else:
+                        reaction.lower_bound = 0.0
 
-        try:
-            if self.data_watcher.get_pfba():
-                solution = cobra.flux_analysis.pfba(self.model, fraction_of_optimum=1.0, reactions=self.model.exchanges)
-            else:
-                solution = self.model.optimize(objective_sense='maximize', raise_error=True)
-        except OptimizationError:
-            print(self.name + " Model infeasible")
-            return
+            try:
+                if self.data_watcher.get_pfba():
+                    cobra.flux_analysis.parsimonious.add_pfba(model)
 
-        print(self.name, solution.objective_value)
-        self.set_biomass(round((self.get_biomass() * round(solution.objective_value, 6) * timestep + self.get_biomass()) * (1 - self.data_watcher.get_death_rate()), 6))
-        #print("New Iteration")
-        for i in range(len(solution.fluxes.index)):
-            name = solution.fluxes.index[i]
-            if name[:3] == "EX_":
-                solution.fluxes.iloc[i] = (round(solution.fluxes.iloc[i], 6) * self.get_biomass() * timestep)
-                #print(solution.fluxes.iloc[i])
+                objective_value = model.slim_optimize()
+                solution = get_solution(model, reactions=model.exchanges)
+            except OptimizationError:
+                print(self.name + " Model infeasible")
+                return
 
-        return solution
+            #print(self.name, solution.objective_value)
+            self.set_biomass((self.get_biomass() * round(solution.objective_value, 6) * timestep + self.get_biomass()) * (1 - self.data_watcher.get_death_rate()))
+            #print("New Iteration")
+            for i in range(len(solution.fluxes.index)):
+                name = solution.fluxes.index[i]
+                if name[:3] == "EX_":
+                    solution.fluxes.iloc[i] = (round(solution.fluxes.iloc[i], 6) * self.get_biomass() * timestep)
+                    #print(solution.fluxes.iloc[i])
+
+            return solution
 
     def get_growth_curve(self):
         return self.data_watcher.get_growth_curve(self.name)

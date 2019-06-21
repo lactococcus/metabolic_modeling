@@ -74,7 +74,7 @@ class Individual:
         self.data_watcher.set_fitness(round(fitness, 6))
         gc.collect()
 
-    def get_fitness(self, medium=None, force=False):
+    def get_fitness(self, force=False, medium=None):
         if self.data_watcher.get_fitness() == None or force or medium != None:
             self.score_fitness(fitness_func=self.fitness_function, medium=medium)
         return self.data_watcher.get_fitness()
@@ -106,10 +106,10 @@ class Individual:
 
     def __del__(self):
         del self.data_watcher
-        del self.chromosome
-        del self.culture
-        self.objective = None
-        self.timestep = None
-        self.simulation_time = None
-        self.medium_volume = None
+        #self.chromosome = None
+        #self.culture = None
+        #self.objective = None
+        #self.timestep = None
+        #self.simulation_time = None
+        #self.medium_volume = None
         #print("Destroyed Individual")
