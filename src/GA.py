@@ -114,19 +114,17 @@ def run_GA(population, output_dir, queue_fitness, queue_founder, callback, suffi
                 queue_founder.put(population.get_best())
                 callback.update_graphs()
 
-
+            end = time.time()
             callback.graph_page.text.config(state=NORMAL) 
             with open(info_file_path, 'a') as file:
                 callback.graph_page.text.insert(END, f"Iteration: {i+1} Fitness: Best: {population.get_best_fitness()} Average: {population.get_average_fitness()}\n")
+                callback.graph_page.text.insert(END, f"Iteration {i+1} took {round((end-start) / 60, 2)} minutes\n")
                 file.write(f"Iteration: {i+1} Fitness: Best: {population.get_best_fitness()} Average: {population.get_average_fitness()}\n")
             callback.graph_page.text.config(state=DISABLED)
 
             gc.collect()
-            if population.get_best_fitness() <= 0.003:
+            if population.get_best_fitness() <= 0.03:
                 break
-
-            end = time.time()
-            print(f"Iteration {i+1} took {round(end-start, 2)} seconds")
 
         if callback != None:
             if callback.flag:
@@ -143,7 +141,7 @@ def run_GA(population, output_dir, queue_fitness, queue_founder, callback, suffi
             callback.graph_page.text.insert(END, "Finished")
             callback.graph_page.text.config(state=DISABLED)
 
-            callback.graph_page.medium_control.add_medium(medium)
+            callback.graph_page.medium_control.add_medium(population.get_best().chromosome.to_medium(population.get_best().medium_volume))
 
         ind_solutions.append(medium)
 

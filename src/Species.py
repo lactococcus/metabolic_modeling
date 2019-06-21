@@ -3,6 +3,7 @@ from cobra.exceptions import OptimizationError
 import Medium
 import math
 from cobra.flux_analysis import pfba
+from decimal import *
 
 class Species:
     """class representing a bacterial species"""
@@ -10,6 +11,8 @@ class Species:
         self.name = name
         self.model = cobra.io.read_sbml_model(model_file_path)
         self.model.solver = 'cplex'
+        self.model.solver.solution_target = 'global'
+        self.model.solver.lp_method = 'barrier'
         self.dry_weight = dry_weight_pg
         self.surface_area = 4 * math.pi * radius_microm ** 2
         self.volume = 4 / 3 * math.pi * radius_microm ** 3
@@ -24,31 +27,29 @@ class Species:
         if medium != None:
             for reaction in self.model.exchanges:
                 if reaction.id in medium:
-                    reaction.lower_bound = -300 * min(medium.get_component(reaction.id) / self.get_biomass(), 1000.0)
-                    #if self.name == 'Klebsiella':
-                        #print(f"{medium.get_component(reaction.id)}: {self.get_biomass()}: {medium.get_component(reaction.id) / self.get_biomass()}")
+                    tmp = -1 * float(round(medium.get_component(reaction.id) / Decimal(self.get_biomass()), 3))
+                    reaction.lower_bound = max(tmp, -1000)
+                    #print(reaction.lower_bound)
                 else:
                     reaction.lower_bound = 0.0
 
         try:
             if self.data_watcher.get_pfba():
-                solution = cobra.flux_analysis.pfba(self.model, reactions=self.model.exchanges)
+                solution = cobra.flux_analysis.pfba(self.model, fraction_of_optimum=1.0, reactions=self.model.exchanges)
             else:
                 solution = self.model.optimize(objective_sense='maximize', raise_error=True)
         except OptimizationError:
             print(self.name + " Model infeasible")
             return
 
-        #print(self.name, solution.objective_value)
-        self.set_biomass((self.get_biomass() * solution.objective_value * timestep + self.get_biomass()) * (1 - self.data_watcher.get_death_rate()))
+        print(self.name, solution.objective_value)
+        self.set_biomass(round((self.get_biomass() * round(solution.objective_value, 6) * timestep + self.get_biomass()) * (1 - self.data_watcher.get_death_rate()), 6))
         #print("New Iteration")
         for i in range(len(solution.fluxes.index)):
             name = solution.fluxes.index[i]
             if name[:3] == "EX_":
-                solution.fluxes.iloc[i] *= (self.get_biomass() * timestep)
-                #if self.name == 'Lactococcus':
-                    #if solution.fluxes.iloc[i] < 0:
-                        #print(name)
+                solution.fluxes.iloc[i] = (round(solution.fluxes.iloc[i], 6) * self.get_biomass() * timestep)
+                #print(solution.fluxes.iloc[i])
 
         return solution
 
@@ -59,8 +60,9 @@ class Species:
         self.data_watcher = data_watcher
         self.data_watcher.data["species"][self.name] = [None, []]  # [init_abundance, biomass]
 
+
     def set_biomass(self, biomass):
-        self.data_watcher.set_abundance(self.name, biomass // self.get_dryweight())
+        self.data_watcher.set_abundance(self.name, biomass * 1000000000000 // self.dry_weight)
 
     def set_abundance(self, abundance):
         self.data_watcher.set_abundance(self.name, abundance)
@@ -76,7 +78,7 @@ class Species:
 
     def get_biomass(self):
         """returns biomass in gram"""
-        return self.data_watcher.get_abundance(self.name) * self.get_dryweight()
+        return self.data_watcher.get_abundance(self.name) * self.dry_weight / 1000000000000
 
     def get_dryweight(self):
         """returns dryweight in gram"""

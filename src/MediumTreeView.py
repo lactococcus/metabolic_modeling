@@ -96,6 +96,7 @@ class MediumTreeView(Frame):
                 quant = float(child['values'][1])
                 flag = bool(child['values'][2])
                 if flag:
-                    components[name] = quant
+                    if quant > 0:
+                        components[name] = quant
             medium = Medium.from_dict(components, self.run_object.medium_volume)
             Medium.export_medium(medium, "U:/Masterarbeit/GA_Results/final_medium.txt")

@@ -22,12 +22,12 @@ class Individual:
             data_watcher2 = DataWatcher.create_new_watcher(data_watcher)
             self.register_data_watcher(data_watcher2)
 
-    def plot(self, medium=None, sub_plot=None):
+    def plot(self, medium=None, sub_plot=None, force=False):
         self.register_data_watcher(self.data_watcher)
         if medium is not None:
             self.score_fitness(self.fitness_function, medium)
         else:
-            self.get_fitness()
+            self.get_fitness(force)
 
         if sub_plot is not None:
             sub_plot.clear()
@@ -57,13 +57,11 @@ class Individual:
         for i in range(math.floor(self.simulation_time / self.timestep)):
             if not self.culture.update_biomass(self.timestep):
                 break
-
         fitness_func()
 
     def fitness_function(self):
-        total_abundance = 0
-        for spec in self.culture.species_list:
-            total_abundance += spec.get_abundance()
+        total_abundance = sum([spec.get_abundance() for spec in self.culture.species_list])
+
         fitness = 0.0
         for spec_name in self.objective:
             init_abundance = self.data_watcher.get_init_abundance(spec_name)
@@ -76,9 +74,9 @@ class Individual:
         self.data_watcher.set_fitness(round(fitness, 6))
         gc.collect()
 
-    def get_fitness(self, force=False):
-        if self.data_watcher.get_fitness() == None or force:
-            self.score_fitness(fitness_func=self.fitness_function)
+    def get_fitness(self, medium=None, force=False):
+        if self.data_watcher.get_fitness() == None or force or medium != None:
+            self.score_fitness(fitness_func=self.fitness_function, medium=medium)
         return self.data_watcher.get_fitness()
 
     def __lt__(self, other):

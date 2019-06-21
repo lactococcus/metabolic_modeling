@@ -1,6 +1,7 @@
 import Species
 from Medium import Medium
 import threading
+from decimal import *
 
 class Culture:
     """class representing a bacterial culture. a culture consists of 1 medium and n different bacterial species"""
@@ -29,10 +30,11 @@ class Culture:
         else:
             for i in range(len(ratios)):
                 spec = self.species_list[i]
-                ratios[i] = (spec.get_abundance() * spec.volume) / total_volume
+                ratios[i] = 100 * Decimal(spec.get_abundance()) * Decimal(spec.volume) / Decimal(total_volume)
 
             for component in self.medium.components:
-                self.rations[component] = [self.medium.components[component] * x for x in ratios]
+                self.rations[component] = [Decimal(self.medium.components[component]) * x for x in ratios]
+                #print(self.rations[component])
 
     def innoculate_species(self, species, abundance):
         """adds a species to the culture"""

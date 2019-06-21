@@ -119,7 +119,7 @@ class Medium:
             tmp = line.split(";")
             components[tmp[0]] = float(tmp[1])
         file.close()
-        return Medium.from_dict(components, volume)
+        return Medium.from_dict(components, float(volume))
 
     def __contains__(self, item):
         return item in self.components
