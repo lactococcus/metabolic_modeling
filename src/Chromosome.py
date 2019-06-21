@@ -101,7 +101,7 @@ class Chromosome_Qualitative(Chromosome):
                 words = line.split(":")
                 index_to_names[int(words[0])] = words[1]
                 chromosome.append(bool(words[2] == "True"))
-        chr = Chromosome(index_to_names)
+        chr = Chromosome_Qualitative(index_to_names, None)
         chr.chromosome = chromosome
         return chr
 
@@ -161,7 +161,9 @@ class Chromosome_Quantitative(Chromosome):
 
         for i, amount in enumerate(self.chromosome):
             name = self.index_to_names[i]
-            med_dict[name] = amount * volume
+            flux = round(amount * volume, 6)
+            if flux > 0:
+                med_dict[name] = flux
 
         return Medium.from_dict(med_dict, volume)
 
@@ -179,7 +181,7 @@ class Chromosome_Quantitative(Chromosome):
                 words = line.split(":")
                 index_to_names[int(words[0])] = words[1]
                 chromosome.append(float(words[2]))
-        chr = Chromosome(index_to_names)
+        chr = Chromosome_Quantitative(index_to_names, None)
         chr.chromosome = chromosome
         return chr
 
@@ -238,6 +240,6 @@ class Chromosome_Quantitative(Chromosome):
     def __len__(self):
         counter = 0
         for amount in self.chromosome:
-            if amount != 0.0:
+            if amount > 0.0:
                 counter += 1
         return counter

@@ -64,8 +64,8 @@ def run_GA(culture, objective, medium_volume, output_dir, queue_fitness, queue_f
 
     founder = Individual(culture, Chromosome_Quantitative(index_to_names, names_to_index, num_essentials), objective, medium_volume, sim_time, timestep, culture.data_watcher)
     founder.chromosome.initialize_medium(LB, medium_volume)
-    #while founder.get_fitness(force=True) == -1.0:
-        #founder.chromosome.initialize_random()
+    while founder.get_fitness(force=True) == -1.0:
+        founder.chromosome.initialize_random()
 
     population = Population(founder, pop_size, death_per_gen, mutation_chance, deletion_chance, crossover_freq, mutation_freq, deletion_freq, twopoint, num_cpus)
 
@@ -406,7 +406,7 @@ class RunPage(tk.Frame):
 
         self.anim_fitness = animation.FuncAnimation(self.fig1, self._draw_fitness, interval=10000)
         self.anim_founder = animation.FuncAnimation(self.fig2, self._draw_founder, interval=10000)
-        #self.anim_medium = animation.FuncAnimation(self.fig3, self._draw_medium, interval=2000)
+        self.anim_medium = animation.FuncAnimation(self.fig3, self._draw_medium, interval=2000)
 
         self.text = tk.Text(self, state=tk.DISABLED)
         self.text.grid(row=1, column=2)
