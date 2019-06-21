@@ -15,13 +15,14 @@ class Culture:
     def allocate_medium(self):
         """partitions the available resources of the medium based on the volume each bacterial species occupies in the medium"""
         ratios = [0 for species in self.species_list]
+        self.rations = {}
 
         total_volume = self.medium.volume * 10**15
         used_volume = 0
 
         for species in self.species_list:
             #print(species.name, species.data_watcher, species.get_abundance())
-            used_volume += species.volume * species.get_abundance()
+            used_volume += 10000 * species.volume * species.get_abundance()
 
         if total_volume <= used_volume:
             for component in self.medium.components:
@@ -30,10 +31,10 @@ class Culture:
         else:
             for i in range(len(ratios)):
                 spec = self.species_list[i]
-                ratios[i] = 100 * Decimal(spec.get_abundance()) * Decimal(spec.volume) / Decimal(total_volume)
+                ratios[i] = 10000 * spec.get_abundance() * spec.volume / total_volume
 
             for component in self.medium.components:
-                self.rations[component] = [Decimal(self.medium.components[component]) * x for x in ratios]
+                self.rations[component] = [self.medium.components[component] * min(x, 1.0) for x in ratios]
                 #print(self.rations[component])
 
     def innoculate_species(self, species, abundance):
