@@ -63,7 +63,7 @@ class Population:
 
         amount = (self.deaths + 1) // self.num_processes
 
-        self.individuals = self.individuals[self.deaths:]
+        #self.individuals = self.individuals[self.deaths:]
         #print(len(self.individuals))
 
         #total_fitness = sum([ind.get_fitness() for ind in self.individuals])
@@ -80,6 +80,7 @@ class Population:
         offspring = None
 
         self.add_individual(flat_offspring)
+        self.individuals = self.individuals[len(self.individuals)-self.size:]
 
 
     def get_best(self):

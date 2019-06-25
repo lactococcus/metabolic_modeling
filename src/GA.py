@@ -118,7 +118,7 @@ def run_GA(population, output_dir, queue_fitness, queue_founder, callback, suffi
             callback.graph_page.text.config(state=NORMAL) 
             with open(info_file_path, 'a') as file:
                 callback.graph_page.text.insert(END, f"Iteration: {i+1} Fitness: Best: {population.get_best_fitness()} Average: {population.get_average_fitness()}\n")
-                callback.graph_page.text.insert(END, f"Iteration {i+1} took {round((end-start) / 60, 2)} minutes\n")
+                callback.graph_page.text.insert(END, f"Iteration: {i+1} took {round((end-start) / 60, 2)} minutes\n")
                 file.write(f"Iteration: {i+1} Fitness: Best: {population.get_best_fitness()} Average: {population.get_average_fitness()}\n")
             callback.graph_page.text.config(state=DISABLED)
 
@@ -141,11 +141,25 @@ def run_GA(population, output_dir, queue_fitness, queue_founder, callback, suffi
             callback.graph_page.text.insert(END, "Finished")
             callback.graph_page.text.config(state=DISABLED)
 
-            callback.graph_page.medium_control.add_medium(population.get_best().chromosome.to_medium(population.get_best().medium_volume))
+            callback.graph_page.medium_control.add_medium(medium)
 
-        ind_solutions.append(medium)
+        if population.get_best().get_fitness() <= 0.1:
+            ind_solutions.append(medium)
 
+    heatmap = {}
+    for sol in ind_solutions:
+        for comp in sol:
+            if comp in heatmap:
+                heatmap[comp] += 1
+            else:
+                heatmap[comp] = 1
+    for comp in heatmap:
+        heatmap[comp] /= len(ind_solutions)
 
+    with open(output_dir + "/medium_heatmap.csv", 'w') as file:
+        file.write("ID; %")
+        for comp in heatmap:
+            file.write(f"{comp}; {heatmap[comp]}")
 
     return medium
 

@@ -62,8 +62,10 @@ def run_GA(culture, objective, medium_volume, output_dir, queue_fitness, queue_f
     names_to_index = dicts[0]
     index_to_names = dicts[1]
 
-    founder = Individual(culture, Chromosome_Quantitative(index_to_names, names_to_index, num_essentials), objective, medium_volume, sim_time, timestep, culture.data_watcher)
-    founder.chromosome.initialize_medium(LB, medium_volume)
+    chr = Chromosome_Quantitative(index_to_names, names_to_index, num_essentials)
+    chr.initialize_medium(LB, medium_volume)
+    founder = Individual(culture, chr, objective, medium_volume, sim_time, timestep, culture.data_watcher)
+
     while founder.get_fitness(force=True) == -1.0:
         founder.chromosome.initialize_random()
 
@@ -454,7 +456,7 @@ class RunPage(tk.Frame):
         except queue.Empty:
             pass
         if founder != None:
-            founder.plot(sub_plot=self.plot_founder)
+            founder.plot(sub_plot=self.plot_founder, force=True)
             self.plot_founder.set_xlabel("Time [h]")
             self.plot_founder.set_ylabel("Abundance")
             self.fig2.align_labels(self.plot_founder)
