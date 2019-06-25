@@ -52,6 +52,25 @@ class Chromosome:
         for i in range(first, second):
             self.chromosome[i], other.chromosome[i] = other.chromosome[i], self.chromosome[i]
 
+    def import_from_list(filepath):
+        """constructs a chromosome based on the list of chemicals given as filepath"""
+        comp = {}
+        with open(filepath, 'r') as file:
+            file.readline()
+            for line in file:
+                line = line.strip('\n').split(';')
+                ID = "EX_" + line[1] + "_e0"
+                name = line[0]
+                comp[ID] = name
+        index_to_names = {}
+        names_to_index = {}
+        counter = 0
+        for key in comp:
+            index_to_names[counter] = key
+            names_to_index[key] = counter
+            counter += 1
+        return index_to_names, names_to_index
+
     def __str__(self):
         return str(self.chromosome)
 
@@ -105,6 +124,10 @@ class Chromosome_Qualitative(Chromosome):
         chr.chromosome = chromosome
         return chr
 
+    def import_from_list(filepath):
+        index_to_names, names_to_index = Chromosome.import_from_list(filepath)
+        return Chromosome_Qualitative(index_to_names, names_to_index)
+
     def mutate(self, number_of_mutation):
         for i in range(number_of_mutation):
             index = random.randrange(self.num_essentials, len(self.chromosome))
@@ -154,7 +177,7 @@ class Chromosome_Quantitative(Chromosome):
         self.chromosome = [0.0 for i in range(len(self.index_to_names))]
 
         for i in range(self.num_essentials):
-            self.chromosome[i] = 20.0
+            self.chromosome[i] = 1000.0
 
     def to_medium(self, volume):
         med_dict = {}
@@ -184,6 +207,10 @@ class Chromosome_Quantitative(Chromosome):
         chr = Chromosome_Quantitative(index_to_names, None)
         chr.chromosome = chromosome
         return chr
+
+    def import_from_list(filepath):
+        index_to_names, names_to_index = Chromosome.import_from_list(filepath)
+        return Chromosome_Quantitative(index_to_names, names_to_index)
 
     def mutate(self, number_of_mutation):
         for i in range(number_of_mutation):
