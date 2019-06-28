@@ -22,6 +22,144 @@ from Population import Population
 from Individual import Individual
 from Chromosome import *
 import gc
+from sys import argv
+
+def run_headless(cofig_file):
+    culture = Culture()
+    data_watcher = DataWatcher()
+    culture.register_data_watcher(data_watcher)
+    objective = None
+    medium_volume = None
+    output_dir = None
+    queue_fitness = None
+    queue_founder = None
+    callback = None
+    num_cpus = None
+    sim_time = None
+    timestep = None
+    pop_size = None
+    death_per_gen = None
+    iterations = None
+    run_name = ""
+    mutation_chance = None
+    deletion_chance = None
+    mutation_freq = None
+    deletion_freq = None
+    crossover_freq = None
+    twopoint = None
+    repeats = None
+    objective = {}
+
+    num_species = 0
+
+    with open(cofig_file, 'r') as file:
+        run_name = file.readline().strip('\n').split(' ')[1]
+        print(f"Run Name {run_name}")
+        for line in file:
+            #print(line.strip('\n'))
+            if line.strip('\n') == '':
+                continue
+            else:
+                line = line.strip('\n').split(' ')
+                #print(line)
+                if line[0] == '#NUM_RUNS':
+                    repeats = int(line[1])
+                    print(f"Repeats {repeats}")
+                    continue
+                elif line[0] == '#NUM_CPUS':
+                    num_cpus = int(line[1])
+                    print(f"CPUs {num_cpus}")
+                    continue
+                elif line[0] == '#OUTPUT_DIR':
+                    output_dir = line[1]
+                    print(f"Output Dir {output_dir}")
+                    continue
+                elif line[0] == '#SIM_TIME':
+                    sim_time = int(line[1])
+                    print(f"Simulation Time {sim_time}")
+                    continue
+                elif line[0] == '#TIMESTEP':
+                    timestep = float(line[1])
+                    print(f"Timestep {timestep}")
+                    continue
+                elif line[0] == '#DEATH_RATE':
+                    data_watcher.set_death_rate(float(line[1]))
+                    continue
+                elif line[0] == '#MEDIUM_VOLUME':
+                    medium_volume = float(line[1])
+                    print(f"Medium Volume {medium_volume}")
+                    continue
+                elif line[0] == '#PFBA':
+                    data_watcher.set_pfba(True if line[1] == 'True' else False)
+                    continue
+                elif line[0] == '#ENFORCE_GROWTH':
+                    data_watcher.set_enforce_growth(True if line[1] == 'True' else False)
+                    continue
+                elif line[0] == '#AEROB_GROWTH':
+                    data_watcher.set_oxigen(True if line[1] == 'True' else False)
+                    continue
+                elif line[0] == '#POP_SIZE':
+                    pop_size = int(line[1])
+                    print(f"Population Size {pop_size}")
+                    continue
+                elif line[0] == '#OFFSPRING_PER_GEN':
+                    death_per_gen = int(line[1])
+                    print(f"Offspring per Gen {death_per_gen}")
+                    continue
+                elif line[0] == '#ITERATIONS':
+                    iterations = int(line[1])
+                    print(f"Iterations {iterations}")
+                    continue
+                elif line[0] == '#MUTATION_CHANCE':
+                    mutation_chance = float(line[1])
+                    print(f"Mutation Chance {mutation_chance}")
+                    continue
+                elif line[0] == '#DELETION_CHANCE':
+                    deletion_chance = float(line[1])
+                    print(f"Deletion Chance {deletion_chance}")
+                    continue
+                elif line[0] == '#MUTATION_FREQ':
+                    mutation_freq = float(line[1])
+                    print(f"Mutation Freq {mutation_freq}")
+                    continue
+                elif line[0] == '#DELETION_FREQ':
+                    deletion_freq = float(line[1])
+                    print(f"Deletion Freq {deletion_freq}")
+                    continue
+                elif line[0] == '#CROSSOVER_FREQ':
+                    crossover_freq = float(line[1])
+                    print(f"Crossover Freq {crossover_freq}")
+                    continue
+                elif line[0] == '#TWO_POINT':
+                    twopoint = True if line[1] == 'True' else False
+                    print(f"Twopoint {twopoint}")
+                    continue
+                elif line[0] == '#NUM_SPECIES':
+                    num_species = int(line[1])
+                    break
+
+        print("Loading Species")
+        for i in range(num_species):
+            line = file.readline().strip('\n')
+            while line == '':
+                line = file.readline().strip('\n')
+
+            spec_name = line.split(' ')[1]
+            print(f"Name {spec_name}")
+            model = file.readline().strip('\n').split(' ')[1]
+            radius = float(file.readline().strip('\n').split(' ')[1])
+            dryweight = float(file.readline().strip('\n').split(' ')[1])
+            inn = int(file.readline().strip('\n').split(' ')[1])
+            obj = float(file.readline().strip('\n').split(' ')[1])
+
+            species = Species(spec_name, model, radius, dryweight)
+            culture.innoculate_species(species, inn)
+            objective[spec_name] = obj
+
+    print("Loaded Configurations")
+    run_GA(culture, objective, medium_volume, output_dir, queue_fitness, queue_founder, callback, num_cpus,
+            sim_time, timestep, pop_size, death_per_gen, iterations, run_name, mutation_chance, deletion_chance,
+            mutation_freq, deletion_freq, crossover_freq, twopoint, repeats)
 
 def _quit():
     app.quit()
@@ -456,7 +594,7 @@ class RunPage(tk.Frame):
         except queue.Empty:
             pass
         if founder != None:
-            founder.plot(sub_plot=self.plot_founder, force=True)
+            founder.plot(sub_plot=self.plot_founder, force=False)
             self.plot_founder.set_xlabel("Time [h]")
             self.plot_founder.set_ylabel("Abundance")
             self.fig2.align_labels(self.plot_founder)
@@ -519,15 +657,20 @@ if __name__ == '__main__':
     bg_blue = "#8f9eb7"
     bg_grey = "#DDDDDD"
 
-    run = RunObject()
+    if len(argv) == 2:
+        run_headless(argv[1])
 
-    app = Application()
+    else:
 
-    style = ttk.Style()
-    style.configure('.', font=('Helvetica', 10))
-    style.configure('big.TLabel', font=('Helvetica', 14))
-    style.configure('bigger.TLabel', font=('Helvetica', 18))
-    style.configure('bigger.TButton', font=('Helvetica', 18, 'bold'))
-    style.configure('TButton', font=('bold'))
+        run = RunObject()
 
-    app.mainloop()
+        app = Application()
+
+        style = ttk.Style()
+        style.configure('.', font=('Helvetica', 10))
+        style.configure('big.TLabel', font=('Helvetica', 14))
+        style.configure('bigger.TLabel', font=('Helvetica', 18))
+        style.configure('bigger.TButton', font=('Helvetica', 18, 'bold'))
+        style.configure('TButton', font=('bold'))
+
+        app.mainloop()
