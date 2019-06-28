@@ -23,6 +23,11 @@ class Population:
 
         self.individuals = []
 
+    def refresh(self):
+        self.pool.close()
+        self.pool.join()
+        self.pool = Pool(processes=self.num_processes, maxtasksperchild=2)
+
     def get_best_fitness(self):
         return self.individuals[-1].get_fitness()
 

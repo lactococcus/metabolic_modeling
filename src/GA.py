@@ -87,11 +87,12 @@ def run_GA(population, output_dir, queue_fitness, queue_founder, callback, suffi
 
     for n in range(loop):
 
-        info_file_path = f"{output_dir}/run_info_{suffix}{loop}.txt"
+        info_file_path = f"{output_dir}/run_info_{suffix}{n}.txt"
 
         if callback != None and callback.flag:
             return
 
+        population.refresh()
         population.generate_initial_population()
 
         if callback != None:
@@ -104,6 +105,7 @@ def run_GA(population, output_dir, queue_fitness, queue_founder, callback, suffi
 
             start = time.time()
             population.new_generation()
+            end = time.time()
 
             if callback != None and callback.flag:
                 return
@@ -114,13 +116,13 @@ def run_GA(population, output_dir, queue_fitness, queue_founder, callback, suffi
                 queue_founder.put(population.get_best())
                 callback.update_graphs()
 
-            end = time.time()
-            callback.graph_page.text.config(state=NORMAL) 
+                callback.graph_page.text.config(state=NORMAL)
+                callback.graph_page.text.insert(END, f"Iteration: {i + 1} Fitness: Best: {population.get_best_fitness()} Average: {population.get_average_fitness()}\n")
+                callback.graph_page.text.insert(END, f"Iteration: {i + 1} took {round((end - start) / 60, 2)} minutes\n")
+                callback.graph_page.text.config(state=DISABLED)
+         
             with open(info_file_path, 'a') as file:
-                callback.graph_page.text.insert(END, f"Iteration: {i+1} Fitness: Best: {population.get_best_fitness()} Average: {population.get_average_fitness()}\n")
-                callback.graph_page.text.insert(END, f"Iteration: {i+1} took {round((end-start) / 60, 2)} minutes\n")
                 file.write(f"Iteration: {i+1} Fitness: Best: {population.get_best_fitness()} Average: {population.get_average_fitness()}\n")
-            callback.graph_page.text.config(state=DISABLED)
 
             gc.collect()
             if population.get_best_fitness() <= 0.03:
@@ -143,7 +145,7 @@ def run_GA(population, output_dir, queue_fitness, queue_founder, callback, suffi
 
             callback.graph_page.medium_control.add_medium(medium)
 
-        if population.get_best().get_fitness() <= 0.1:
+        if population.get_best().get_fitness() <= 1000.1:
             ind_solutions.append(medium)
 
     heatmap = {}
