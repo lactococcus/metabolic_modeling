@@ -10,9 +10,9 @@ class Species:
     def __init__(self, name, model_file_path, radius_microm=0.2, dry_weight_pg=0.3):
         self.name = name
         self.model = cobra.io.read_sbml_model(model_file_path)
-        self.model.solver = 'cplex'
+        self.model.solver = 'glpk'
         self.model.solver.solution_target = 'global'
-        self.model.solver.lp_method = 'barrier'
+        #self.model.solver.lp_method = 'barrier'
         self.dry_weight = dry_weight_pg
         self.surface_area = 4 * math.pi * radius_microm ** 2
         self.volume = 4 / 3 * math.pi * radius_microm ** 3

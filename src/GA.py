@@ -8,7 +8,6 @@ import itertools
 from copy import deepcopy
 from matplotlib import pyplot as plt
 from DataWatcher import DataWatcher
-from tkinter import END, DISABLED, NORMAL
 import gc
 import time
 
@@ -87,7 +86,10 @@ def run_GA(population, output_dir, queue_fitness, queue_founder, callback, suffi
 
     for n in range(loop):
 
-        info_file_path = f"{output_dir}/run_info_{suffix}{n}.txt"
+        info_file_path = "{}/run_info_{}{}.txt".format(output_dir, suffix, n)
+
+        with open(info_file_path, 'w') as file:
+            file.write("Starting Genetic Algorithm\n")
 
         if callback != None and callback.flag:
             return
@@ -96,6 +98,7 @@ def run_GA(population, output_dir, queue_fitness, queue_founder, callback, suffi
         population.generate_initial_population()
 
         if callback != None:
+            from tkinter import END, DISABLED, NORMAL
             fit = (n, population.get_best_fitness(), population.get_average_fitness())
             queue_fitness.put(fit)
             queue_founder.put(population.get_best())
@@ -117,12 +120,13 @@ def run_GA(population, output_dir, queue_fitness, queue_founder, callback, suffi
                 callback.update_graphs()
 
                 callback.graph_page.text.config(state=NORMAL)
-                callback.graph_page.text.insert(END, f"Iteration: {i + 1} Fitness: Best: {population.get_best_fitness()} Average: {population.get_average_fitness()}\n")
-                callback.graph_page.text.insert(END, f"Iteration: {i + 1} took {round((end - start) / 60, 2)} minutes\n")
+                callback.graph_page.text.insert(END, "Iteration: {} Fitness: Best: {} Average: {}\n".format(i+1, population.get_best_fitness(), population.get_average_fitness()))
+                callback.graph_page.text.insert(END, "Iteration: {} took {} minutes\n".format(i+1, round((end - start) / 60, 2)))
                 callback.graph_page.text.config(state=DISABLED)
          
             with open(info_file_path, 'a') as file:
-                file.write(f"Iteration: {i+1} Fitness: Best: {population.get_best_fitness()} Average: {population.get_average_fitness()}\n")
+                file.write("Iteration: {} Fitness: Best: {} Average: {}\n".format(i+1, population.get_best_fitness(), population.get_average_fitness()))
+                file.write("Iteration: {} took {} min".format(i+1, round((end-start) / 60, 2)))
 
             gc.collect()
             if population.get_best_fitness() <= 0.03:
@@ -133,10 +137,10 @@ def run_GA(population, output_dir, queue_fitness, queue_founder, callback, suffi
                 return
             callback.update_graphs()
 
-        population.get_best().chromosome.export_chromosome(f"{output_dir}/chromosome_{suffix}{loop}.txt")
+        population.get_best().chromosome.export_chromosome("{}/chromosome_{}{}.txt".format(output_dir, suffix, n))
 
         medium = minimize_medium(population.get_best())
-        Medium.export_medium(medium, f"{output_dir}/medium_minimized_{suffix}{loop}.txt")
+        Medium.export_medium(medium, "{}/medium_minimized_{}{}.txt".format(output_dir, suffix, n))
 
         if callback != None:
             callback.graph_page.text.config(state=NORMAL)
@@ -145,12 +149,12 @@ def run_GA(population, output_dir, queue_fitness, queue_founder, callback, suffi
 
             callback.graph_page.medium_control.add_medium(medium)
 
-        if population.get_best().get_fitness() <= 1000.1:
+        if population.get_best().get_fitness() <= 0.1:
             ind_solutions.append(medium)
 
     heatmap = {}
     for sol in ind_solutions:
-        for comp in sol:
+        for comp in sol.get_components():
             if comp in heatmap:
                 heatmap[comp] += 1
             else:
@@ -161,7 +165,7 @@ def run_GA(population, output_dir, queue_fitness, queue_founder, callback, suffi
     with open(output_dir + "/medium_heatmap.csv", 'w') as file:
         file.write("ID; %")
         for comp in heatmap:
-            file.write(f"{comp}; {heatmap[comp]}")
+            file.write("{}; {}".format(comp, heatmap[comp]))
 
     return medium
 
