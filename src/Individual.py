@@ -102,7 +102,7 @@ class Individual:
         return len(self.culture)
 
     def __str__(self):
-        return f"Individual with Fitness: {self.get_fitness()}"
+        return "Individual with Fitness: {}".format(self.get_fitness())
 
     def __del__(self):
         del self.data_watcher
