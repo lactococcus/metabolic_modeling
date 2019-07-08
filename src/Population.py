@@ -26,6 +26,7 @@ class Population:
     def refresh(self):
         self.pool.close()
         self.pool.join()
+        self.individuals = []
         self.pool = Pool(processes=self.num_processes, maxtasksperchild=2)
 
     def get_best_fitness(self):
@@ -97,7 +98,7 @@ class Population:
     def __del__(self):
         self.pool.close()
         self.pool.join()
-
+        del self.individuals
 
 def crossover(parent1, parent2, two_point=False):
     offspring1 = parent1.copy()
