@@ -186,6 +186,7 @@ class Chromosome_Quantitative(Chromosome):
             name = self.index_to_names[i]
             flux = round(amount * volume, 6)
             if flux > 0:
+                #print(f"{name}, {amount}")
                 med_dict[name] = flux
 
         return Medium.from_dict(med_dict, volume)

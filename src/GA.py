@@ -55,24 +55,23 @@ def average_num_nutrients(population):
     return round(average, 3)
 
 def minimize_medium(individual):
-    """removes unused components from the medium"""
+    """removes unused components from the medium and minimizes nutrient amount"""
     ref_medium = individual.chromosome.to_medium(individual.medium_volume).get_components()
     size_before = len(ref_medium)
-    #individual.score_fitness()
+    individual.get_fitness()
     med = individual.culture.medium
     used_medium = individual.culture.medium.components_over_time
     min_medium = {}
-    #med.plot_nutrients_over_time()
+    # med.plot_nutrients_over_time()
     for key in ref_medium:
         if key in used_medium:
             progress = used_medium[key]
-            #print(progress)
+            # print(progress)
             start = progress[0]
-            for timepoint in progress:
-                if timepoint < start:
-                    if ref_medium[key] > 0.0:
-                        min_medium[key] = ref_medium[key]
-                    break
+            minimum = min(progress)
+            #print(f"Start: {start} Min: {minimum}")
+            if minimum < start:
+                min_medium[key] = ref_medium[key]
 
     size_after = len(min_medium)
     print("Before: " + str(size_before) + " After: " + str(size_after))

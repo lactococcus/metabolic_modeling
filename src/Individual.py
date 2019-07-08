@@ -106,10 +106,10 @@ class Individual:
 
     def __del__(self):
         del self.data_watcher
-        #self.chromosome = None
-        #self.culture = None
-        #self.objective = None
-        #self.timestep = None
-        #self.simulation_time = None
-        #self.medium_volume = None
+        self.chromosome = None
+        self.culture = None
+        self.objective = None
+        self.timestep = None
+        self.simulation_time = None
+        self.medium_volume = None
         #print("Destroyed Individual")
