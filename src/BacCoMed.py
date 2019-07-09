@@ -181,16 +181,4 @@ if __name__ == '__main__':
 
     else:
         from GUI import *
-
-        run = RunObject()
-
-        app = Application()
-
-        style = ttk.Style()
-        style.configure('.', font=('Helvetica', 10))
-        style.configure('big.TLabel', font=('Helvetica', 14))
-        style.configure('bigger.TLabel', font=('Helvetica', 18))
-        style.configure('bigger.TButton', font=('Helvetica', 18, 'bold'))
-        style.configure('TButton', font=('bold'))
-
-        app.mainloop()
+        open_gui()

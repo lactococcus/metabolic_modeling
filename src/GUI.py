@@ -28,6 +28,22 @@ from matplotlib.figure import Figure
 matplotlib.use("TkAgg")
 matplotlib.style.use("ggplot")
 
+def open_gui():
+    global run
+    run = RunObject()
+
+    global app
+    app = Application()
+
+    style = ttk.Style()
+    style.configure('.', font=('Helvetica', 10))
+    style.configure('big.TLabel', font=('Helvetica', 14))
+    style.configure('bigger.TLabel', font=('Helvetica', 18))
+    style.configure('bigger.TButton', font=('Helvetica', 18, 'bold'))
+    style.configure('TButton', font=('bold'))
+
+    app.mainloop()
+
 def _quit():
     app.quit()
     app.destroy()
