@@ -111,7 +111,7 @@ def start(setup):
 
     objective = {}
     data_watcher = DataWatcher()
-    data_watcher.set_oxigen(run.oxigen)
+    data_watcher.set_oxygen(run.oxigen)
     data_watcher.set_enforce_growth(run.enforce_growth)
     data_watcher.set_pfba(run.pfba)
     data_watcher.set_death_rate(run.death_rate)
