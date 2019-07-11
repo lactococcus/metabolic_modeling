@@ -179,7 +179,7 @@ class Chromosome_Quantitative(Chromosome):
         for i in range(self.num_essentials):
             self.chromosome[i] = 1000.0
 
-    def to_medium(self, volume):
+    def to_medium(self, volume, oxy=True):
         med_dict = {}
 
         for i, amount in enumerate(self.chromosome):
@@ -188,6 +188,10 @@ class Chromosome_Quantitative(Chromosome):
             if flux > 0:
                 #print(f"{name}, {amount}")
                 med_dict[name] = flux
+        if oxy:
+            med_dict['EX_cpd00007_e0'] = 1000 * volume
+        else:
+            med_dict['EX_cpd00007_e0'] = 0
 
         return Medium.from_dict(med_dict, volume)
 
