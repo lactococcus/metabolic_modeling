@@ -85,7 +85,7 @@ def run_headless(cofig_file):
                     data_watcher.set_enforce_growth(True if line[1] == 'True' else False)
                     continue
                 elif line[0] == '#AEROB_GROWTH':
-                    data_watcher.set_oxigen(True if line[1] == 'True' else False)
+                    data_watcher.set_oxygen(True if line[1] == 'True' else False)
                     continue
                 elif line[0] == '#POP_SIZE':
                     pop_size = int(line[1])
