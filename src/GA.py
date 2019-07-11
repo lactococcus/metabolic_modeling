@@ -125,7 +125,7 @@ def run_GA(population, output_dir, queue_fitness, queue_founder, callback, suffi
          
             with open(info_file_path, 'a') as file:
                 file.write("Iteration: {} Fitness: Best: {} Average: {}\n".format(i+1, population.get_best_fitness(), population.get_average_fitness()))
-                file.write("Iteration: {} took {} min".format(i+1, round((end-start) / 60, 2)))
+                file.write("Iteration: {} took {} min\n".format(i+1, round((end-start) / 60, 2)))
 
             gc.collect()
             if population.get_best_fitness() <= 0.03:

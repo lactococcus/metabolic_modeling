@@ -39,10 +39,10 @@ class DataWatcher:
     def set_init_abundance(self, spec_name, abundance):
         self.data["species"][spec_name][0] = abundance
 
-    def get_oxigen(self):
+    def get_oxygen(self):
         return self.data["settings"][1]
 
-    def set_oxigen(self, boolean):
+    def set_oxygen(self, boolean):
         self.data["settings"][1] = boolean
 
     def get_enforce_growth(self):

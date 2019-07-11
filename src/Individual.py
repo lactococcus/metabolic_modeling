@@ -47,7 +47,7 @@ class Individual:
 
     def score_fitness(self, fitness_func, medium=None):
         if medium is None:
-            self.culture.set_medium(self.chromosome.to_medium(self.medium_volume))
+            self.culture.set_medium(self.chromosome.to_medium(self.medium_volume, self.data_watcher.get_oxygen()))
         else:
             self.culture.set_medium(medium)
 
