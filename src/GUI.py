@@ -100,6 +100,8 @@ def start(setup):
     run.deletion_freq = setup.entry_deletion_freq.get()
     run.crossover_freq = setup.entry_crossover_freq.get()
     run.twopoint = False if setup.var_twopoint is 0 else True
+    run.chromosome = setup.entry_chromosome.get()
+
 
     if run.mutation_freq + run.deletion_freq + run.crossover_freq != 1:
         print(f"Mutation: {run.mutation_freq} + Deletion: {run.deletion_freq} + Crossover: {run.crossover_freq} is not eaqual to 1")
@@ -107,6 +109,10 @@ def start(setup):
 
     if not os.path.isdir(run.output_dir):
         print(f"'{run.output_dir}' is not a valid directory")
+        return
+
+    if not os.path.isfile(run.chromosome):
+        print(f"'{run.chromosome}' does not exist")
         return
 
     objective = {}
@@ -227,6 +233,7 @@ class SetupPage(tk.Frame):
         ttk.Label(self, text="Deletion frequency:").grid(row=891, column=0, sticky='w')
         ttk.Label(self, text="Crossover frequency:").grid(row=892, column=0, sticky='w')
         ttk.Label(self, text="Two-point crossover:").grid(row=893, column=0, sticky='w')
+        ttk.Label(self, text="Chemical list:").grid(row=894, column=0, sticky='w')
         ttk.Separator(self, orient="horizontal").grid(row=899, columnspan=5, sticky='ew')
 
         ttk.Button(self, text="Start Run", image=self.start_image, command=lambda :start(self), compound="left").grid(row=1000, column=0)
@@ -234,6 +241,7 @@ class SetupPage(tk.Frame):
         #ttk.Button(self, text="Test", command=lambda :controller.show_frame(RunPage)).grid(row=1000, column=2)
         ttk.Button(self, image=self.file_image, command=lambda: choose_directory(self.entry_output)).grid(row=682, column=2, sticky='w')
         ttk.Button(self, image=self.info_image, command=lambda :tk.messagebox.showinfo("Info pFBA", "pFBA also minimizes the amount of metabolites used. However it takes 2x as long.")).grid(row=788, column=2, sticky='w')
+        ttk.Button(self, image=self.file_image, command=lambda: choose_file(self.entry_chromosome)).grid(row=894, column=2, sticky='w')
 
         self.entry_run_name = StringEntry(self)
         self.entry_run_name.grid(row=1, column=1)
@@ -284,6 +292,8 @@ class SetupPage(tk.Frame):
         self.entry_crossover_freq = FloatEntry(self)
         self.entry_crossover_freq.grid(row=892, column=1)
         self.entry_crossover_freq.set("0.3")
+        self.entry_chromosome = StringEntry(self)
+        self.entry_chromosome.grid(row=894, column=1)
 
         self.var_pfba = tk.IntVar()
         self.radio_button_pfba_yes = ttk.Radiobutton(self, text="Yes", variable=self.var_pfba, value=1)
@@ -418,10 +428,16 @@ class RunPage(tk.Frame):
         self.medium_control.grid(row=1, column=3, padx=30, rowspan=4, columnspan=3, sticky='n')
 
     def _draw_fitness(self, i):
-        self.canvas1.draw()
+        try:
+            self.canvas1.draw()
+        except:
+            self.anim_fitness = animation.FuncAnimation(self.fig1, self._draw_fitness, interval=10000)
 
     def _draw_founder(self, i):
-        self.canvas2.draw()
+        try:
+            self.canvas2.draw()
+        except:
+            self.anim_founder = animation.FuncAnimation(self.fig2, self._draw_founder, interval=10000)
 
     def _draw_medium(self, i):
         self.canvas3.draw()
@@ -484,6 +500,7 @@ class RunObject:
         self.deletion_freq = 0.0
         self.crossover_freq = 0.0
         self.twopoint = True
+        self.chromosome = None
 
 
         self.graph_page = None
@@ -498,7 +515,7 @@ class RunObject:
         self.graph_page.queue_fitness = Queue(maxsize=2)
         self.graph_page.queue_founder = Queue(maxsize=2)
         self.flag = False
-        self.process = Thread(target=BacCoMed.run_GA, args=(self.culture, self.objective, self.medium_volume, self.output_dir, self.graph_page.queue_fitness, self.graph_page.queue_founder, self, self.num_cpus, self.sim_time, self.timestep, self.pop_size, self.death_per_gen, self.iterations, self.run_name, self.mutation_chance, self.deletion_chance, self.mutation_freq, self.deletion_freq, self.crossover_freq, self.twopoint, self.repeats))
+        self.process = Thread(target=BacCoMed.run_GA, args=(self.culture, self.objective, self.medium_volume, self.output_dir, self.graph_page.queue_fitness, self.graph_page.queue_founder, self, self.num_cpus, self.sim_time, self.timestep, self.pop_size, self.death_per_gen, self.iterations, self.run_name, self.mutation_chance, self.deletion_chance, self.mutation_freq, self.deletion_freq, self.crossover_freq, self.twopoint, self.repeats, self.chromosome))
         self.process.start()
 
     def terminate_process(self):

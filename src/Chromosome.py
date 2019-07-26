@@ -58,10 +58,14 @@ class Chromosome:
         with open(filepath, 'r') as file:
             file.readline()
             for line in file:
-                line = line.strip('\n').split(';')
-                ID = "EX_" + line[1] + "_e0"
-                name = line[0]
-                comp[ID] = name
+                if line[:3] == 'EX_':
+                    ID = line.strip('\n')
+                    comp[ID] = None
+                else:
+                    line = line.strip('\n').split(';')
+                    ID = "EX_" + line[1] + "_e0"
+                    name = line[0]
+                    comp[ID] = name
         index_to_names = {}
         names_to_index = {}
         counter = 0
@@ -220,7 +224,7 @@ class Chromosome_Quantitative(Chromosome):
     def mutate(self, number_of_mutation):
         for i in range(number_of_mutation):
             index = random.randrange(self.num_essentials, len(self.chromosome))
-            self.chromosome[index] = round(random.uniform(0.0, 1000.0),1)
+            self.chromosome[index] = random.randint(0, 1000)
 
     def deletion(self, number_of_mutation):
         for i in range(number_of_mutation):
@@ -231,7 +235,7 @@ class Chromosome_Quantitative(Chromosome):
         for i, amount in enumerate(self.chromosome):
             if i >= self.num_essentials:
                 if random.random() <= mutation_chance:
-                    self.chromosome[i] = round(random.uniform(0.0, 1000.0),1)
+                    self.chromosome[i] = random.randint(0, 1000)
 
     def delete_with_chance(self, mutation_chance):
         for i, amount in enumerate(self.chromosome):
@@ -241,7 +245,7 @@ class Chromosome_Quantitative(Chromosome):
 
     def initialize_random(self):
         for i in range(self.num_essentials, len(self.chromosome)):
-            self.chromosome[i] = round(random.uniform(0.0, 1000.0),1)
+            self.chromosome[i] = random.randint(0, 1000)
         self.delete_with_chance(0.33)
 
     def initialize_all_true(self):

@@ -69,12 +69,14 @@ def minimize_medium(individual):
             # print(progress)
             start = progress[0]
             minimum = min(progress)
-            #print(f"Start: {start} Min: {minimum}")
+            # print(f"Start: {start} Min: {minimum}")
             if minimum < start:
                 min_medium[key] = ref_medium[key]
 
     size_after = len(min_medium)
     print("Before: " + str(size_before) + " After: " + str(size_after))
+
+    return Medium.from_dict(min_medium, individual.medium_volume)
 
     return Medium.from_dict(min_medium, individual.medium_volume)
 
