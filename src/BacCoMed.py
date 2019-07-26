@@ -37,6 +37,7 @@ def run_headless(cofig_file):
     crossover_freq = None
     twopoint = None
     repeats = None
+    chromosome = None
     objective = {}
 
     num_species = 0
@@ -123,6 +124,9 @@ def run_headless(cofig_file):
                     twopoint = True if line[1] == 'True' else False
                     print("Twopoint {}".format(twopoint))
                     continue
+                elif line[0] == '#CHROMOSOME':
+                    chromosome = line[1] if line[1] != "" else None
+                    continue
                 elif line[0] == '#NUM_SPECIES':
                     num_species = int(line[1])
                     break
@@ -148,19 +152,21 @@ def run_headless(cofig_file):
     print("Loaded Configurations")
     run_GA(culture, objective, medium_volume, output_dir, queue_fitness, queue_founder, callback, num_cpus,
             sim_time, timestep, pop_size, death_per_gen, iterations, run_name, mutation_chance, deletion_chance,
-            mutation_freq, deletion_freq, crossover_freq, twopoint, repeats)
+            mutation_freq, deletion_freq, crossover_freq, twopoint, repeats, chromosome)
 
-def run_GA(culture, objective, medium_volume, output_dir, queue_fitness, queue_founder,  callback, num_cpus, sim_time, timestep, pop_size, death_per_gen, iterations, run_name, mutation_chance, deletion_chance, mutation_freq, deletion_freq, crossover_freq, twopoint, repeats):
-    print("Finding Essential Nutrients...")
-    num_essentials, essential_nutrients = GA.find_essential_nutrients(culture.species_list, len(culture.species_list)//2)
-    print("Found {} Essential Nutrients!\n".format(num_essentials))
+def run_GA(culture, objective, medium_volume, output_dir, queue_fitness, queue_founder,  callback, num_cpus, sim_time, timestep, pop_size, death_per_gen, iterations, run_name, mutation_chance, deletion_chance, mutation_freq, deletion_freq, crossover_freq, twopoint, repeats, chromosome):
 
-    dicts = GA.generate_dicts(culture.species_list, essential_nutrients)
-    names_to_index = dicts[0]
-    index_to_names = dicts[1]
-
-    chr = Chromosome_Quantitative(index_to_names, names_to_index, num_essentials)
-    chr.initialize_medium(LB, medium_volume)
+    if chromosome == None:
+        print("Finding Essential Nutrients...")
+        num_essentials, essential_nutrients = GA.find_essential_nutrients(culture.species_list, len(culture.species_list) // 2)
+        print("Found {} Essential Nutrients!\n".format(num_essentials))
+        dicts = GA.generate_dicts(culture.species_list, essential_nutrients)
+        names_to_index = dicts[0]
+        index_to_names = dicts[1]
+        chr = Chromosome_Quantitative(index_to_names, names_to_index, num_essentials)
+        chr.initialize_medium(LB, medium_volume)
+    else:
+        chr = Chromosome_Quantitative.import_from_list(chromosome)
     founder = Individual(culture, chr, objective, medium_volume, sim_time, timestep, culture.data_watcher)
 
     while founder.get_fitness(force=True) == -1.0:

@@ -34,6 +34,7 @@ class Medium:
         self.components = {}
         self.components_over_time = {}
         self.time = 0
+        self.is_fresh = True
 
         if self.stock != None:
             for component in self.stock.components:
@@ -59,12 +60,13 @@ class Medium:
 
     def update_medium(self, fluxes_pandas):
         """updates the medium components after doing fba"""
+        self.is_fresh = False
         self.time += 1
         for i in range(len(fluxes_pandas.index)):
             # print(fluxes_pandas.index[i])
             key = fluxes_pandas.index[i]
-
-            if key[:3] == "EX_":
+            #print(key)
+            if key[:3] == "EX_" and not (key == "EX_cpd11416_e0" or key == "EX_cpd11416_c0"): # EX_cpd11416_c0 is biomass exchange reaction
                 if key in self.components:
                     self.components[key] = max(self.components[key] + fluxes_pandas.iloc[i], 0)
                     self.components_over_time[key].append(self.components[key])
@@ -91,6 +93,17 @@ class Medium:
 
     def get_components(self):
         return self.components
+
+    def get_produced_nutrients(self):
+        if self.is_fresh:
+            print("Medium was not used yet. Run simulation and try again")
+            return
+        else:
+            products = {}
+            for key in self.components_over_time:
+                if self.components_over_time[key][-1] > self.components_over_time[key][0]:
+                    products[key] = self.components_over_time[key][-1]
+            return products
 
     def plot_nutrients_over_time(self):
         for key in self.components_over_time:
@@ -126,6 +139,9 @@ class Medium:
 
     def __len__(self):
         return len(self.components)
+
+    def __getitem__(self, item):
+        return self.components[item]
 
 
 m9_noO2 = {"EX_nh4_e": 18.7,
@@ -169,8 +185,51 @@ m9_O2 = {"EX_nh4_e": 18.7,
          "EX_h2o_e": 1000.0,
          "EX_o2_e": 100.0}
 
+m9_O2 = {"EX_cpd00013_e0": 1000,
+         "EX_cpd00099_e0": 1000,
+         "EX_cpd00971_e0": 1000,
+         "EX_cpd00030_e0": 1000,
+         "EX_cpd00034_e0": 1000,
+         "EX_cpd00149_e0": 1000,
+         "EX_cpd00058_e0": 1000,
+         "EX_cpd00063_e0": 1000,
+         "EX_cpd00254_e0": 1000,
+         "EX_cpd00048_e0": 1000,
+         "EX_cpd10516_e0": 1000,
+         "EX_cpd10515_e0": 1000,
+         "EX_cpd00067_e0": 1000,
+         "EX_cpd00205_e0": 1000,
+         "EX_cpd11574_e0": 1000,
+         "EX_cpd00244_e0": 1000,
+         "EX_cpd00009_e0": 1000,
+         "EX_cpd00001_e0": 1000,
+         "EX_cpd00007_e0": 1000,
+         "EX_cpd00027_e0": 1000
+         }
+
+m9_noO2 = {"EX_cpd00013_e0": 1000,
+         "EX_cpd00099_e0": 1000,
+         "EX_cpd00971_e0": 1000,
+         "EX_cpd00030_e0": 1000,
+         "EX_cpd00034_e0": 1000,
+         "EX_cpd00149_e0": 1000,
+         "EX_cpd00058_e0": 1000,
+         "EX_cpd00063_e0": 1000,
+         "EX_cpd00254_e0": 1000,
+         "EX_cpd00048_e0": 1000,
+         "EX_cpd10516_e0": 1000,
+         "EX_cpd10515_e0": 1000,
+         "EX_cpd00067_e0": 1000,
+         "EX_cpd00205_e0": 1000,
+         "EX_cpd11574_e0": 1000,
+         "EX_cpd00244_e0": 1000,
+         "EX_cpd00009_e0": 1000,
+         "EX_cpd00001_e0": 1000,
+         "EX_cpd00027_e0": 1000
+         }
+
 m9plus = {
-    # M9
+    # M9 18
     "EX_cpd00013_e0": 1000,
     "EX_cpd00099_e0": 1000,
     "EX_cpd00971_e0": 1000,
@@ -189,16 +248,17 @@ m9plus = {
     "EX_cpd00009_e0": 1000,
     "EX_cpd00001_e0": 1000,
     "EX_cpd00007_e0": 1000,
-    # Vitamins
+    # Vitamins 9
     "EX_cpd00104_e0": 1000,
     "EX_cpd00016_e0": 1000,
-    # "EX_cpd00305_e0": 1000,
+    "EX_cpd00305_e0": 1000,
     "EX_cpd00408_e0": 1000,
     "EX_cpd00133_e0": 1000,
-    "EX_cpd00330_e0": 1000,
+    "EX_cpd00393_e0": 1000,
     "EX_cpd00220_e0": 1000,
-    # "EX_cpd03424_e0": 1000,
-    # Amino Acids
+    "EX_cpd03424_e0": 1000,
+    "EX_cpd00423_e0": 1000,
+    # Amino Acids 19
     "EX_cpd00132_e0": 1000,
     "EX_cpd00023_e0": 1000,
     "EX_cpd00053_e0": 1000,
@@ -285,9 +345,49 @@ lb = {"EX_cpd00001_e0": 1000,
       "EX_cpd10515_e0": 1000,
       "EX_cpd10516_e0": 1000,
       "EX_cpd11595_e0": 1000,
-      "EX_cpd00013_e0": 1000}
+      "EX_cpd00013_e0": 1000
+      }
+
+m9_01 = {
+    # M9
+    "EX_cpd00013_e0": 1000,
+    "EX_cpd00099_e0": 1000,
+    "EX_cpd00971_e0": 1000,
+    "EX_cpd00030_e0": 1000,
+    "EX_cpd00034_e0": 1000,
+    "EX_cpd00149_e0": 1000,
+    "EX_cpd00058_e0": 1000,
+    "EX_cpd00063_e0": 1000,
+    "EX_cpd00254_e0": 1000,
+    "EX_cpd00048_e0": 1000,
+    "EX_cpd10516_e0": 1000,
+    "EX_cpd10515_e0": 1000,
+    "EX_cpd00067_e0": 1000,
+    "EX_cpd00205_e0": 1000,
+    "EX_cpd11574_e0": 1000,
+    "EX_cpd00009_e0": 1000,
+    "EX_cpd00001_e0": 1000,
+    "EX_cpd00007_e0": 1000,
+    # Vitamins
+    "EX_cpd00104_e0": 1000,
+    "EX_cpd00305_e0": 1000,
+    "EX_cpd00644_e0": 1000,
+    "EX_cpd00133_e0": 1000,
+    "EX_cpd00393_e0": 1000,
+    "EX_cpd00220_e0": 1000,
+    "EX_cpd00423_e0": 1000,
+    # Amino Acids
+    "EX_cpd00132_e0": 1000,
+    "EX_cpd00107_e0": 1000,
+    "EX_cpd00060_e0": 1000,
+    "EX_cpd00069_e0": 1000,
+    'EX_cpd00066_e0': 1000,
+    'EX_cpd00084_e0': 1000,
+    'EX_cpd00027_e0': 1000
+    }
 
 M9_anoxic = StockMedium(m9_noO2)
 M9_oxic = StockMedium(m9_O2)
 M9_plus = StockMedium(m9plus)
+M9_01 = StockMedium(m9_01)
 LB = StockMedium(lb)
