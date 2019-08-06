@@ -28,8 +28,9 @@ class Species:
             if medium != None:
                 for reaction in self.model.exchanges:
                     if reaction.id in medium:
-                        tmp = -1 * round(medium.get_component(reaction.id) / self.get_biomass(), 3)
+                        tmp = -10 * round(medium.get_component(reaction.id) / self.get_biomass(), 3)
                         reaction.lower_bound = max(tmp, -1000)
+                        #print(reaction.lower_bound)
                     else:
                         reaction.lower_bound = 0.0
 
@@ -48,7 +49,8 @@ class Species:
             for i in range(len(solution.fluxes.index)):
                 name = solution.fluxes.index[i]
                 if name[:3] == "EX_":
-                    solution.fluxes.iloc[i] = (round(solution.fluxes.iloc[i], 6) * self.get_biomass() * timestep)
+                    solution.fluxes.iloc[i] = (round(solution.fluxes.iloc[i], 6) * self.get_biomass() * timestep * 10000)
+                    #print(solution.fluxes.iloc[i])
 
             return solution
 

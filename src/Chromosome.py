@@ -152,9 +152,9 @@ class Chromosome_Qualitative(Chromosome):
             if i >= self.num_essentials:
                 self.chromosome[i] = False if random.random() <= mutation_chance else self.chromosome[i]
 
-    def initialize_random(self):
+    def initialize_random(self, chance=0.5):
         for i in range(self.num_essentials, len(self.chromosome)):
-            self.chromosome[i] = True if random.random() <= 0.5 else False
+            self.chromosome[i] = True if random.random() <= chance else False
 
     def initialize_all_true(self):
         for i, bool in enumerate(self.chromosome):
@@ -202,7 +202,7 @@ class Chromosome_Quantitative(Chromosome):
     def export_chromosome(self, file_path):
         with open(file_path, 'w') as file:
             for key in self.index_to_names:
-                file.write("%s:%s:%f\n" % (key, self.index_to_names[key], self.chromosome[int(key)]))
+                file.write("%s:%s:%d\n" % (key, self.index_to_names[key], self.chromosome[int(key)]))
 
     def import_chromosome(file_path):
         index_to_names = {}
@@ -243,10 +243,10 @@ class Chromosome_Quantitative(Chromosome):
                 if random.random() <= mutation_chance:
                     self.chromosome[i] = 0.0
 
-    def initialize_random(self):
+    def initialize_random(self, chance=0.33):
         for i in range(self.num_essentials, len(self.chromosome)):
-            self.chromosome[i] = random.randint(0, 1000)
-        self.delete_with_chance(0.33)
+            self.chromosome[i] = random.randint(0, 500)
+        self.delete_with_chance(chance)
 
     def initialize_all_true(self):
         for i in range(self.num_essentials, len(self.chromosome)):

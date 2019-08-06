@@ -204,7 +204,7 @@ m9_O2 = {"EX_cpd00013_e0": 1000,
          "EX_cpd00009_e0": 1000,
          "EX_cpd00001_e0": 1000,
          "EX_cpd00007_e0": 1000,
-         "EX_cpd00027_e0": 1000
+         "EX_cpd00027_e0": 11
          }
 
 m9_noO2 = {"EX_cpd00013_e0": 1000,
@@ -386,8 +386,38 @@ m9_01 = {
     'EX_cpd00027_e0': 1000
     }
 
+m9_02 = {
+    #"EX_cpd00013_e0": 1000,
+    "EX_cpd00099_e0": 1000,
+    "EX_cpd00971_e0": 1000,
+    "EX_cpd00030_e0": 1000,
+    "EX_cpd00034_e0": 1000,
+    "EX_cpd00149_e0": 1000,
+    "EX_cpd00058_e0": 1000,
+    "EX_cpd00063_e0": 1000,
+    "EX_cpd00254_e0": 1000,
+    "EX_cpd00048_e0": 1000,
+    "EX_cpd10516_e0": 1000,
+    "EX_cpd10515_e0": 1000,
+    "EX_cpd00067_e0": 1000,
+    "EX_cpd00205_e0": 1000,
+    "EX_cpd11574_e0": 1000,
+    "EX_cpd00009_e0": 1000,
+    "EX_cpd00001_e0": 1000,
+    "EX_cpd00007_e0": 1000,
+    #Vitamins
+    "EX_cpd00220_e0": 10,
+    #Aminoacids
+    "EX_cpd00035_e0": 400,
+    "EX_cpd00051_e0": 200,
+    "EX_cpd00132_e0": 150,
+    #Sugars
+    "EX_cpd00185_e0": 216
+    }
+
 M9_anoxic = StockMedium(m9_noO2)
 M9_oxic = StockMedium(m9_O2)
 M9_plus = StockMedium(m9plus)
 M9_01 = StockMedium(m9_01)
 LB = StockMedium(lb)
+M9_02 = StockMedium(m9_02)

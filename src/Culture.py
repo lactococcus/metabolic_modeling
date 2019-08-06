@@ -22,16 +22,16 @@ class Culture:
 
         for species in self.species_list:
             #print(species.name, species.data_watcher, species.get_abundance())
-            used_volume += 10000 * species.volume * species.get_abundance()
+            used_volume += species.volume * species.get_abundance()
 
-        if total_volume <= used_volume:
+        if total_volume <= used_volume * 1000:
             for component in self.medium.components:
                 self.rations[component] = [0 for x in ratios]
 
         else:
             for i in range(len(ratios)):
                 spec = self.species_list[i]
-                ratios[i] = 10000 * spec.get_abundance() * spec.volume / total_volume
+                ratios[i] = 45 * spec.get_abundance() * spec.volume / total_volume
 
             for component in self.medium.components:
                 self.rations[component] = [self.medium.components[component] * min(x, 1.0) for x in ratios]

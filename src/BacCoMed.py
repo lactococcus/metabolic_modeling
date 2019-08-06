@@ -167,10 +167,11 @@ def run_GA(culture, objective, medium_volume, output_dir, queue_fitness, queue_f
         chr.initialize_medium(LB, medium_volume)
     else:
         chr = Chromosome_Quantitative.import_from_list(chromosome)
+        chr.initialize_random(0.05)
     founder = Individual(culture, chr, objective, medium_volume, sim_time, timestep, culture.data_watcher)
 
     while founder.get_fitness(force=True) == -1.0:
-        founder.chromosome.initialize_random()
+        founder.chromosome.initialize_random(0.05)
 
     population = Population(founder, pop_size, death_per_gen, mutation_chance, deletion_chance, crossover_freq, mutation_freq, deletion_freq, twopoint, num_cpus)
 
