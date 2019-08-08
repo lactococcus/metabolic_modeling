@@ -22,12 +22,12 @@ class Individual:
             data_watcher2 = DataWatcher.create_new_watcher(data_watcher)
             self.register_data_watcher(data_watcher2)
 
-    def plot(self, medium=None, sub_plot=None, force=False):
+    def plot(self, medium=None, sub_plot=None, force=False, save_crossfeed=False):
         self.register_data_watcher(self.data_watcher)
         if medium is not None:
-            self.score_fitness(self.fitness_function, medium)
+            self.score_fitness(self.fitness_function, medium, save_crossfeed=save_crossfeed)
         else:
-            self.get_fitness(force)
+            self.get_fitness(force, save_crossfeed=save_crossfeed)
 
         if sub_plot is not None:
             sub_plot.clear()
@@ -45,7 +45,7 @@ class Individual:
             plt.legend()
             plt.show()
 
-    def score_fitness(self, fitness_func, medium=None):
+    def score_fitness(self, fitness_func, medium=None, save_crossfeed=False):
         if medium is None:
             self.culture.set_medium(self.chromosome.to_medium(self.medium_volume, self.data_watcher.get_oxygen()))
         else:
@@ -55,7 +55,7 @@ class Individual:
         self.register_data_watcher(data_watcher)
 
         for i in range(math.floor(self.simulation_time / self.timestep)):
-            if not self.culture.update_biomass(self.timestep):
+            if not self.culture.update_biomass(self.timestep, save_crossfeed=save_crossfeed):
                 break
         fitness_func()
 
@@ -74,10 +74,13 @@ class Individual:
         self.data_watcher.set_fitness(round(fitness, 6))
         gc.collect()
 
-    def get_fitness(self, force=False, medium=None):
-        if self.data_watcher.get_fitness() == None or force or medium != None:
-            self.score_fitness(fitness_func=self.fitness_function, medium=medium)
+    def get_fitness(self, force=False, medium=None, save_crossfeed=False):
+        if self.data_watcher.get_fitness() == None or force or medium != None or save_crossfeed:
+            self.score_fitness(fitness_func=self.fitness_function, medium=medium, save_crossfeed=save_crossfeed)
         return self.data_watcher.get_fitness()
+
+    def get_crossfeed_interactions(self):
+        return self.data_watcher.get_crossfeeding()
 
     def __lt__(self, other):
         """an indicidual is lesser than another when its fitness score is higher. higher fitness == bad"""

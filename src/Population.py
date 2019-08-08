@@ -74,7 +74,7 @@ class Population:
 
         #total_fitness = sum([ind.get_fitness() for ind in self.individuals])
 
-        rel_fitness = [(len(self.individuals) / ind.get_fitness()) for ind in self.individuals]
+        rel_fitness = [(len(self.individuals) / max(ind.get_fitness(), 0.000001)) for ind in self.individuals]
         scale = sum(rel_fitness)
         rel_fitness = [(fit / scale) for fit in rel_fitness]
 
