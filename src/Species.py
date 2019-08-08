@@ -22,7 +22,7 @@ class Species:
             reaction.bounds = (0.0, 1000.0)
         #print(f"Species {self.name} got created")
 
-    def optimize(self, medium, timestep):
+    def optimize(self, medium, timestep, save_crossfeed=False):
         """does FBA for the bacterial species. sets bounds of exchange reactions based on medium"""
         with self.model as model:
             if medium != None:
@@ -49,7 +49,13 @@ class Species:
             for i in range(len(solution.fluxes.index)):
                 name = solution.fluxes.index[i]
                 if name[:3] == "EX_":
-                    solution.fluxes.iloc[i] = (round(solution.fluxes.iloc[i], 6) * self.get_biomass() * timestep * 10000)
+                    flux = round(solution.fluxes.iloc[i], 6)
+                    solution.fluxes.iloc[i] = flux * self.get_biomass() * timestep * 10000
+                    if save_crossfeed:
+                        if flux < 0:
+                            self.data_watcher.add_crossfeed_interaction(self.name, name, True)
+                        if flux > 0:
+                            self.data_watcher.add_crossfeed_interaction(self.name, name, False)
                     #print(solution.fluxes.iloc[i])
 
             return solution

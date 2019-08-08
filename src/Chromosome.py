@@ -181,7 +181,7 @@ class Chromosome_Quantitative(Chromosome):
         self.chromosome = [0.0 for i in range(len(self.index_to_names))]
 
         for i in range(self.num_essentials):
-            self.chromosome[i] = 1000.0
+            self.chromosome[i] = 100.0
 
     def to_medium(self, volume, oxy=True):
         med_dict = {}
@@ -245,12 +245,12 @@ class Chromosome_Quantitative(Chromosome):
 
     def initialize_random(self, chance=0.33):
         for i in range(self.num_essentials, len(self.chromosome)):
-            self.chromosome[i] = random.randint(0, 500)
+            self.chromosome[i] = random.randint(0, 300)
         self.delete_with_chance(chance)
 
     def initialize_all_true(self):
         for i in range(self.num_essentials, len(self.chromosome)):
-            self.chromosome[i] = 1000.0
+            self.chromosome[i] = 300.0
 
     def initialize_medium(self, stock_medium, volume):
         medium = stock_medium.create_medium(volume)

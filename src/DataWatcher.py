@@ -2,7 +2,7 @@ from copy import deepcopy
 
 class DataWatcher:
     def __init__(self):
-        self.data = {"species": {}, "individual": None, "settings": [None, None, None, 0.0]}
+        self.data = {"species": {}, "individual": None, "settings": [None, None, None, 0.0], "crossfeeding": {}}
 
     def init_data_watcher(self, individual):
         self.init_species(individual.culture.species_list)
@@ -11,9 +11,17 @@ class DataWatcher:
     def init_species(self, specs):
         for spec in specs:
             self.data["species"][spec.name] = [None, []] # [init_abundance, abundance]
+            self.data["crossfeeding"][spec.name] = [set(), set()] #influxes, outfluxes
 
     def init_individual(self):
         self.data["individual"] = None #fitness
+
+    def get_crossfeeding(self):
+        return self.data["crossfeeding"]
+
+    def add_crossfeed_interaction(self, species_name, nutrient, input):
+        direction = 0 if input else 1
+        self.data["crossfeeding"][species_name][direction].add(nutrient)
 
     def get_fitness(self):
         return self.data["individual"]
@@ -70,6 +78,7 @@ class DataWatcher:
         new_watcher.data["settings"] = deepcopy(data_watcher.data["settings"])
         for key in new_watcher.data["species"]:
             new_watcher.data["species"][key][1] = [new_watcher.data["species"][key][0]]
+            new_watcher.data["crossfeeding"][key] = [set(), set()]
         return new_watcher
 
     def __del__(self):
