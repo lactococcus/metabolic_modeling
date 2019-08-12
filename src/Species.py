@@ -28,7 +28,7 @@ class Species:
             if medium != None:
                 for reaction in self.model.exchanges:
                     if reaction.id in medium:
-                        tmp = -10 * round(medium.get_component(reaction.id) / self.get_biomass(), 3)
+                        tmp = round(-100 * medium.get_component(reaction.id) / self.get_biomass(), 6)
                         reaction.lower_bound = max(tmp, -1000)
                         #print(reaction.lower_bound)
                     else:
@@ -50,7 +50,7 @@ class Species:
                 name = solution.fluxes.index[i]
                 if name[:3] == "EX_":
                     flux = round(solution.fluxes.iloc[i], 6)
-                    solution.fluxes.iloc[i] = flux * self.get_biomass() * timestep * 10000
+                    solution.fluxes.iloc[i] = flux * self.get_biomass() * timestep * (self.get_abundance() / 10000)
                     if save_crossfeed:
                         if flux < 0:
                             self.data_watcher.add_crossfeed_interaction(self.name, name, True)
