@@ -31,7 +31,7 @@ class Culture:
         else:
             for i in range(len(ratios)):
                 spec = self.species_list[i]
-                ratios[i] = 100 * spec.get_abundance() * spec.volume / total_volume
+                ratios[i] = 50 * spec.get_abundance() * spec.volume / total_volume
 
             for component in self.medium.components:
                 self.rations[component] = [self.medium.components[component] * min(x, 1.0) for x in ratios]
