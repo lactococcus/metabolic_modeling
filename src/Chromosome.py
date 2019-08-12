@@ -188,12 +188,12 @@ class Chromosome_Quantitative(Chromosome):
 
         for i, amount in enumerate(self.chromosome):
             name = self.index_to_names[i]
-            flux = round(amount * volume, 6)
+            flux = round(amount * volume * 200, 6)
             if flux > 0:
                 #print(f"{name}, {amount}")
                 med_dict[name] = flux
         if oxy:
-            med_dict['EX_cpd00007_e0'] = 1000 * volume
+            med_dict['EX_cpd00007_e0'] = 1000 * volume * 200
         else:
             med_dict['EX_cpd00007_e0'] = 0
 

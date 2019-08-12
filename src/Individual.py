@@ -60,15 +60,15 @@ class Individual:
         fitness_func()
 
     def fitness_function(self):
-        total_abundance = sum([spec.get_abundance() for spec in self.culture.species_list])
+        total_biomass = sum([spec.get_biomass() for spec in self.culture.species_list])
 
         fitness = 0.0
         for spec_name in self.objective:
-            init_abundance = self.data_watcher.get_init_abundance(spec_name)
-            abundance = self.data_watcher.get_abundance(spec_name)
-            rel_abundance = abundance / total_abundance
-            fitness += 1000 * (self.objective[spec_name] - rel_abundance) ** 2
-            if abundance <= init_abundance and self.data_watcher.get_enforce_growth():
+            init_biomass = self.data_watcher.get_init_biomass(spec_name)
+            biomass = self.data_watcher.get_biomass(spec_name)
+            rel_biomass = biomass / total_biomass
+            fitness += 1000 * (self.objective[spec_name] - rel_biomass) ** 2
+            if biomass <= init_biomass and self.data_watcher.get_enforce_growth():
                 fitness = -1.0
                 break
         self.data_watcher.set_fitness(round(fitness, 6))

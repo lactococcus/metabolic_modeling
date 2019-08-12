@@ -10,7 +10,7 @@ class DataWatcher:
 
     def init_species(self, specs):
         for spec in specs:
-            self.data["species"][spec.name] = [None, []] # [init_abundance, abundance]
+            self.data["species"][spec.name] = [None, []] # [init_biomass, biomass]
             self.data["crossfeeding"][spec.name] = [set(), set()] #influxes, outfluxes
 
     def init_individual(self):
@@ -32,20 +32,21 @@ class DataWatcher:
     def get_species(self):
         return self.data["species"]
 
-    def get_abundance(self, spec_name):
+    def get_biomass(self, spec_name):
+        """Biomass in datawatcher is saved in pico gram"""
         return self.data["species"][spec_name][1][-1]
 
-    def set_abundance(self, spec_name, abundance):
-        self.data["species"][spec_name][1].append(abundance)
+    def set_biomass(self, spec_name, biomass):
+        self.data["species"][spec_name][1].append(biomass)
 
     def get_growth_curve(self, spec_name):
         return self.data["species"][spec_name][1]
 
-    def get_init_abundance(self, spec_name):
+    def get_init_biomass(self, spec_name):
         return self.data["species"][spec_name][0]
 
-    def set_init_abundance(self, spec_name, abundance):
-        self.data["species"][spec_name][0] = abundance
+    def set_init_biomass(self, spec_name, biomass):
+        self.data["species"][spec_name][0] = biomass
 
     def get_oxygen(self):
         return self.data["settings"][1]

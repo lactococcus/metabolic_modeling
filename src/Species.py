@@ -28,9 +28,9 @@ class Species:
             if medium != None:
                 for reaction in self.model.exchanges:
                     if reaction.id in medium:
-                        tmp = round(-100 * medium.get_component(reaction.id) / self.get_biomass(), 6)
+                        tmp = round(-1 * medium.get_component(reaction.id) / self.get_biomass(), 6)
                         reaction.lower_bound = max(tmp, -1000)
-                        #print(reaction.lower_bound)
+                        #print(reaction.id, reaction.lower_bound)
                     else:
                         reaction.lower_bound = 0.0
 
@@ -50,7 +50,9 @@ class Species:
                 name = solution.fluxes.index[i]
                 if name[:3] == "EX_":
                     flux = round(solution.fluxes.iloc[i], 6)
-                    solution.fluxes.iloc[i] = flux * self.get_biomass() * timestep * (self.get_abundance() / 10000)
+                    print(name, flux)
+                    solution.fluxes.iloc[i] = flux * self.get_biomass() * timestep * 10000
+                    print(name, solution.fluxes.iloc[i])
                     if save_crossfeed:
                         if flux < 0:
                             self.data_watcher.add_crossfeed_interaction(self.name, name, True)
@@ -69,27 +71,27 @@ class Species:
 
 
     def set_biomass(self, biomass):
-        self.data_watcher.set_abundance(self.name, biomass * 1000000000000 // self.dry_weight)
+        self.data_watcher.set_biomass(self.name, biomass * 1e12)
 
     def set_abundance(self, abundance):
-        self.data_watcher.set_abundance(self.name, abundance)
+        self.data_watcher.set_biomass(self.name, abundance * self.dry_weight)
 
     def set_init_abundance(self, abundance):
-        self.data_watcher.set_init_abundance(self.name, abundance)
+        self.data_watcher.set_init_biomass(self.name, abundance * self.dry_weight)
 
     def get_init_abundance(self):
-        return self.data_watcher.get_init_abundance(self.name)
+        return self.data_watcher.get_init_biomass(self.name) // self.dry_weight
 
     def get_abundance(self):
-        return self.data_watcher.get_abundance(self.name)
+        return self.data_watcher.get_biomass(self.name) // self.dry_weight
 
     def get_biomass(self):
         """returns biomass in gram"""
-        return self.data_watcher.get_abundance(self.name) * self.dry_weight / 1000000000000
+        return self.data_watcher.get_biomass(self.name) * 1e-12
 
     def get_dryweight(self):
         """returns dryweight in gram"""
-        return self.dry_weight / 1000000000000
+        return self.dry_weight * 1e-12
 
     def add_to_culture(self, culture):
         self.culture = culture
