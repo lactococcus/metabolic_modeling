@@ -50,9 +50,9 @@ class Species:
                 name = solution.fluxes.index[i]
                 if name[:3] == "EX_":
                     flux = round(solution.fluxes.iloc[i], 6)
-                    print(name, flux)
+                    #print(name, flux)
                     solution.fluxes.iloc[i] = flux * self.get_biomass() * timestep * 10000
-                    print(name, solution.fluxes.iloc[i])
+                    #print(name, solution.fluxes.iloc[i])
                     if save_crossfeed:
                         if flux < 0:
                             self.data_watcher.add_crossfeed_interaction(self.name, name, True)
