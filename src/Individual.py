@@ -60,7 +60,7 @@ class Individual:
         fitness_func()
 
     def fitness_function(self):
-        total_biomass = sum([spec.get_biomass() for spec in self.culture.species_list])
+        total_biomass = sum([(spec.get_biomass() * 1e12) for spec in self.culture.species_list])
 
         fitness = 0.0
         for spec_name in self.objective:

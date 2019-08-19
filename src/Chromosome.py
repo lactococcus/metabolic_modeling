@@ -36,7 +36,7 @@ class Chromosome:
     def initialize_all_true(self):
         pass
 
-    def initialize_medium(self, stock_medium, volume=1.0):
+    def initialize_medium(self, stock_medium):
         pass
 
     def make_new_chromosome(self):
@@ -160,8 +160,8 @@ class Chromosome_Qualitative(Chromosome):
         for i, bool in enumerate(self.chromosome):
             self.chromosome[i] = True
 
-    def initialize_medium(self, stock_medium, volume):
-        medium = stock_medium.create_medium(volume)
+    def initialize_medium(self, stock_medium):
+        medium = stock_medium.create_medium(1.0)
         for component in medium.get_components():
             if component in self.names_to_index:
                 self.chromosome[self.names_to_index[component]] = True
@@ -252,8 +252,8 @@ class Chromosome_Quantitative(Chromosome):
         for i in range(self.num_essentials, len(self.chromosome)):
             self.chromosome[i] = 100.0
 
-    def initialize_medium(self, stock_medium, volume):
-        medium = stock_medium.create_medium(volume)
+    def initialize_medium(self, stock_medium):
+        medium = stock_medium.create_medium(1.0)
         for component in medium.get_components():
             if component in self.names_to_index:
                 self.chromosome[self.names_to_index[component]] = medium.get_components()[component]
