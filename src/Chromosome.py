@@ -193,7 +193,7 @@ class Chromosome_Quantitative(Chromosome):
                 #print(f"{name}, {amount}")
                 med_dict[name] = flux
         if oxy:
-            med_dict['EX_cpd00007_e0'] = 1000 * volume * 200
+            med_dict['EX_cpd00007_e0'] = 100 * volume * 200
         else:
             med_dict['EX_cpd00007_e0'] = 0
 

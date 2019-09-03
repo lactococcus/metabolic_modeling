@@ -40,7 +40,7 @@ class Individual:
             for spec in self.culture.species_list:
                 curve = spec.get_growth_curve()
                 plt.plot([self.timestep * x for x in range(len(curve))], curve, label=spec.name)
-            plt.xlabel("Time")
+            plt.xlabel("Time [h]")
             plt.ylabel("Abundance")
             plt.legend()
             plt.show()

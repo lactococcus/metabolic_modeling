@@ -111,9 +111,12 @@ def start(setup):
         print(f"'{run.output_dir}' is not a valid directory")
         return
 
-    if not os.path.isfile(run.chromosome):
-        print(f"'{run.chromosome}' does not exist")
-        return
+    if run.chromosome == '':
+        run.chromosome = None
+    else:
+        if not os.path.isfile(run.chromosome):
+            print(f"'{run.chromosome}' does not exist")
+            return
 
     objective = {}
     data_watcher = DataWatcher()

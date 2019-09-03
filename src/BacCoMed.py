@@ -125,7 +125,7 @@ def run_headless(cofig_file):
                     print("Twopoint {}".format(twopoint))
                     continue
                 elif line[0] == '#CHROMOSOME':
-                    chromosome = line[1] if line[1] != "" else None
+                    chromosome = line[1] if line[1] != '' else None
                     continue
                 elif line[0] == '#NUM_SPECIES':
                     num_species = int(line[1])
@@ -164,7 +164,7 @@ def run_GA(culture, objective, medium_volume, output_dir, queue_fitness, queue_f
         names_to_index = dicts[0]
         index_to_names = dicts[1]
         chr = Chromosome_Quantitative(index_to_names, names_to_index, num_essentials)
-        chr.initialize_medium(LB, medium_volume)
+        chr.initialize_medium(LB)
     else:
         chr = Chromosome_Quantitative.import_from_list(chromosome)
         chr.initialize_random(0.05)
