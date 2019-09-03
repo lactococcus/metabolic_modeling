@@ -78,8 +78,6 @@ def minimize_medium(individual):
 
     return Medium.from_dict(min_medium, individual.medium_volume)
 
-    return Medium.from_dict(min_medium, individual.medium_volume)
-
 
 def run_GA(population, output_dir, queue_fitness, queue_founder, callback, suffix, iter, loop):
 
@@ -164,9 +162,9 @@ def run_GA(population, output_dir, queue_fitness, queue_founder, callback, suffi
         heatmap[comp] /= len(ind_solutions)
 
     with open(output_dir + "/medium_heatmap.csv", 'w') as file:
-        file.write("ID; %")
+        file.write("ID;%\n")
         for comp in heatmap:
-            file.write("{}; {}".format(comp, heatmap[comp]))
+            file.write("{};{}\n".format(comp, heatmap[comp]))
 
     return medium
 
