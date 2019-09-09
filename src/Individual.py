@@ -6,6 +6,7 @@ import gc
 
 class Individual:
     def __init__(self, culture, chromosome, objective, medium_volume, simulation_time=24, timestep=1, data_watcher=None):
+        """Class representing an idividual in the Genetic algorithm context. An individual consists out of a bacterial culture and a chromosome. It handles the fitness evaluation"""
         self.culture = culture
         self.chromosome = chromosome
         self.objective = objective
@@ -23,6 +24,7 @@ class Individual:
             self.register_data_watcher(data_watcher2)
 
     def plot(self, medium=None, sub_plot=None, force=False, save_crossfeed=False):
+        """plot the growth curves of the bacterial culture"""
         self.register_data_watcher(self.data_watcher)
         if medium is not None:
             self.score_fitness(self.fitness_function, medium, save_crossfeed=save_crossfeed)
@@ -46,6 +48,7 @@ class Individual:
             plt.show()
 
     def score_fitness(self, fitness_func, medium=None, save_crossfeed=False):
+        """scores the fitness of an individual based on the fitness function passed as an argument"""
         if medium is None:
             self.culture.set_medium(self.chromosome.to_medium(self.medium_volume, self.data_watcher.get_oxygen()))
         else:
@@ -60,6 +63,7 @@ class Individual:
         fitness_func()
 
     def fitness_function(self):
+        """l2 norm fitness function"""
         total_biomass = sum([(spec.get_biomass() * 1e12) for spec in self.culture.species_list])
 
         fitness = 0.0
@@ -75,6 +79,7 @@ class Individual:
         gc.collect()
 
     def get_fitness(self, force=False, medium=None, save_crossfeed=False):
+        """returns the fitness of the individual. Evaluates the ftness if it wasn't already"""
         if self.data_watcher.get_fitness() == None or force or medium != None or save_crossfeed:
             self.score_fitness(fitness_func=self.fitness_function, medium=medium, save_crossfeed=save_crossfeed)
         return self.data_watcher.get_fitness()

@@ -107,15 +107,11 @@ class Medium:
             return products
 
     def plot_nutrients_over_time(self):
+        """plots the change of every nutrient in the medium over time"""
         for key in self.components_over_time:
             plt.plot(self.components_over_time[key], label=key)
         plt.legend()
         plt.show()
-
-    def print_content(self):
-        for component in self.components:
-            print("%s: %f mmol" % (component, self.components[component]))
-        print()
 
     def export_medium(medium, file_path):
         file = open(file_path, 'w')
@@ -144,6 +140,7 @@ class Medium:
     def __getitem__(self, item):
         return self.components[item]
 
+'''Following are a few media that were tested experimentally'''
 
 m9_noO2 = {"EX_nh4_e": 18.7,
            "EX_cl_e": 10.0,
@@ -452,26 +449,26 @@ m9_04 = {"EX_cpd00063_e0": 1,
          "EX_cpd00254_e0": 1,
          "EX_cpd00149_e0": 1,
          "EX_cpd00027_e0": 1,  # Glucose
-         "EX_cpd00048_e0": 10,
+         "EX_cpd00048_e0": 1,
          "EX_cpd00107_e0": 5,  # Leucine
          "EX_cpd00129_e0": 8,  # L-Prolin
          "EX_cpd00322_e0": 2,  # L-Isoleucine
          #"EX_cpd00130_e0": 10,  # L-Malate
          "EX_cpd00084_e0": 10,  # L-Cysteine
          "EX_cpd00054_e0": 30,  # L-Serine
-         "EX_cpd00644_e0": 10,  # Pantothenic acid
+         "EX_cpd00644_e0": 1,  # Pantothenic acid
          "EX_cpd10515_e0": 10,
          "EX_cpd00106_e0": 31,  # Fumarate
          "EX_cpd00033_e0": 10,  # Glycine
          "EX_cpd00065_e0": 5,  # L-Tryptophane
          "EX_cpd00091_e0": 10,  # UMP
-         "EX_cpd00793_e0": 10,  # Thiamine phosphate
+         "EX_cpd00793_e0": 1,  # Thiamine phosphate
          "EX_cpd00001_e0": 3,
          "EX_cpd00013_e0": 2,  # Ammonia
          "EX_cpd00007_e0": 100,
          #"EX_cpd00239_e0": 10,
          "EX_cpd00249_e0": 50,  # Uridine
-         "EX_cpd00220_e0": 10,  # Riboflavine
+         "EX_cpd00220_e0": 1,  # Riboflavine
          }
 
 M9_anoxic = StockMedium(m9_noO2)

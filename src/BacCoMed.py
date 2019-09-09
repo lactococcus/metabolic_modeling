@@ -14,6 +14,7 @@ import gc
 from sys import argv
 
 def run_headless(cofig_file):
+    """reads in settings of the GA from settings file"""
     culture = Culture()
     data_watcher = DataWatcher()
     culture.register_data_watcher(data_watcher)
@@ -180,9 +181,7 @@ def run_GA(culture, objective, medium_volume, output_dir, queue_fitness, queue_f
     print("Finished Genetic Algorithm")
 
 if __name__ == '__main__':
-    bg_blue = "#8f9eb7"
-    bg_grey = "#DDDDDD"
-
+    """if no settings file is provided start GUI"""
     if len(argv) == 2:
         run_headless(argv[1])
 

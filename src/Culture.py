@@ -17,25 +17,24 @@ class Culture:
         ratios = [0 for species in self.species_list]
         self.rations = {}
 
-        total_volume = self.medium.volume * 10**15
+        total_volume = self.medium.volume * 10**15 #conversion from litre to pm^3
         used_volume = 0
 
         for species in self.species_list:
-            #print(species.name, species.data_watcher, species.get_abundance())
             used_volume += species.volume * species.get_abundance()
 
-        if total_volume <= used_volume * 1000:
+        if total_volume <= used_volume * 1000: # grow until 1/1000 of the medium is full of bacteria
             for component in self.medium.components:
                 self.rations[component] = [0 for x in ratios]
 
         else:
             for i in range(len(ratios)):
                 spec = self.species_list[i]
-                ratios[i] = 50 * spec.get_abundance() * spec.volume / total_volume
+                ratios[i] = 50 * spec.get_abundance() * spec.volume / total_volume # factor 50 is necessary to recreate experimental growth behavior of Klebsiella and Cirtobacter
 
             for component in self.medium.components:
                 self.rations[component] = [self.medium.components[component] * min(x, 1.0) for x in ratios]
-                #print(self.rations[component])
+
 
     def innoculate_species(self, species, abundance):
         """adds a species to the culture"""
@@ -62,7 +61,7 @@ class Culture:
         return len(self.species_list)
 
     def update_biomass(self, timestep, save_crossfeed=False):
-        """optimizes the biomass production of all species in the culture using FBA"""
+        """optimizes the biomass production of all species in the culture using FBA and handles metabolite usage and production"""
         self.allocate_medium()
 
         solutions = []
