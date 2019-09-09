@@ -36,7 +36,7 @@ class Population:
         return round(sum([individual.get_fitness() for individual in self.individuals]) / len(self.individuals), 6)
 
     def add_individual(self, individual):
-        '''Adds an individual (or list of individuals) to the population, sortes them by fitness and keeps the pop_size constant.'''
+        '''Adds an individual (or list of individuals) to the population and sortes them by fitness'''
         if isinstance(individual, list):
             for ind in individual:
                 ind.reconstruct(self.founder)
@@ -69,11 +69,7 @@ class Population:
 
         amount = (self.deaths + 1) // self.num_processes
 
-        #self.individuals = self.individuals[self.deaths:]
-        #print(len(self.individuals))
-
-        #total_fitness = sum([ind.get_fitness() for ind in self.individuals])
-
+        '''rescales the fitness scores so individuals with lower scores have a higher chance to be chosen to create offspring'''
         rel_fitness = [(len(self.individuals) / max(ind.get_fitness(), 0.000001)) for ind in self.individuals]
         scale = sum(rel_fitness)
         rel_fitness = [(fit / scale) for fit in rel_fitness]
@@ -90,6 +86,7 @@ class Population:
 
 
     def get_best(self):
+        """get the individual with the best fitness"""
         return self.individuals[-1]
 
     def __len__(self):

@@ -2,6 +2,7 @@ from copy import deepcopy
 
 class DataWatcher:
     def __init__(self):
+        """The datawatcher stores information like settings, biomasses and fitness scores of an individual"""
         self.data = {"species": {}, "individual": None, "settings": [None, None, None, 0.0], "crossfeeding": {}}
 
     def init_data_watcher(self, individual):

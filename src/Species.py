@@ -7,12 +7,11 @@ from cobra.core.solution import get_solution
 
 class Species:
     """class representing a bacterial species"""
-    def __init__(self, name, model_file_path, radius_microm=0.2, dry_weight_pg=0.3):
+    def __init__(self, name, model_file_path, radius_microm=0.2, dry_weight_pg=0.3, solver='cplex'):
         self.name = name
         self.model = cobra.io.read_sbml_model(model_file_path)
-        self.model.solver = 'cplex'
+        self.model.solver = solver
         self.model.solver.solution_target = 'global'
-        #self.model.solver.lp_method = 'barrier'
         self.dry_weight = dry_weight_pg
         self.surface_area = 4 * math.pi * radius_microm ** 2
         self.volume = 4 / 3 * math.pi * radius_microm ** 3
@@ -20,7 +19,6 @@ class Species:
 
         for reaction in self.model.exchanges:
             reaction.bounds = (0.0, 1000.0)
-        #print(f"Species {self.name} got created")
 
     def optimize(self, medium, timestep, save_crossfeed=False):
         """does FBA for the bacterial species. sets bounds of exchange reactions based on medium"""
@@ -30,7 +28,6 @@ class Species:
                     if reaction.id in medium:
                         tmp = round(-1 * medium.get_component(reaction.id) / self.get_biomass(), 6)
                         reaction.lower_bound = max(tmp, -1000)
-                        #print(reaction.id, reaction.lower_bound)
                     else:
                         reaction.lower_bound = 0.0
 
@@ -44,25 +41,23 @@ class Species:
                 print(self.name + " Model infeasible")
                 return
 
-            self.set_biomass((self.get_biomass() * round(solution.objective_value, 6) * timestep + self.get_biomass()) * (1 - self.data_watcher.get_death_rate()))
+            self.set_biomass((self.get_biomass() * round(solution.objective_value, 6) * timestep + self.get_biomass()) * (1 - self.data_watcher.get_death_rate())) # updates the biomass
 
             for i in range(len(solution.fluxes.index)):
                 name = solution.fluxes.index[i]
                 if name[:3] == "EX_":
                     flux = round(solution.fluxes.iloc[i], 6)
-                    #print(name, flux)
-                    solution.fluxes.iloc[i] = flux * self.get_biomass() * timestep * 10000
-                    #print(name, solution.fluxes.iloc[i])
+                    solution.fluxes.iloc[i] = flux * self.get_biomass() * timestep * 10000 # the factor 10000 is needed to get realistic metabolite usage, otherwise the culture would grow to much
                     if save_crossfeed:
                         if flux < 0:
                             self.data_watcher.add_crossfeed_interaction(self.name, name, True)
                         if flux > 0:
                             self.data_watcher.add_crossfeed_interaction(self.name, name, False)
-                    #print(solution.fluxes.iloc[i])
 
             return solution
 
     def get_growth_curve(self):
+        """returns a list of floats representing the abundance of the species at each timestep"""
         return self.data_watcher.get_growth_curve(self.name)
 
     def set_data_watcher(self, data_watcher):
@@ -71,6 +66,7 @@ class Species:
 
 
     def set_biomass(self, biomass):
+        """sets the biomass of the species. biomass argument has to be in gramm"""
         self.data_watcher.set_biomass(self.name, biomass * 1e12)
 
     def set_abundance(self, abundance):
