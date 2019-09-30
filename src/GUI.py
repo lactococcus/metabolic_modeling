@@ -158,7 +158,7 @@ class Application(tk.Tk):
         tk.Tk.__init__(self, *args, **kwargs)
         #self.attributes('-fullscreen', True)
         self.geometry(f"{self.winfo_screenwidth()}x{self.winfo_screenheight()}")
-        self.iconbitmap("U:/Bilder/icon.ico")
+        self.iconbitmap("assets/icon.ico")
 
         self.title("Bac Co-Med")
         self.container = ttk.Frame(self)
@@ -185,7 +185,7 @@ class StartPage(tk.Frame):
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent)
 
-        self.logo_image = tk.PhotoImage(file="U:/Bilder/logo.png")
+        self.logo_image = tk.PhotoImage(file="assets/logo.png")
 
         ttk.Label(self, image=self.logo_image).grid(row=0, column=0)
         ttk.Button(self, text="New Run", command=lambda :controller.show_frame(SetupPage), style='bigger.TButton').grid(row=1, column=0)
@@ -197,10 +197,10 @@ class SetupPage(tk.Frame):
 
         self.widgets = []
 
-        self.bacteria_image = tk.PhotoImage(file="U:/Bilder/add.gif")
-        self.start_image = tk.PhotoImage(file="U:/Bilder/start.gif")
-        self.file_image = tk.PhotoImage(file="U:/Bilder/file.gif")
-        self.info_image = tk.PhotoImage(file="U:/Bilder/info.gif")
+        self.bacteria_image = tk.PhotoImage(file="assets/add.gif")
+        self.start_image = tk.PhotoImage(file="assets/start.gif")
+        self.file_image = tk.PhotoImage(file="assets/file.gif")
+        self.info_image = tk.PhotoImage(file="assets/info.gif")
 
         ttk.Label(self, text="Setup Run", style='bigger.TLabel').grid(row=0, column=1)
         ttk.Label(self, text="Run Name:", style='big.TLabel').grid(row=1, column=0, sticky='w')
@@ -336,8 +336,8 @@ class SpeciesWidget(tk.Frame):
         self.species = species
         self.parent = parent
         #self.configure(bg=bg_colour)
-        self.cross_image = tk.PhotoImage(file="U:/Bilder/cross.gif")
-        self.edit_image = tk.PhotoImage(file="U:/Bilder/pencil.gif")
+        self.cross_image = tk.PhotoImage(file="assets/cross.gif")
+        self.edit_image = tk.PhotoImage(file="assets/pencil.gif")
         self.name = tk.StringVar()
         self.name.set(self.species.entry_name.get())
         tk.Label(self, textvariable=self.name).grid(row=0, column=0, sticky='w')
@@ -361,7 +361,7 @@ class BacteriaPage(tk.Frame):
         self.parent_page = parent_page
         self.controller = controller
         #self.configure(bg=bg_colour)
-        self.file_image = tk.PhotoImage(file="U:/Bilder/file.gif")
+        self.file_image = tk.PhotoImage(file="assets/file.gif")
         ttk.Label(self, text="Bacterium", style='big.TLabel').grid(row=0, column=1)
         ttk.Label(self, text="Name:").grid(row=1, column=0, sticky='w')
         ttk.Label(self, text="Model:").grid(row=2, column=0, sticky='w')
@@ -394,8 +394,8 @@ class RunPage(tk.Frame):
         self.plot_fitness = self.fig1.add_subplot(111)
         self.fig2 = Figure(figsize=(4,4), dpi=100)
         self.plot_founder = self.fig2.add_subplot(111)
-        self.fig3 = Figure(figsize=(4, 4), dpi=100)
-        self.plot_test_medium = self.fig3.add_subplot(111)
+        #self.fig3 = Figure(figsize=(4, 4), dpi=100)
+        #self.plot_test_medium = self.fig3.add_subplot(111)
 
         self.queue_fitness = None
         self.queue_founder = None
@@ -403,32 +403,32 @@ class RunPage(tk.Frame):
 
         self.canvas1 = FigureCanvasTkAgg(self.fig1, master=self)
         self.canvas2 = FigureCanvasTkAgg(self.fig2, master=self)
-        self.canvas3 = FigureCanvasTkAgg(self.fig3, master=self)
+        #self.canvas3 = FigureCanvasTkAgg(self.fig3, master=self)
         self.canvas1.draw()
         self.canvas2.draw()
-        self.canvas3.draw()
+        #self.canvas3.draw()
         self.canvas1.get_tk_widget().grid(row=1, column=0, padx=10)
-        self.canvas2.get_tk_widget().grid(row=4, column=0, padx=10)
-        self.canvas3.get_tk_widget().grid(row=4, column=2, padx=10)
+        self.canvas2.get_tk_widget().grid(row=1, column=4, padx=10)
+        #self.canvas3.get_tk_widget().grid(row=4, column=2, padx=10)
 
 
         ttk.Label(self, text="Fitness:", style='big.TLabel').grid(row=0, column=0)
-        ttk.Label(self, text="Current Best:", style='big.TLabel').grid(row=3, column=0)
-        ttk.Label(self, text="Minimized Medium:", style='big.TLabel').grid(row=3, column=2)
-        ttk.Button(self, text="Back", command=quit_and_back).grid(row=0, column=1)
-        ttk.Button(self, text="Refresh", command=self.update_founder_plot).grid(row=5, column=0)
+        ttk.Label(self, text="Current Best:", style='big.TLabel').grid(row=0, column=4)
+        #ttk.Label(self, text="Minimized Medium:", style='big.TLabel').grid(row=3, column=2)
+        ttk.Button(self, text="Back", command=quit_and_back).grid(row=2, column=0)
+        ttk.Button(self, text="Refresh", command=self.update_founder_plot).grid(row=2, column=4)
 
         self.anim_fitness = animation.FuncAnimation(self.fig1, self._draw_fitness, interval=10000)
         self.anim_founder = animation.FuncAnimation(self.fig2, self._draw_founder, interval=10000)
-        self.anim_medium = animation.FuncAnimation(self.fig3, self._draw_medium, interval=2000)
+        #self.anim_medium = animation.FuncAnimation(self.fig3, self._draw_medium, interval=2000)
 
         self.text = tk.Text(self, state=tk.DISABLED)
-        self.text.grid(row=1, column=2)
+        self.text.grid(row=1, column=8)
 
         #medium = Medium.import_medium("U:\Masterarbeit\GA_Results\medium_minimized_9901.txt")
-        self.medium_control = MediumTreeView(self, parent, run_object=run)
+        #self.medium_control = MediumTreeView(self, parent, run_object=run)
         #self.medium_control.add_medium(medium)
-        self.medium_control.grid(row=1, column=3, padx=30, rowspan=4, columnspan=3, sticky='n')
+        #self.medium_control.grid(row=1, column=3, padx=30, rowspan=4, columnspan=3, sticky='n')
 
     def _draw_fitness(self, i):
         try:
