@@ -9,10 +9,12 @@ class Species:
     """class representing a bacterial species"""
     def __init__(self, name, model_file_path, radius_microm=0.2, dry_weight_pg=0.3, solver='cplex'):
         self.name = name
+        self.model_file = model_file_path
         self.model = cobra.io.read_sbml_model(model_file_path)
         self.model.solver = solver
         self.model.solver.solution_target = 'global'
         self.dry_weight = dry_weight_pg
+        self.radius = radius_microm
         self.surface_area = 4 * math.pi * radius_microm ** 2
         self.volume = 4 / 3 * math.pi * radius_microm ** 3
         self.data_watcher = None
@@ -91,6 +93,10 @@ class Species:
 
     def add_to_culture(self, culture):
         self.culture = culture
+
+    def get_radius(self):
+        """returns radius in micrometers"""
+        return self.radius
 
     def __del__(self):
         #print(f"Species {self.name} got destroyed")

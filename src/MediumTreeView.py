@@ -23,6 +23,7 @@ class MediumTreeView(Frame):
         self.run_object = kwargs.pop('run_object', None)
 
         self.medium = None
+        self.medium_volume = None
 
         Label(self, text="Quantity:").grid(row=1, column=0)
         self.edit_entry = FloatEntry(self, initial_value='')
@@ -36,35 +37,33 @@ class MediumTreeView(Frame):
         self.rad_button_exclude.grid(row=2, column=1, sticky='e')
         Label(self, text="Include:").grid(row=2, column=0)
 
-        Button(self, text="Test Medium", command=self.plot_medium).grid(row=3, column=0)
+        Button(self, text="Test Medium", command=parent.plot).grid(row=3, column=0)
         Button(self, text="Save Medium", command=self.save_medium).grid(row=3, column=1)
 
-    def plot_medium(self):
+    def plot_medium(self, individual, sub_plot):
         if self.medium is not None:
             components = {}
             children = self.tree.get_children('')
             for child in children:
                 child = self.tree.item(child)
                 name = child['values'][0]
-                quant = float(child['values'][1])
+                quant = float(child['values'][1]) * 200
                 flag = bool(child['values'][2])
                 if flag:
                     components[name] = quant
-            medium = Medium.from_dict(components, self.run_object.medium_volume)
-            individual = Individual(self.run_object.culture, None, self.run_object.objective, self.run_object.medium_volume, self.run_object.sim_time, self.run_object.timestep, self.run_object.culture.data_watcher)
-            individual.plot(medium=medium, sub_plot=self.run_object.graph_page.plot_test_medium)
-            self.run_object.graph_page._draw_medium(0)
+            medium = Medium.from_dict(components, self.medium_volume)
+            individual.plot(medium=medium, sub_plot=sub_plot)
 
-
-    def add_medium(self, medium):
+    def add_medium(self, medium, medium_volume):
         if medium is not None:
             self.medium = medium
+            self.medium_volume = medium_volume
             self.update_treeviev()
 
     def update_treeviev(self):
         if self.medium is not None:
             for i, comp in enumerate(self.medium.get_components()):
-                self.tree.insert('', i, comp, values=[comp, self.medium.get_components()[comp], 1])
+                self.tree.insert('', i, comp, values=[comp, self.medium.get_components()[comp] / 200, 1])
 
     def select_item(self, a):
         try:

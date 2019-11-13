@@ -146,7 +146,7 @@ def run_GA(population, output_dir, queue_fitness, queue_founder, callback, suffi
             callback.graph_page.text.insert(END, "Finished")
             callback.graph_page.text.config(state=DISABLED)
 
-            callback.graph_page.medium_control.add_medium(medium)
+            #callback.graph_page.medium_control.add_medium(medium)
 
         if population.get_best().get_fitness() <= 0.1:
             ind_solutions.append(medium)

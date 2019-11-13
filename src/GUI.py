@@ -72,7 +72,7 @@ def add_bacterium(parent, controller, bacterium):
             species_widget = SpeciesWidget(parent, controller, bacterium)
             bacterium.parent_page.widgets.append(species_widget)
         bacterium.parent_page.update()
-        bacterium.controller.show_frame(SetupPage)
+        bacterium.parent_page.tkraise()
 
 def quit_and_back():
     app.show_frame(SetupPage)
@@ -131,16 +131,6 @@ def start(setup):
         print("Less than two Species added")
         return
 
-    for widget in setup.widgets:
-        objective[widget.species.entry_name.get()] = widget.entry_objective.get()
-        model = widget.species.entry_model.get()
-        if not os.path.isfile(model):
-            print(f"Can not find file: {model}")
-            return
-        print(f"Loading Model of Species: {widget.species.entry_name.get()}")
-        species = Species(widget.species.entry_name.get(), model, widget.species.entry_radius.get(), widget.species.entry_dryweight.get())
-        culture.innoculate_species(species, widget.species.entry_innoculation.get())
-
     run.objective = objective
     run.culture = culture
 
@@ -149,6 +139,23 @@ def start(setup):
     run.graph_page = run_page
 
     run_page.tkraise()
+
+    for widget in setup.widgets:
+        objective[widget.species.entry_name.get()] = widget.entry_objective.get()
+        model = widget.species.entry_model.get()
+        if not os.path.isfile(model):
+            print(f"Can not find file: {model}")
+            return
+
+        if run.graph_page != None:
+            from tkinter import END, DISABLED, NORMAL
+            run.graph_page.text.config(state=NORMAL)
+            run.graph_page.text.insert(END, f"Loading Model of Species: {widget.species.entry_name.get()}\n")
+            run.graph_page.text.config(state=DISABLED)
+
+        print(f"Loading Model of Species: {widget.species.entry_name.get()}")
+        species = Species(widget.species.entry_name.get(), model, widget.species.entry_radius.get(), widget.species.entry_dryweight.get())
+        culture.innoculate_species(species, widget.species.entry_innoculation.get())
 
     run.start_process()
 
@@ -168,7 +175,20 @@ class Application(tk.Tk):
 
         self.frames = {}
 
-        for F in (SetupPage, StartPage):
+        global file_image
+        file_image = tk.PhotoImage(file="assets/file.gif")
+        global bacteria_image
+        bacteria_image = tk.PhotoImage(file="assets/add.gif")
+        global start_image
+        start_image = tk.PhotoImage(file="assets/start.gif")
+        global info_image
+        info_image = tk.PhotoImage(file="assets/info.gif")
+        global cross_image
+        cross_image = tk.PhotoImage(file="assets/cross.gif")
+        global edit_image
+        edit_image = tk.PhotoImage(file="assets/pencil.gif")
+
+        for F in (SetupPage, StartPage, RefinePage):
             frame = F(self.container, self)
             self.frames[F] = frame
             frame.grid(row=0, column=0, sticky="nsew")
@@ -188,8 +208,9 @@ class StartPage(tk.Frame):
         self.logo_image = tk.PhotoImage(file="assets/logo.png")
 
         ttk.Label(self, image=self.logo_image).grid(row=0, column=0)
-        ttk.Button(self, text="New Run", command=lambda :controller.show_frame(SetupPage), style='bigger.TButton').grid(row=1, column=0)
-        ttk.Button(self, text="Exit", command=_quit, style='bigger.TButton').grid(row=2, column=0)
+        ttk.Button(self, text="Run GA", command=lambda :controller.show_frame(SetupPage), style='bigger.TButton').grid(row=1, column=0)
+        ttk.Button(self, text="Refine Medium", command=lambda :controller.show_frame(RefinePage), style='bigger.TButton').grid(row=2, column=0)
+        ttk.Button(self, text="Exit", command=_quit, style='bigger.TButton').grid(row=3, column=0)
 
 class SetupPage(tk.Frame):
     def __init__(self, parent, controller):
@@ -197,16 +218,11 @@ class SetupPage(tk.Frame):
 
         self.widgets = []
 
-        self.bacteria_image = tk.PhotoImage(file="assets/add.gif")
-        self.start_image = tk.PhotoImage(file="assets/start.gif")
-        self.file_image = tk.PhotoImage(file="assets/file.gif")
-        self.info_image = tk.PhotoImage(file="assets/info.gif")
-
         ttk.Label(self, text="Setup Run", style='bigger.TLabel').grid(row=0, column=1)
         ttk.Label(self, text="Run Name:", style='big.TLabel').grid(row=1, column=0, sticky='w')
         ttk.Separator(self, orient="horizontal").grid(row=2, columnspan=5, sticky='ew')
         ttk.Label(self, text="Bacteria:", style='big.TLabel').grid(row=3, column=0, sticky='w')
-        self.add_bacteria_button = ttk.Button(self, text="Add Bacteria", image=self.bacteria_image, compound="left", command=lambda :new_bacteria(parent, controller, self))
+        self.add_bacteria_button = ttk.Button(self, text="Add Bacteria", image=bacteria_image, compound="left", command=lambda :new_bacteria(parent, controller, self))
         self.add_bacteria_button.grid(row=4+len(self.widgets), column=0)
 
         ttk.Separator(self, orient="horizontal").grid(row=678, columnspan=5, sticky='ew')
@@ -239,12 +255,12 @@ class SetupPage(tk.Frame):
         ttk.Label(self, text="Chemical list:").grid(row=894, column=0, sticky='w')
         ttk.Separator(self, orient="horizontal").grid(row=899, columnspan=5, sticky='ew')
 
-        ttk.Button(self, text="Start Run", image=self.start_image, command=lambda :start(self), compound="left").grid(row=1000, column=0)
-        ttk.Button(self, text="Exit", command=_quit).grid(row=1000, column=1)
+        ttk.Button(self, text="Start Run", image=start_image, command=lambda :start(self), compound="left").grid(row=1000, column=0)
+        ttk.Button(self, text="Back", command=lambda :controller.show_frame(StartPage)).grid(row=1000, column=1)
         #ttk.Button(self, text="Test", command=lambda :controller.show_frame(RunPage)).grid(row=1000, column=2)
-        ttk.Button(self, image=self.file_image, command=lambda: choose_directory(self.entry_output)).grid(row=682, column=2, sticky='w')
-        ttk.Button(self, image=self.info_image, command=lambda :tk.messagebox.showinfo("Info pFBA", "pFBA also minimizes the amount of metabolites used. However it takes 2x as long.")).grid(row=788, column=2, sticky='w')
-        ttk.Button(self, image=self.file_image, command=lambda: choose_file(self.entry_chromosome)).grid(row=894, column=2, sticky='w')
+        ttk.Button(self, image=file_image, command=lambda: choose_directory(self.entry_output)).grid(row=682, column=2, sticky='w')
+        ttk.Button(self, image=info_image, command=lambda :tk.messagebox.showinfo("Info pFBA", "pFBA also minimizes the amount of metabolites used. However it takes 2x as long.")).grid(row=788, column=2, sticky='w')
+        ttk.Button(self, image=file_image, command=lambda: choose_file(self.entry_chromosome)).grid(row=894, column=2, sticky='w')
 
         self.entry_run_name = StringEntry(self)
         self.entry_run_name.grid(row=1, column=1)
@@ -336,16 +352,14 @@ class SpeciesWidget(tk.Frame):
         self.species = species
         self.parent = parent
         #self.configure(bg=bg_colour)
-        self.cross_image = tk.PhotoImage(file="assets/cross.gif")
-        self.edit_image = tk.PhotoImage(file="assets/pencil.gif")
         self.name = tk.StringVar()
         self.name.set(self.species.entry_name.get())
         tk.Label(self, textvariable=self.name).grid(row=0, column=0, sticky='w')
         tk.Label(self, text="Objective:").grid(row=0, column=2, sticky='e')
         self.entry_objective = FloatEntry(self)
         self.entry_objective.grid(row=0, column=3, sticky='e')
-        ttk.Button(self, image=self.edit_image, command=lambda: species.tkraise()).grid(row=0, column=4, sticky='w')
-        ttk.Button(self, image=self.cross_image, command=lambda: self.remove()).grid(row=0, column=5, sticky='w')
+        ttk.Button(self, image=edit_image, command=lambda: species.tkraise()).grid(row=0, column=4, sticky='w')
+        ttk.Button(self, image=cross_image, command=lambda: self.remove()).grid(row=0, column=5, sticky='w')
 
     def update(self):
         self.name.set(self.species.entry_name.get())
@@ -361,7 +375,6 @@ class BacteriaPage(tk.Frame):
         self.parent_page = parent_page
         self.controller = controller
         #self.configure(bg=bg_colour)
-        self.file_image = tk.PhotoImage(file="assets/file.gif")
         ttk.Label(self, text="Bacterium", style='big.TLabel').grid(row=0, column=1)
         ttk.Label(self, text="Name:").grid(row=1, column=0, sticky='w')
         ttk.Label(self, text="Model:").grid(row=2, column=0, sticky='w')
@@ -370,7 +383,7 @@ class BacteriaPage(tk.Frame):
         ttk.Label(self, text="Innoculation size:").grid(row=5, column=0, sticky='w')
         ttk.Button(self, text="Save Bacterium", command=lambda :add_bacterium(parent_page, controller, self)).grid(row=6, column=0)
         ttk.Button(self, text="Back", command=lambda :controller.show_frame(SetupPage)).grid(row=100, column=0)
-        ttk.Button(self, image=self.file_image, command=lambda: choose_file(self.entry_model)).grid(row=2, column=2, sticky='w')
+        ttk.Button(self, image=file_image, command=lambda: choose_file(self.entry_model)).grid(row=2, column=2, sticky='w')
 
         self.entry_name = StringEntry(self)
         self.entry_name.grid(row=1, column=1)
@@ -389,13 +402,11 @@ class BacteriaPage(tk.Frame):
 class RunPage(tk.Frame):
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent)
-        #self.configure(bg=bg_colour)
+
         self.fig1 = Figure(figsize=(4,4), dpi=100)
         self.plot_fitness = self.fig1.add_subplot(111)
         self.fig2 = Figure(figsize=(4,4), dpi=100)
         self.plot_founder = self.fig2.add_subplot(111)
-        #self.fig3 = Figure(figsize=(4, 4), dpi=100)
-        #self.plot_test_medium = self.fig3.add_subplot(111)
 
         self.queue_fitness = None
         self.queue_founder = None
@@ -403,32 +414,25 @@ class RunPage(tk.Frame):
 
         self.canvas1 = FigureCanvasTkAgg(self.fig1, master=self)
         self.canvas2 = FigureCanvasTkAgg(self.fig2, master=self)
-        #self.canvas3 = FigureCanvasTkAgg(self.fig3, master=self)
+
         self.canvas1.draw()
         self.canvas2.draw()
-        #self.canvas3.draw()
+
         self.canvas1.get_tk_widget().grid(row=1, column=0, padx=10)
         self.canvas2.get_tk_widget().grid(row=1, column=4, padx=10)
-        #self.canvas3.get_tk_widget().grid(row=4, column=2, padx=10)
-
 
         ttk.Label(self, text="Fitness:", style='big.TLabel').grid(row=0, column=0)
         ttk.Label(self, text="Current Best:", style='big.TLabel').grid(row=0, column=4)
-        #ttk.Label(self, text="Minimized Medium:", style='big.TLabel').grid(row=3, column=2)
+
         ttk.Button(self, text="Back", command=quit_and_back).grid(row=2, column=0)
         ttk.Button(self, text="Refresh", command=self.update_founder_plot).grid(row=2, column=4)
 
         self.anim_fitness = animation.FuncAnimation(self.fig1, self._draw_fitness, interval=10000)
         self.anim_founder = animation.FuncAnimation(self.fig2, self._draw_founder, interval=10000)
-        #self.anim_medium = animation.FuncAnimation(self.fig3, self._draw_medium, interval=2000)
 
         self.text = tk.Text(self, state=tk.DISABLED)
         self.text.grid(row=1, column=8)
 
-        #medium = Medium.import_medium("U:\Masterarbeit\GA_Results\medium_minimized_9901.txt")
-        #self.medium_control = MediumTreeView(self, parent, run_object=run)
-        #self.medium_control.add_medium(medium)
-        #self.medium_control.grid(row=1, column=3, padx=30, rowspan=4, columnspan=3, sticky='n')
 
     def _draw_fitness(self, i):
         try:
@@ -533,6 +537,64 @@ class RunObject:
         if self.graph_page != None:
             self.graph_page.update_fitness_plot()
             self.graph_page.update_founder_plot()
+
+
+class RefinePage(tk.Frame):
+    def __init__(self, parent, controller):
+        tk.Frame.__init__(self, parent)
+
+        self.individual = None
+        self.chrom = None
+        self.save = None
+
+        self.fig = Figure(figsize=(4, 4), dpi=100)
+        self.plot_growth = self.fig.add_subplot(111)
+        self.canvas = FigureCanvasTkAgg(self.fig, master=self)
+        self.canvas.draw()
+        self.canvas.get_tk_widget().grid(row=1, column=5, padx=10, rowspan=20)
+
+        ttk.Label(self, text="Simulated Growth:", style='big.TLabel').grid(row=0, column=5)
+        ttk.Label(self, text='Medium refinement', style='big.TLabel').grid(row=0, column=0)
+        ttk.Label(self, text="Medium:", style='big.TLabel').grid(row=0, column=6)
+
+        ttk.Label(self, text="Save File:").grid(row=1, column=0)
+        ttk.Label(self, text="Input Chromosome:").grid(row=2, column=0)
+
+        self.entry_chromosome = StringEntry(self)
+        self.entry_chromosome.grid(row=2, column=1)
+        self.entry_savefile = StringEntry(self)
+        self.entry_savefile.grid(row=1, column=1)
+
+        ttk.Button(self, image=file_image, command=lambda: choose_file(self.entry_chromosome)).grid(row=2, column=2, sticky='w')
+        ttk.Button(self, image=file_image, command=lambda: choose_file(self.entry_savefile)).grid(row=1, column=2, sticky='w')
+        ttk.Button(self, text="Back", command=lambda: controller.show_frame(StartPage)).grid(row=3, column=0)
+        ttk.Button(self, text="Import", command=self.load).grid(row=3, column=1)
+        ttk.Button(self, text="Plot", command=self.plot).grid(row=21, column=5)
+
+        self.medium = MediumTreeView(self)
+        self.medium.grid(row=1, column=6, rowspan=40)
+
+
+    def load(self):
+        if self.chrom != self.entry_chromosome.get() or self.save != self.entry_savefile.get():
+            chr = Chromosome_Quantitative.import_chromosome(self.entry_chromosome.get())
+            self.chrom = self.entry_chromosome.get()
+
+            (culture, objective, medium_volume, output_dir, queue_fitness, queue_founder, callback, num_cpus,
+             sim_time, timestep, pop_size, death_per_gen, iterations, run_name, mutation_chance, deletion_chance,
+             mutation_freq, deletion_freq, crossover_freq, twopoint, repeats, chromosome) = BacCoMed.load_runfile(self.entry_savefile.get())
+            self.save = self.entry_savefile.get()
+
+            self.medium.add_medium(chr.to_medium(medium_volume), medium_volume)
+
+            self.individual = Individual(culture, chr, objective, medium_volume, sim_time, timestep, data_watcher=culture.data_watcher)
+        self.plot()
+
+    def plot(self):
+        if self.individual != None:
+            self.medium.plot_medium(self.individual, self.plot_growth)
+            self.canvas.draw()
+
 
 if __name__ == '__main__':
     bg_blue = "#8f9eb7"
