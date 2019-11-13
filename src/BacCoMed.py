@@ -12,6 +12,7 @@ from Individual import Individual
 from Chromosome import *
 import gc
 from sys import argv
+import SEEDIDs
 
 def run_headless(config_file):
     """reads in settings of the GA from settings file"""
@@ -258,12 +259,8 @@ def run_GA(culture, objective, medium_volume, output_dir, queue_fitness, queue_f
 
 if __name__ == '__main__':
     """if no settings file is provided start GUI"""
-    SEED_to_Names = {}
-    with open("data/seed_mtabolites_edited.tsv") as file:
-        file.readline()
-        for line in file:
-            line = line.split('\t')
-            SEED_to_Names[line[0]] = line[2]
+
+    SEEDIDs.init()
 
     if len(argv) == 2:
         run_headless(argv[1])

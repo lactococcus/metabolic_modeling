@@ -3,20 +3,23 @@ from tkinter.ttk import Treeview, Button, Label, Radiobutton
 from CustomEntryWidgets import FloatEntry
 from tkinter import Frame, IntVar
 from Individual import Individual
+import SEEDIDs
 
 class MediumTreeView(Frame):
     def __init__(self, parent, *args, **kwargs):
         Frame.__init__(self, parent)
         self.tree = Treeview(self)
         self.tree['selectmode'] = "browse"
-        self.tree['columns'] = ('Metabolite', 'Gram', 'Include')
+        self.tree['columns'] = ('ID', 'Name', 'Gram', 'Include')
         self.tree['height'] = 30
         self.tree['show'] = "headings"
-        self.tree.heading('Metabolite', text="Metabolite")
+        self.tree.heading('ID', text="ID")
+        self.tree.heading('Name', text="Name")
         self.tree.heading('Gram', text="Quantity [mmol]")
         self.tree.heading('Include', text="Include")
-        self.tree.column('Metabolite', minwidth=100, width=100)
-        self.tree.column('Gram', minwidth=0, width=80)
+        self.tree.column('ID', minwidth=0, width=20)
+        self.tree.column('Name', minwidth=100, width=100)
+        self.tree.column('Gram', minwidth=0, width=90)
         self.tree.column('Include', minwidth=50, width=50)
         self.tree.bind('<ButtonRelease-1>', self.select_item)
         self.tree.grid(row=0, column=0, columnspan=3)
@@ -46,11 +49,11 @@ class MediumTreeView(Frame):
             children = self.tree.get_children('')
             for child in children:
                 child = self.tree.item(child)
-                name = child['values'][0]
-                quant = float(child['values'][1]) * 200
-                flag = bool(child['values'][2])
+                ID = child['values'][0]
+                quant = float(child['values'][2]) * 200
+                flag = bool(child['values'][3])
                 if flag:
-                    components[name] = quant
+                    components[ID] = quant
             medium = Medium.from_dict(components, self.medium_volume)
             individual.plot(medium=medium, sub_plot=sub_plot)
 
@@ -63,13 +66,17 @@ class MediumTreeView(Frame):
     def update_treeviev(self):
         if self.medium is not None:
             for i, comp in enumerate(self.medium.get_components()):
-                self.tree.insert('', i, comp, values=[comp, self.medium.get_components()[comp] / 200, 1])
+                try:
+                    name = SEEDIDs.SEED_to_Names[comp.split("_")[1]]
+                except:
+                    name = comp
+                self.tree.insert('', i, comp, values=[comp, name, self.medium.get_components()[comp] / 200, 1])
 
     def select_item(self, a):
         try:
             currItem = self.tree.focus()
-            string_qu = self.tree.item(currItem)['values'][1]
-            include = bool(self.tree.item(currItem)['values'][2])
+            string_qu = self.tree.item(currItem)['values'][2]
+            include = bool(self.tree.item(currItem)['values'][3])
             self.edit_entry.set(string_qu)
             self.rad_var.set(0 if not include else 1)
         except:
@@ -77,9 +84,10 @@ class MediumTreeView(Frame):
 
     def save_changes(self):
         currItem = self.tree.focus()
-        name = self.tree.item(currItem)['values'][0]
+        ID = self.tree.item(currItem)['values'][0]
+        name = self.tree.item(currItem)['values'][1]
         exclude = 1 if self.rad_var.get() == 1 else 0
-        self.tree.item(currItem, values=[name, self.edit_entry.get(), exclude])
+        self.tree.item(currItem, values=[ID, name, self.edit_entry.get(), exclude])
 
     def load_medium(self, file):
         medium = Medium.import_medium(file)
@@ -91,9 +99,10 @@ class MediumTreeView(Frame):
             children = self.tree.get_children('')
             for child in children:
                 child = self.tree.item(child)
-                name = child['values'][0]
-                quant = float(child['values'][1])
-                flag = bool(child['values'][2])
+                ID = child['values'][0]
+                name = child['values'][1]
+                quant = float(child['values'][2])
+                flag = bool(child['values'][3])
                 if flag:
                     if quant > 0:
                         components[name] = quant

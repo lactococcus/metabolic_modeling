@@ -569,7 +569,7 @@ class RefinePage(tk.Frame):
         ttk.Button(self, image=file_image, command=lambda: choose_file(self.entry_savefile)).grid(row=1, column=2, sticky='w')
         ttk.Button(self, text="Back", command=lambda: controller.show_frame(StartPage)).grid(row=3, column=0)
         ttk.Button(self, text="Import", command=self.load).grid(row=3, column=1)
-        ttk.Button(self, text="Plot", command=self.plot).grid(row=21, column=5)
+        #ttk.Button(self, text="Plot", command=self.plot).grid(row=21, column=5)
 
         self.medium = MediumTreeView(self)
         self.medium.grid(row=1, column=6, rowspan=40)
