@@ -41,7 +41,7 @@ class MediumTreeView(Frame):
         Label(self, text="Include:").grid(row=2, column=0)
 
         Button(self, text="Test Medium", command=parent.plot).grid(row=3, column=0)
-        Button(self, text="Save Medium", command=self.save_medium).grid(row=3, column=1)
+        Button(self, text="Save Medium", command=lambda: self.save_medium(parent.save)).grid(row=3, column=1)
 
     def plot_medium(self, individual, sub_plot):
         if self.medium is not None:
@@ -93,8 +93,14 @@ class MediumTreeView(Frame):
         medium = Medium.import_medium(file)
         self.add_medium(medium)
 
-    def save_medium(self):
+    def save_medium(self, path):
         if self.medium is not None:
+            print(path.split("/")[:-1])
+            file_path = ""
+            for x in path.split("/")[:-1]:
+                file_path = file_path + x + "/"
+
+            print(file_path)
             components = {}
             children = self.tree.get_children('')
             for child in children:
@@ -105,6 +111,6 @@ class MediumTreeView(Frame):
                 flag = bool(child['values'][3])
                 if flag:
                     if quant > 0:
-                        components[name] = quant
-            medium = Medium.from_dict(components, self.run_object.medium_volume)
-            Medium.export_medium(medium, "U:/Masterarbeit/GA_Results/final_medium.txt")
+                        components[name] = quant / 200
+            medium = Medium.from_dict(components, self.medium_volume)
+            Medium.export_medium(medium, file_path + "/refinded_medium.txt")
