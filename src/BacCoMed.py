@@ -13,8 +13,18 @@ from Chromosome import *
 import gc
 from sys import argv
 
-def run_headless(cofig_file):
+def run_headless(config_file):
     """reads in settings of the GA from settings file"""
+
+    (culture, objective, medium_volume, output_dir, queue_fitness, queue_founder, callback, num_cpus,
+     sim_time, timestep, pop_size, death_per_gen, iterations, run_name, mutation_chance, deletion_chance,
+     mutation_freq, deletion_freq, crossover_freq, twopoint, repeats, chromosome) = load_runfile(config_file)
+
+    run_GA(culture, objective, medium_volume, output_dir, queue_fitness, queue_founder, callback, num_cpus,
+            sim_time, timestep, pop_size, death_per_gen, iterations, run_name, mutation_chance, deletion_chance,
+            mutation_freq, deletion_freq, crossover_freq, twopoint, repeats, chromosome)
+
+def load_runfile(config_file):
     culture = Culture()
     data_watcher = DataWatcher()
     culture.register_data_watcher(data_watcher)
@@ -43,16 +53,16 @@ def run_headless(cofig_file):
 
     num_species = 0
 
-    with open(cofig_file, 'r') as file:
+    with open(config_file, 'r') as file:
         run_name = file.readline().strip('\n').split(' ')[1]
         print("Run Name {}".format(run_name))
         for line in file:
-            #print(line.strip('\n'))
+            # print(line.strip('\n'))
             if line.strip('\n') == '':
                 continue
             else:
                 line = line.strip('\n').split(' ')
-                #print(line)
+                # print(line)
                 if line[0] == '#NUM_RUNS':
                     repeats = int(line[1])
                     print("Repeats {}".format(repeats))
@@ -130,6 +140,7 @@ def run_headless(cofig_file):
                     continue
                 elif line[0] == '#NUM_SPECIES':
                     num_species = int(line[1])
+                    #print(num_species)
                     break
 
         print("Loading Species")
@@ -151,15 +162,68 @@ def run_headless(cofig_file):
             objective[spec_name] = obj
 
     print("Loaded Configurations")
-    run_GA(culture, objective, medium_volume, output_dir, queue_fitness, queue_founder, callback, num_cpus,
+    return (culture, objective, medium_volume, output_dir, queue_fitness, queue_founder, callback, num_cpus,
             sim_time, timestep, pop_size, death_per_gen, iterations, run_name, mutation_chance, deletion_chance,
             mutation_freq, deletion_freq, crossover_freq, twopoint, repeats, chromosome)
+
+def save_runfile(individual, population, output_dir, run_name, iterations, num_runs, chromosome_file=None):
+    """Writes a settings file of the current run"""
+    print("Writing setup to file: at {}".format(output_dir + "/" + run_name + "_runfile.txt"))
+    with open(output_dir + "/" + run_name + "_runfile.txt", 'w') as file:
+        file.write("#RUN_NAME {}\n".format(run_name))
+        file.write("\nGENERAL\n")
+        file.write("#NUM_RUNS {}\n".format(num_runs))
+        file.write("#NUM_CPUS {}\n".format(population.num_processes))
+        file.write("#OUTPUT_DIR {}\n".format(output_dir))
+        file.write("\nFBA\n")
+        file.write("#SIM_TIME {}\n".format(individual.simulation_time))
+        file.write("#TIMESTEP {}\n".format(individual.timestep))
+        file.write("#DEATH_RATE {}\n".format(individual.data_watcher.get_death_rate()))
+        file.write("#MEDIUM_VOLUME {}\n".format(individual.medium_volume))
+        file.write("#PFBA {}\n".format(individual.data_watcher.get_pfba()))
+        file.write("#ENFORCE_GROWTH {}\n".format(individual.data_watcher.get_enforce_growth()))
+        file.write("#AEROB_GROWTH {}\n".format(individual.data_watcher.get_oxygen()))
+        file.write("\nGA\n")
+        file.write("#POP_SIZE {}\n".format(population.size))
+        file.write("#OFFSPRING_PER_GEN {}\n".format(population.deaths))
+        file.write("#ITERATIONS {}\n".format(iterations))
+        file.write("#MUTATION_CHANCE {}\n".format(population.mutation_chance))
+        file.write("#DELETION_CHANCE {}\n".format(population.deletion_chance))
+        file.write("#MUTATION_FREQ {}\n".format(population.mutation_freq))
+        file.write("#DELETION_FREQ {}\n".format(population.deletion_freq))
+        file.write("#CROSSOVER_FREQ {}\n".format(population.crossover_freq))
+        file.write("#TWO_POINT {}\n".format(population.twopoint))
+        file.write("#CHROMOSOME {}\n".format(chromosome_file if chromosome_file is not None else ""))
+        file.write("\nSPECIES\n")
+        file.write("#NUM_SPECIES {}\n".format(len(individual.culture)))
+        file.write("\n")
+
+        for spec in individual.culture.species_list:
+            file.write("#NAME {}\n".format(spec.name))
+            file.write("#MODEL {}\n".format(spec.model_file))
+            file.write("#RADIUS {}\n".format(spec.get_radius()))
+            file.write("#DRYWEIGHT {}\n".format(spec.dry_weight))
+            file.write("#INNOCULATION_SIZE {}\n".format(int(spec.get_init_abundance())))
+            file.write("#OBJECTIVE {}\n".format(individual.objective[spec.name]))
+            file.write("\n")
 
 def run_GA(culture, objective, medium_volume, output_dir, queue_fitness, queue_founder,  callback, num_cpus, sim_time, timestep, pop_size, death_per_gen, iterations, run_name, mutation_chance, deletion_chance, mutation_freq, deletion_freq, crossover_freq, twopoint, repeats, chromosome):
 
     if chromosome == None:
+        if callback != None:
+            from tkinter import END, DISABLED, NORMAL
+            callback.graph_page.text.config(state=NORMAL)
+            callback.graph_page.text.insert(END, "Finding Essential Nutrients...\n")
+            callback.graph_page.text.config(state=DISABLED)
+
         print("Finding Essential Nutrients...")
         num_essentials, essential_nutrients = GA.find_essential_nutrients(culture.species_list, len(culture.species_list) // 2)
+        
+        if callback != None:
+            callback.graph_page.text.config(state=NORMAL)
+            callback.graph_page.text.insert(END, "Found {} Essential Nutrients!\n".format(num_essentials))
+            callback.graph_page.text.config(state=DISABLED)
+
         print("Found {} Essential Nutrients!\n".format(num_essentials))
         dicts = GA.generate_dicts(culture.species_list, essential_nutrients)
         names_to_index = dicts[0]
@@ -176,12 +240,31 @@ def run_GA(culture, objective, medium_volume, output_dir, queue_fitness, queue_f
 
     population = Population(founder, pop_size, death_per_gen, mutation_chance, deletion_chance, crossover_freq, mutation_freq, deletion_freq, twopoint, num_cpus)
 
+    if callback != None:
+        callback.graph_page.text.config(state=NORMAL)
+        callback.graph_page.text.insert(END, "Starting Genetic Algorithm\n")
+        callback.graph_page.text.config(state=DISABLED)
+
+    save_runfile(founder, population, output_dir, run_name, iterations, repeats, chromosome)
     print("Starting Genetic Algorithm")
     GA.run_GA(population, output_dir, queue_fitness, queue_founder, callback, run_name, iterations, repeats)
+
+    if callback != None:
+        callback.graph_page.text.config(state=NORMAL)
+        callback.graph_page.text.insert(END, "Finished Genetic Algorithm\n")
+        callback.graph_page.text.config(state=DISABLED)
+
     print("Finished Genetic Algorithm")
 
 if __name__ == '__main__':
     """if no settings file is provided start GUI"""
+    SEED_to_Names = {}
+    with open("data/seed_mtabolites_edited.tsv") as file:
+        file.readline()
+        for line in file:
+            line = line.split('\t')
+            SEED_to_Names[line[0]] = line[2]
+
     if len(argv) == 2:
         run_headless(argv[1])
 
