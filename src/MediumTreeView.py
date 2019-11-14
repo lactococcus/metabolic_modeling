@@ -95,12 +95,10 @@ class MediumTreeView(Frame):
 
     def save_medium(self, path):
         if self.medium is not None:
-            print(path.split("/")[:-1])
             file_path = ""
             for x in path.split("/")[:-1]:
                 file_path = file_path + x + "/"
 
-            print(file_path)
             components = {}
             children = self.tree.get_children('')
             for child in children:
@@ -111,6 +109,6 @@ class MediumTreeView(Frame):
                 flag = bool(child['values'][3])
                 if flag:
                     if quant > 0:
-                        components[name] = quant / 200
+                        components[name] = quant
             medium = Medium.from_dict(components, self.medium_volume)
-            Medium.export_medium(medium, file_path + "/refinded_medium.txt")
+            Medium.export_medium(medium, file_path + "/refinded_medium.csv")
