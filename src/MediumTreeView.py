@@ -1,6 +1,6 @@
 from Medium import Medium
 from tkinter.ttk import Treeview, Button, Label, Radiobutton
-from CustomEntryWidgets import FloatEntry
+from CustomEntryWidgets import FloatEntry, StringEntry
 from tkinter import Frame, IntVar
 from Individual import Individual
 import SEEDIDs
@@ -39,9 +39,12 @@ class MediumTreeView(Frame):
         self.rad_button_include.grid(row=2, column=1, sticky='w')
         self.rad_button_exclude.grid(row=2, column=1, sticky='e')
         Label(self, text="Include:").grid(row=2, column=0)
+        Label(self, text="Medium Name:").grid(row=3, column=0)
+        self.name_entry = StringEntry(self, initial_value="refined_medium")
+        self.name_entry.grid(row=3, column=1, sticky='w')
 
-        Button(self, text="Test Medium", command=parent.plot).grid(row=3, column=0)
-        Button(self, text="Save Medium", command=lambda: self.save_medium(parent.save)).grid(row=3, column=1)
+        Button(self, text="Test Medium", command=parent.plot).grid(row=4, column=0)
+        Button(self, text="Save Medium", command=lambda: self.save_medium(parent.save)).grid(row=4, column=1)
 
     def plot_medium(self, individual, sub_plot):
         if self.medium is not None:
@@ -111,4 +114,4 @@ class MediumTreeView(Frame):
                     if quant > 0:
                         components[name] = quant
             medium = Medium.from_dict(components, self.medium_volume)
-            Medium.export_medium(medium, file_path + "/refinded_medium.csv")
+            Medium.export_medium(medium, file_path + "/" + self.name_entry.get() + ".csv")
