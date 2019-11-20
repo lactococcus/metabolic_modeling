@@ -85,7 +85,7 @@ def run_GA(population, output_dir, queue_fitness, queue_founder, callback, suffi
 
     for n in range(loop):
 
-        info_file_path = "{}/run_info_{}{}.txt".format(output_dir, suffix, n)
+        info_file_path = "{}/run_info_{}_{}.txt".format(output_dir, suffix, n)
 
         with open(info_file_path, 'w') as file:
             file.write("Starting Genetic Algorithm\n")
@@ -143,7 +143,7 @@ def run_GA(population, output_dir, queue_fitness, queue_founder, callback, suffi
 
         if callback != None:
             callback.graph_page.text.config(state=NORMAL)
-            callback.graph_page.text.insert(END, "Finished")
+            callback.graph_page.text.insert(END, "Finished\n")
             callback.graph_page.text.config(state=DISABLED)
 
             #callback.graph_page.medium_control.add_medium(medium)
@@ -161,7 +161,7 @@ def run_GA(population, output_dir, queue_fitness, queue_founder, callback, suffi
     for comp in heatmap:
         heatmap[comp] /= len(ind_solutions)
 
-    with open(output_dir + "/medium_heatmap.csv", 'w') as file:
+    with open(output_dir + "/medium_heatmap" + suffix + ".csv", 'w') as file:
         file.write("ID;%\n")
         for comp in heatmap:
             file.write("{};{}\n".format(comp, heatmap[comp]))
