@@ -244,7 +244,7 @@ class SetupPage(tk.Frame):
 
         ttk.Label(self, text="GA Settings:", style='big.TLabel').grid(row=800, column=0, sticky='w')
         ttk.Label(self, text="Population size:").grid(row=885, column=0, sticky='w')
-        ttk.Label(self, text="Death per generation:").grid(row=886, column=0, sticky='w')
+        ttk.Label(self, text="Offspring per generation:").grid(row=886, column=0, sticky='w')
         ttk.Label(self, text="Iterations:").grid(row=887, column=0, sticky='w')
         ttk.Label(self, text="Mutation chance:").grid(row=888, column=0, sticky='w')
         ttk.Label(self, text="Deletion chance:").grid(row=889, column=0, sticky='w')
@@ -378,9 +378,9 @@ class BacteriaPage(tk.Frame):
         ttk.Label(self, text="Bacterium", style='big.TLabel').grid(row=0, column=1)
         ttk.Label(self, text="Name:").grid(row=1, column=0, sticky='w')
         ttk.Label(self, text="Model:").grid(row=2, column=0, sticky='w')
-        ttk.Label(self, text="Radium in micrometer:").grid(row=3, column=0, sticky='w')
+        ttk.Label(self, text="Radius in micrometer:").grid(row=3, column=0, sticky='w')
         ttk.Label(self, text="Dryweight in picogram:").grid(row=4, column=0, sticky='w')
-        ttk.Label(self, text="Innoculation size:").grid(row=5, column=0, sticky='w')
+        ttk.Label(self, text="Inoculation size:").grid(row=5, column=0, sticky='w')
         ttk.Button(self, text="Save Bacterium", command=lambda :add_bacterium(parent_page, controller, self)).grid(row=6, column=0)
         ttk.Button(self, text="Back", command=lambda :controller.show_frame(SetupPage)).grid(row=100, column=0)
         ttk.Button(self, image=file_image, command=lambda: choose_file(self.entry_model)).grid(row=2, column=2, sticky='w')
@@ -569,7 +569,6 @@ class RefinePage(tk.Frame):
         ttk.Button(self, image=file_image, command=lambda: choose_file(self.entry_savefile)).grid(row=1, column=2, sticky='w')
         ttk.Button(self, text="Back", command=lambda: controller.show_frame(StartPage)).grid(row=3, column=0)
         ttk.Button(self, text="Import", command=self.load).grid(row=3, column=1)
-        #ttk.Button(self, text="Plot", command=self.plot).grid(row=21, column=5)
 
         self.medium = MediumTreeView(self)
         self.medium.grid(row=1, column=6, rowspan=40)

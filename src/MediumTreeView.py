@@ -43,8 +43,8 @@ class MediumTreeView(Frame):
         self.name_entry = StringEntry(self, initial_value="refined_medium")
         self.name_entry.grid(row=3, column=1, sticky='w')
 
-        Button(self, text="Test Medium", command=parent.plot).grid(row=4, column=0)
-        Button(self, text="Save Medium", command=lambda: self.save_medium(parent.save)).grid(row=4, column=1)
+        Button(self, text="Test Medium", command=parent.plot).grid(row=4, column=1)
+        Button(self, text="Save Medium", command=lambda: self.save_medium(parent.save)).grid(row=3, column=2)
 
     def plot_medium(self, individual, sub_plot):
         if self.medium is not None:
