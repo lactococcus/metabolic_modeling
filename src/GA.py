@@ -103,7 +103,7 @@ def minimize_medium(individual, second_step=False):
 def run_GA(population, output_dir, queue_fitness, queue_founder, callback, suffix, iter, loop):
 
     ind_solutions = []
-
+    max_iterations = []  # used to track how many iterations it took to finish the GA
     for n in range(loop):
 
         info_file_path = "{}/run_info_{}_{}.txt".format(output_dir, suffix, n)
@@ -124,7 +124,6 @@ def run_GA(population, output_dir, queue_fitness, queue_founder, callback, suffi
             queue_founder.put(population.get_best())
             callback.update_graphs()
 
-        max_iterations = [] #used to track how many iterations it took to finish the GA
         current_iteration = 0
 
         for i in range(iter):

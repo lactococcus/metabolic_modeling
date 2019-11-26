@@ -27,6 +27,7 @@ import matplotlib.animation as animation
 from matplotlib.figure import Figure
 matplotlib.use("TkAgg")
 matplotlib.style.use("ggplot")
+from optlang import available_solvers
 
 def open_gui():
     global run
@@ -101,6 +102,7 @@ def start(setup):
     run.crossover_freq = setup.entry_crossover_freq.get()
     run.twopoint = False if setup.var_twopoint is 0 else True
     run.chromosome = setup.entry_chromosome.get()
+    run.solver = setup.solver_var.get()
 
 
     if run.mutation_freq + run.deletion_freq + run.crossover_freq != 1:
@@ -154,7 +156,7 @@ def start(setup):
             run.graph_page.text.config(state=DISABLED)
 
         print(f"Loading Model of Species: {widget.species.entry_name.get()}")
-        species = Species(widget.species.entry_name.get(), model, widget.species.entry_radius.get(), widget.species.entry_dryweight.get())
+        species = Species(widget.species.entry_name.get(), model, widget.species.entry_radius.get(), widget.species.entry_dryweight.get(), run.solver.lower())
         culture.innoculate_species(species, widget.species.entry_innoculation.get())
 
     run.start_process()
@@ -217,6 +219,12 @@ class SetupPage(tk.Frame):
         tk.Frame.__init__(self, parent)
 
         self.widgets = []
+        self.solvers = []
+        self.solver_var = tk.StringVar(self)
+        for solver in available_solvers.keys():
+            if available_solvers[solver]:
+                self.solvers.append(solver)
+        self.solver_var.set(self.solvers[0])
 
         ttk.Label(self, text="Setup Run", style='bigger.TLabel').grid(row=0, column=1)
         ttk.Label(self, text="Run Name:", style='big.TLabel').grid(row=1, column=0, sticky='w')
@@ -240,6 +248,7 @@ class SetupPage(tk.Frame):
         ttk.Label(self, text="pFBA:").grid(row=788, column=0, sticky='w')
         ttk.Label(self, text="Enforce growth:").grid(row=789, column=0, sticky='w')
         ttk.Label(self, text="Aerob growth:").grid(row=790, column=0, sticky='w')
+        ttk.Label(self, text="LP-Solver:").grid(row=791, column=0, sticky='w')
         ttk.Separator(self, orient="horizontal").grid(row=799, columnspan=5, sticky='ew')
 
         ttk.Label(self, text="GA Settings:", style='big.TLabel').grid(row=800, column=0, sticky='w')
@@ -286,6 +295,7 @@ class SetupPage(tk.Frame):
         self.entry_death_rate = FloatEntry(self)
         self.entry_death_rate.set("0.0")
         self.entry_death_rate.grid(row=785, column=1)
+
 
         self.entry_pop_size = IntEntry(self)
         self.entry_pop_size.set("100")
@@ -340,6 +350,9 @@ class SetupPage(tk.Frame):
         self.radio_button_twopoint_no.grid(row=893, column=1, sticky='w')
         self.radio_button_twopoint_yes = ttk.Radiobutton(self, text="Yes", variable=self.var_oxigen, value=1)
         self.radio_button_twopoint_yes.grid(row=893, column=1, sticky='e')
+
+        self.solver_menue = ttk.OptionMenu(self, self.solver_var, self.solver_var.get(), *self.solvers)
+        self.solver_menue.grid(row=791, column=1, sticky='w')
 
     def update(self):
         self.add_bacteria_button.grid(row=4 + len(self.widgets), column=0)
@@ -508,6 +521,7 @@ class RunObject:
         self.crossover_freq = 0.0
         self.twopoint = True
         self.chromosome = None
+        self.solver = None
 
 
         self.graph_page = None
