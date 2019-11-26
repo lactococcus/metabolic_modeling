@@ -20,7 +20,7 @@ import matplotlib
 import tkinter as tk
 from tkinter import filedialog
 from tkinter import ttk
-from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk
 from CustomEntryWidgets import *
 from MediumTreeView import MediumTreeView
 import matplotlib.animation as animation
@@ -552,6 +552,10 @@ class RefinePage(tk.Frame):
         self.canvas = FigureCanvasTkAgg(self.fig, master=self)
         self.canvas.draw()
         self.canvas.get_tk_widget().grid(row=1, column=5, padx=10, rowspan=20)
+
+        #self.toolbar = NavigationToolbar2Tk(self.canvas, self)
+        #self.toolbar.update()
+        #self.canvas._tkcanvas.grid(row=0, column=0)
 
         ttk.Label(self, text="Simulated Growth:", style='big.TLabel').grid(row=0, column=5)
         ttk.Label(self, text='Medium refinement', style='big.TLabel').grid(row=0, column=0)

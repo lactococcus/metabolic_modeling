@@ -1,5 +1,6 @@
 from copy import deepcopy
 import matplotlib.pyplot as plt
+import SEEDIDs
 
 
 class StockMedium:
@@ -117,7 +118,11 @@ class Medium:
         file = open(file_path, 'w')
         file.write("volume;%f\n" % medium.volume)
         for c in medium.components:
-            file.write("%s;%f\n" % (c, medium.components[c]))
+            try:
+                name = SEEDIDs.SEED_to_Names[c]
+            except:
+                name = ""
+            file.write("%s;%f;%s\n" % (c, medium.components[c], name))
         file.close()
 
     def import_medium(file_path):
