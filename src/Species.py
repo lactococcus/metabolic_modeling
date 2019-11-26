@@ -49,7 +49,7 @@ class Species:
                 name = solution.fluxes.index[i]
                 if name[:3] == "EX_":
                     flux = round(solution.fluxes.iloc[i], 6)
-                    solution.fluxes.iloc[i] = flux * self.get_biomass() * timestep * 10000 # the factor 10000 is needed to get realistic metabolite usage, otherwise the culture would grow to much
+                    solution.fluxes.iloc[i] = flux * self.get_biomass() * timestep
                     if save_crossfeed:
                         if flux < 0:
                             self.data_watcher.add_crossfeed_interaction(self.name, name, True)

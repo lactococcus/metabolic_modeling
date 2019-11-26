@@ -1,4 +1,4 @@
-from Medium import Medium
+from Medium import *
 import random
 from copy import deepcopy
 
@@ -188,13 +188,13 @@ class Chromosome_Quantitative(Chromosome):
 
         for i, amount in enumerate(self.chromosome):
             name = self.index_to_names[i]
-            flux = round(amount * volume * 200, 6)
+            flux = round(amount * volume, 6)
             if flux > 0:
                 #print(f"{name}, {amount}")
                 med_dict[name] = flux
         if oxy:
-            med_dict['EX_cpd00007_e0'] = 100 * volume * 200
-            med_dict['EX_o2_e'] = 100 * volume * 200
+            med_dict['EX_cpd00007_e0'] = 100 * volume
+            med_dict['EX_o2_e'] = 100 * volume
         else:
             med_dict['EX_cpd00007_e0'] = 0
             med_dict['EX_o2_e'] = 0
@@ -254,8 +254,11 @@ class Chromosome_Quantitative(Chromosome):
         for i in range(self.num_essentials, len(self.chromosome)):
             self.chromosome[i] = 100.0
 
-    def initialize_medium(self, stock_medium):
-        medium = stock_medium.create_medium(1.0)
+    def initialize_medium(self, medium):
+        if isinstance(medium, StockMedium):
+            medium = medium.create_medium(1.0)
+        for x in self.chromosome:
+            x = 0
         for component in medium.get_components():
             if component in self.names_to_index:
                 self.chromosome[self.names_to_index[component]] = medium.get_components()[component]

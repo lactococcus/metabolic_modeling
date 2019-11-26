@@ -53,7 +53,7 @@ class MediumTreeView(Frame):
             for child in children:
                 child = self.tree.item(child)
                 ID = child['values'][0]
-                quant = float(child['values'][2]) * 200
+                quant = float(child['values'][2])
                 flag = bool(child['values'][3])
                 if flag:
                     components[ID] = quant
@@ -73,7 +73,7 @@ class MediumTreeView(Frame):
                     name = SEEDIDs.SEED_to_Names[comp.split("_")[1]]
                 except:
                     name = comp
-                self.tree.insert('', i, comp, values=[comp, name, self.medium.get_components()[comp] / 200, 1])
+                self.tree.insert('', i, comp, values=[comp, name, self.medium.get_components()[comp], 1])
 
     def select_item(self, a):
         try:

@@ -33,7 +33,7 @@ class Culture:
                 ratios[i] = 50 * spec.get_abundance() * spec.volume / total_volume # factor 50 is necessary to recreate experimental growth behavior of Klebsiella and Cirtobacter
 
             for component in self.medium.components:
-                self.rations[component] = [self.medium.components[component] * min(x, 1.0) for x in ratios]
+                self.rations[component] = [self.medium.components[component] * 100 * min(x, 1.0) for x in ratios] # factor 100 is needed or the bacteria grow too slow
 
 
     def innoculate_species(self, species, abundance):

@@ -54,12 +54,12 @@ def average_num_nutrients(population):
     average /= len(population)
     return round(average, 3)
 
-def minimize_medium(individual):
+def minimize_medium(individual, second_step=False):
     """removes unused components from the medium and minimizes nutrient amount"""
     ref_medium = individual.chromosome.to_medium(individual.medium_volume).get_components()
     size_before = len(ref_medium)
-    individual.get_fitness()
-    med = individual.culture.medium
+    ref_fitness = individual.get_fitness()
+    #med = individual.culture.medium
     used_medium = individual.culture.medium.components_over_time
     min_medium = {}
     # med.plot_nutrients_over_time()
@@ -75,8 +75,29 @@ def minimize_medium(individual):
 
     size_after = len(min_medium)
     print("Before: " + str(size_before) + " After: " + str(size_after))
+    size_before = len(min_medium)
 
-    return Medium.from_dict(min_medium, individual.medium_volume)
+    test_medium = deepcopy(min_medium)
+
+    if not second_step:
+        return Medium.from_dict(test_medium, individual.medium_volume)
+
+    for comp in min_medium:
+        del(test_medium[comp])
+        med = Medium.from_dict(test_medium, individual.medium_volume)
+        fitness = individual.get_fitness(medium=med)
+        if fitness - ref_fitness >= 0.01 or fitness == -1.0:
+            test_medium[comp] = min_medium[comp]
+            print("{} is essential".format(comp))
+        else:
+            print("{} is not essential".format(comp))
+
+    size_after = len(min_medium)
+    med = Medium.from_dict(test_medium, individual.medium_volume)
+    print("Before: " + str(size_before) + " After: " + str(size_after))
+    fitness = individual.get_fitness(medium=med)
+    print("Fitness Before: " + str(ref_fitness) + "Fitness After: " + str(fitness))
+    return med
 
 
 def run_GA(population, output_dir, queue_fitness, queue_founder, callback, suffix, iter, loop):
@@ -103,8 +124,12 @@ def run_GA(population, output_dir, queue_fitness, queue_founder, callback, suffi
             queue_founder.put(population.get_best())
             callback.update_graphs()
 
+        max_iterations = [] #used to track how many iterations it took to finish the GA
+        current_iteration = 0
+
         for i in range(iter):
 
+            current_iteration = i + 1
             start = time.time()
             population.new_generation()
             end = time.time()
@@ -131,6 +156,8 @@ def run_GA(population, output_dir, queue_fitness, queue_founder, callback, suffi
             if population.get_best_fitness() <= 0.03:
                 break
 
+        max_iterations.append(current_iteration)
+
         if callback != None:
             if callback.flag:
                 return
@@ -138,12 +165,15 @@ def run_GA(population, output_dir, queue_fitness, queue_founder, callback, suffi
 
         population.get_best().chromosome.export_chromosome("{}/chromosome_{}{}.txt".format(output_dir, suffix, n))
 
-        medium = minimize_medium(population.get_best())
+        medium = minimize_medium(population.get_best(), True)
         Medium.export_medium(medium, "{}/medium_minimized_{}{}.txt".format(output_dir, suffix, n))
+        min_chromosome = population.get_best().chromosome.copy()
+        min_chromosome.initialize_medium(medium)
+        min_chromosome.export_chromosome("{}/chromosome_minimized_{}{}.txt".format(output_dir, suffix, n))
 
         if callback != None:
             callback.graph_page.text.config(state=NORMAL)
-            callback.graph_page.text.insert(END, "Finished\n")
+            callback.graph_page.text.insert(END, "Finished iteration {}\n".format(n))
             callback.graph_page.text.config(state=DISABLED)
 
             #callback.graph_page.medium_control.add_medium(medium)
@@ -165,6 +195,9 @@ def run_GA(population, output_dir, queue_fitness, queue_founder, callback, suffi
         file.write("ID;%\n")
         for comp in heatmap:
             file.write("{};{}\n".format(comp, heatmap[comp]))
+
+    print("Iterations:")
+    print(*max_iterations, sep=',')
 
     return medium
 
