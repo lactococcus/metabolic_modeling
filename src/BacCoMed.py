@@ -51,6 +51,7 @@ def load_runfile(config_file):
     repeats = None
     chromosome = None
     objective = {}
+    solver = None
 
     num_species = 0
 
@@ -139,6 +140,8 @@ def load_runfile(config_file):
                 elif line[0] == '#CHROMOSOME':
                     chromosome = line[1] if line[1] != '' else None
                     continue
+                elif line[0] == '#SOLVER':
+                    solver = line[1]
                 elif line[0] == '#NUM_SPECIES':
                     num_species = int(line[1])
                     #print(num_species)
@@ -158,7 +161,7 @@ def load_runfile(config_file):
             inn = int(file.readline().strip('\n').split(' ')[1])
             obj = float(file.readline().strip('\n').split(' ')[1])
 
-            species = Species(spec_name, model, radius, dryweight)
+            species = Species(spec_name, model, radius, dryweight, solver.lower())
             culture.innoculate_species(species, inn)
             objective[spec_name] = obj
 
@@ -195,6 +198,7 @@ def save_runfile(individual, population, output_dir, run_name, iterations, num_r
         file.write("#CROSSOVER_FREQ {}\n".format(population.crossover_freq))
         file.write("#TWO_POINT {}\n".format(population.twopoint))
         file.write("#CHROMOSOME {}\n".format(chromosome_file if chromosome_file is not None else ""))
+        file.write("'SOLVER {}\n".format(individual.culture.species_list[0].model.solver))
         file.write("\nSPECIES\n")
         file.write("#NUM_SPECIES {}\n".format(len(individual.culture)))
         file.write("\n")
