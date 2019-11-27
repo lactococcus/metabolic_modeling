@@ -162,13 +162,13 @@ def run_GA(population, output_dir, queue_fitness, queue_founder, callback, suffi
                 return
             callback.update_graphs()
 
-        population.get_best().chromosome.export_chromosome("{}/chromosome_{}{}.txt".format(output_dir, suffix, n))
+        population.get_best().chromosome.export_chromosome("{}/chromosome_{}_{}.txt".format(output_dir, suffix, n))
 
         medium = minimize_medium(population.get_best(), True)
-        Medium.export_medium(medium, "{}/medium_minimized_{}{}.txt".format(output_dir, suffix, n))
+        Medium.export_medium(medium, "{}/medium_minimized_{}_{}.txt".format(output_dir, suffix, n))
         min_chromosome = population.get_best().chromosome.copy()
         min_chromosome.initialize_medium(medium)
-        min_chromosome.export_chromosome("{}/chromosome_minimized_{}{}.txt".format(output_dir, suffix, n))
+        min_chromosome.export_chromosome("{}/chromosome_minimized_{}_{}.txt".format(output_dir, suffix, n))
 
         if callback != None:
             callback.graph_page.text.config(state=NORMAL)

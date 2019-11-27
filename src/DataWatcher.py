@@ -3,7 +3,7 @@ from copy import deepcopy
 class DataWatcher:
     def __init__(self):
         """The datawatcher stores information like settings, biomasses and fitness scores of an individual"""
-        self.data = {"species": {}, "individual": None, "settings": [None, None, None, 0.0], "crossfeeding": {}}
+        self.data = {"species": {}, "individual": None, "settings": [None, None, None, 0.0], "crossfeeding": {}, "uptake": {}}
 
     def init_data_watcher(self, individual):
         self.init_species(individual.culture.species_list)
@@ -13,6 +13,7 @@ class DataWatcher:
         for spec in specs:
             self.data["species"][spec.name] = [None, []] # [init_biomass, biomass]
             self.data["crossfeeding"][spec.name] = [set(), set()] #influxes, outfluxes
+            self.data["uptake"][spec.name] = {} # cumulative nutrient uptake per species
 
     def init_individual(self):
         self.data["individual"] = None #fitness
@@ -23,6 +24,15 @@ class DataWatcher:
     def add_crossfeed_interaction(self, species_name, nutrient, input):
         direction = 0 if input else 1
         self.data["crossfeeding"][species_name][direction].add(nutrient)
+
+    def add_uptake(self, species_name, nutrient, amount):
+        try:
+            self.data["uptake"][species_name][nutrient] += amount
+        except:
+            self.data["uptake"][species_name][nutrient] = amount
+
+    def get_uptake(self):
+        return self.data["uptake"]
 
     def get_fitness(self):
         return self.data["individual"]
@@ -81,6 +91,7 @@ class DataWatcher:
         for key in new_watcher.data["species"]:
             new_watcher.data["species"][key][1] = [new_watcher.data["species"][key][0]]
             new_watcher.data["crossfeeding"][key] = [set(), set()]
+            new_watcher.data["uptake"][key] = {}
         return new_watcher
 
     def __del__(self):

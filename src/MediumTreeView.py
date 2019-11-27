@@ -10,19 +10,21 @@ class MediumTreeView(Frame):
         Frame.__init__(self, parent)
         self.tree = Treeview(self)
         self.tree['selectmode'] = "browse"
-        self.tree['columns'] = ('ID', 'Name', 'Gram', 'Include')
+        self.tree['columns'] = ('ID', 'Name', 'Gram', 'Include', 'Uptake')
         self.tree['height'] = 30
         self.tree['show'] = "headings"
         self.tree.heading('ID', text="ID")
         self.tree.heading('Name', text="Name")
         self.tree.heading('Gram', text="Quantity [mmol]")
         self.tree.heading('Include', text="Include")
+        self.tree.heading('Uptake', text="Uptake")
         self.tree.column('ID', minwidth=0, width=20)
         self.tree.column('Name', minwidth=100, width=100)
         self.tree.column('Gram', minwidth=0, width=90)
         self.tree.column('Include', minwidth=50, width=50)
+        self.tree.column('Uptake', minwidth=100, width=100)
         self.tree.bind('<ButtonRelease-1>', self.select_item)
-        self.tree.grid(row=0, column=0, columnspan=3)
+        self.tree.grid(row=0, column=0, columnspan=4)
         self.run_object = kwargs.pop('run_object', None)
 
         self.medium = None
@@ -58,7 +60,36 @@ class MediumTreeView(Frame):
                 if flag:
                     components[ID] = quant
             medium = Medium.from_dict(components, self.medium_volume)
-            individual.plot(medium=medium, sub_plot=sub_plot)
+            individual.plot(True, medium=medium, sub_plot=sub_plot)
+            uptakes = individual.get_uptakes()
+            #print(uptakes['Citrobacter'])
+            for child in children:
+                child_elements = self.tree.item(child)
+                ID = child_elements['values'][0]
+                name = child_elements['values'][1]
+                quant = float(child_elements['values'][2])
+                flag = child_elements['values'][3]
+
+                uptake_per_species = []
+                species = []
+
+                for spec in uptakes:
+                    species.append(spec)
+                    try:
+                        uptake_per_species.append(uptakes[spec][ID])
+                    except:
+                        uptake_per_species.append(0)
+                        print(ID)
+
+                total = sum(uptake_per_species)
+                uptake_string = ""
+
+                if total == 0:
+                    self.tree.item(child, values=[ID, name, 0, flag, uptake_string])
+                else:
+                    for name, amount in zip(species, uptake_per_species):
+                        uptake_string = uptake_string.join(name + ": " + str(round(amount / total, 2)) + " ")
+                    self.tree.item(child, values=[ID, name, quant, flag, uptake_string])
 
     def add_medium(self, medium, medium_volume):
         if medium is not None:
@@ -73,7 +104,7 @@ class MediumTreeView(Frame):
                     name = SEEDIDs.SEED_to_Names[comp.split("_")[1]]
                 except:
                     name = comp
-                self.tree.insert('', i, comp, values=[comp, name, self.medium.get_components()[comp], 1])
+                self.tree.insert('', i, comp, values=[comp, name, self.medium.get_components()[comp], 1, ""])
 
     def select_item(self, a):
         try:
@@ -90,7 +121,8 @@ class MediumTreeView(Frame):
         ID = self.tree.item(currItem)['values'][0]
         name = self.tree.item(currItem)['values'][1]
         exclude = 1 if self.rad_var.get() == 1 else 0
-        self.tree.item(currItem, values=[ID, name, self.edit_entry.get(), exclude])
+        uptake = self.tree.item(currItem)['values'][4]
+        self.tree.item(currItem, values=[ID, name, self.edit_entry.get(), exclude, uptake])
 
     def load_medium(self, file):
         medium = Medium.import_medium(file)

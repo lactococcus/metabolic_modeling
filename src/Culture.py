@@ -60,7 +60,7 @@ class Culture:
         """returns the number of different bacterial species in the culture"""
         return len(self.species_list)
 
-    def update_biomass(self, timestep, save_crossfeed=False):
+    def update_biomass(self, timestep, save_uptake, save_crossfeed=False):
         """optimizes the biomass production of all species in the culture using FBA and handles metabolite usage and production"""
         self.allocate_medium()
 
@@ -68,7 +68,7 @@ class Culture:
 
         if len(self.species_list) >= 2:
 
-            threads = [threading.Thread(target=self._update_biomass, args=(i, species, solutions, timestep, save_crossfeed)) for i, species in
+            threads = [threading.Thread(target=self._update_biomass, args=(i, species, solutions, timestep, save_uptake, save_crossfeed)) for i, species in
                          enumerate(self.species_list)]
 
             for thread in threads:
@@ -82,7 +82,7 @@ class Culture:
             for i, species in enumerate(self.species_list):
                 for component in self.rations:
                     components[component] = self.rations[component][i]
-                solution = self.species[species.name].optimize(Medium.from_dict(components, self.medium.volume), timestep, save_crossfeed)
+                solution = self.species[species.name].optimize(Medium.from_dict(components, self.medium.volume), timestep, save_uptake, save_crossfeed)
                 solutions.append(solution)
 
         counter = 0
@@ -100,14 +100,14 @@ class Culture:
         else:
             return True
 
-    def _update_biomass(self, i, species, list, timestep, save_crossfeed):
+    def _update_biomass(self, i, species, list, timestep, save_uptake, save_crossfeed):
 
         components = {}
 
         for component in self.rations:
             components[component] = self.rations[component][i]
 
-        solution = self.species[species.name].optimize(Medium.from_dict(components, self.medium.volume), timestep, save_crossfeed)
+        solution = self.species[species.name].optimize(Medium.from_dict(components, self.medium.volume), timestep, save_uptake, save_crossfeed)
         if solution != None:
             list.append(solution)
 
