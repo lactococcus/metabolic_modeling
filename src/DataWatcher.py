@@ -3,7 +3,7 @@ from copy import deepcopy
 class DataWatcher:
     def __init__(self):
         """The datawatcher stores information like settings, biomasses and fitness scores of an individual"""
-        self.data = {"species": {}, "individual": None, "settings": [None, None, None, 0.0], "crossfeeding": {}, "uptake": {}}
+        self.data = {"species": {}, "individual": None, "settings": [None, None, None, 0.0], "crossfeeding": {}, "uptake": {}, "essentials": set()}
 
     def init_data_watcher(self, individual):
         self.init_species(individual.culture.species_list)
@@ -30,6 +30,12 @@ class DataWatcher:
             self.data["uptake"][species_name][nutrient] += amount
         except:
             self.data["uptake"][species_name][nutrient] = amount
+
+    def add_essential_nutrient(self, nutrient):
+        self.data["essentials"].add(nutrient)
+
+    def get_essential_nutrients(self):
+        return self.data["essentials"]
 
     def get_uptake(self):
         return self.data["uptake"]
@@ -84,8 +90,9 @@ class DataWatcher:
         self.data["settings"][3] = boolean
 
     def create_new_watcher(data_watcher):
+        """method to copy and reset a datawatcher"""
         new_watcher = DataWatcher()
-        #new_watcher.init_individual()
+
         new_watcher.data["species"] = deepcopy(data_watcher.data["species"])
         new_watcher.data["settings"] = deepcopy(data_watcher.data["settings"])
         for key in new_watcher.data["species"]:
@@ -96,4 +103,3 @@ class DataWatcher:
 
     def __del__(self):
         del self.data
-        #print("Destroyed DataWatcher")

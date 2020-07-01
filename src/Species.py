@@ -7,7 +7,7 @@ from cobra.core.solution import get_solution
 
 class Species:
     """class representing a bacterial species"""
-    def __init__(self, name, model_file_path, radius_microm=0.2, dry_weight_pg=0.3, solver='cplex'):
+    def __init__(self, name, model_file_path, radius_microm=0.2, dry_weight_pg=0.3, solver='glpk'):
         self.name = name
         self.model_file = model_file_path
         self.model = cobra.io.read_sbml_model(model_file_path)
@@ -28,7 +28,8 @@ class Species:
             if medium != None:
                 for reaction in self.model.exchanges:
                     if reaction.id in medium:
-                        tmp = round(-1 * medium.get_component(reaction.id) / self.get_biomass(), 6)
+
+                        tmp = round(-40000 * medium.get_component(reaction.id) / self.get_biomass(), 8)
                         reaction.lower_bound = max(tmp, -1000)
                     else:
                         reaction.lower_bound = 0.0
@@ -43,13 +44,13 @@ class Species:
                 print(self.name + " Model infeasible")
                 return
 
-            self.set_biomass((self.get_biomass() * round(solution.objective_value, 6) * timestep + self.get_biomass()) * (1 - self.data_watcher.get_death_rate())) # updates the biomass
+            self.set_biomass((self.get_biomass() * round(solution.objective_value, 8) * timestep + self.get_biomass()) * (1 - self.data_watcher.get_death_rate())) # updates the biomass
 
             for i in range(len(solution.fluxes.index)):
                 name = solution.fluxes.index[i]
                 if name[:3] == "EX_":
-                    flux = round(solution.fluxes.iloc[i], 6)
-                    solution.fluxes.iloc[i] = flux * self.get_biomass() * timestep
+                    flux = solution.fluxes.iloc[i]
+                    solution.fluxes.iloc[i] = round(flux * self.get_biomass() * timestep, 8)
 
                     if save_crossfeed:
                         if flux < 0:
@@ -58,13 +59,16 @@ class Species:
                             self.data_watcher.add_crossfeed_interaction(self.name, name, False)
 
                     if save_uptake:
-                        if flux > 0:
+                        if flux < 0:
                             self.data_watcher.add_uptake(self.name, name, solution.fluxes.iloc[i])
+
+                    if flux < 0:
+                        self.data_watcher.add_essential_nutrient(name)
 
             return solution
 
     def get_growth_curve(self):
-        """returns a list of floats representing the abundance of the species at each timestep"""
+        """returns a list of floats representing the biomass in pg of the species at each timestep"""
         return self.data_watcher.get_growth_curve(self.name)
 
     def set_data_watcher(self, data_watcher):
@@ -73,8 +77,8 @@ class Species:
 
 
     def set_biomass(self, biomass):
-        """sets the biomass of the species. biomass argument has to be in gramm"""
-        self.data_watcher.set_biomass(self.name, biomass * 1e12)
+        """sets the biomass of the species. biomass argument has to be in picogramm"""
+        self.data_watcher.set_biomass(self.name, biomass / 1e-12)
 
     def set_abundance(self, abundance):
         self.data_watcher.set_biomass(self.name, abundance * self.dry_weight)
