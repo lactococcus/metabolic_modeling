@@ -94,7 +94,7 @@ def minimize_medium(individual, second_step=False):
 
 
 def run_GA(population, output_dir, queue_fitness, queue_founder, callback, suffix, iter, loop):
-
+    """runs the genetic algorithm and updates graphs in the gui if not headless mode"""
     ind_solutions = []
     max_iterations = []  # used to track how many iterations it took to finish the GA
     for n in range(loop):
@@ -123,7 +123,7 @@ def run_GA(population, output_dir, queue_fitness, queue_founder, callback, suffi
 
             current_iteration = i + 1
             start = time.time()
-            population.new_generation()
+            population.new_generation() #<- makes new generation.
             end = time.time()
 
             if callback != None and callback.flag:
@@ -173,6 +173,7 @@ def run_GA(population, output_dir, queue_fitness, queue_founder, callback, suffi
         if population.get_best().get_fitness() <= 0.1:
             ind_solutions.append(medium)
 
+    #generates a heatmap based on how prevalent a nutrien was in all solutions
     heatmap = {}
     for sol in ind_solutions:
         for comp in sol.get_components():
