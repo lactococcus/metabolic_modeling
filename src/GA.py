@@ -59,19 +59,12 @@ def minimize_medium(individual, second_step=False):
     ref_medium = individual.chromosome.to_medium(individual.medium_volume).get_components()
     size_before = len(ref_medium)
     ref_fitness = individual.get_fitness()
-    #med = individual.culture.medium
-    used_medium = individual.culture.medium.components_over_time
+    necessary_nutrients = individual.data_watcher.get_essential_nutrients()
     min_medium = {}
-    # med.plot_nutrients_over_time()
+
     for key in ref_medium:
-        if key in used_medium:
-            progress = used_medium[key]
-            # print(progress)
-            start = progress[0]
-            minimum = min(progress)
-            # print(f"Start: {start} Min: {minimum}")
-            if minimum < start:
-                min_medium[key] = ref_medium[key]
+        if key in necessary_nutrients:
+            min_medium[key] = ref_medium[key]
 
     size_after = len(min_medium)
     print("Before: " + str(size_before) + " After: " + str(size_after))
@@ -112,7 +105,7 @@ def run_GA(population, output_dir, queue_fitness, queue_founder, callback, suffi
             file.write("Starting Genetic Algorithm\n")
 
         if callback != None and callback.flag:
-            return
+            break
 
         population.refresh()
         population.generate_initial_population()
@@ -134,7 +127,7 @@ def run_GA(population, output_dir, queue_fitness, queue_founder, callback, suffi
             end = time.time()
 
             if callback != None and callback.flag:
-                return
+                break
 
             if callback != None:
                 fit = (n, population.get_best_fitness(), population.get_average_fitness())

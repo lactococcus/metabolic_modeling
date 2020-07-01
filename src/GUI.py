@@ -80,7 +80,7 @@ def quit_and_back():
     run.terminate_process()
 
 def start(setup):
-
+    """loads all the settings from the gui and starts the genetic algorithm"""
     run.run_name = setup.entry_run_name.get()
     run.num_cpus = setup.entry_cpus.get()
     run.medium_volume = setup.entry_medium.get()
@@ -217,6 +217,7 @@ class StartPage(tk.Frame):
 class SetupPage(tk.Frame):
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent)
+        """Page that allows the user to specify the parameters for the FBA and the genetic algorithm"""
 
         self.widgets = []
         self.solvers = []
@@ -362,15 +363,19 @@ class SetupPage(tk.Frame):
 class SpeciesWidget(tk.Frame):
     def __init__(self, parent, controller, species):
         tk.Frame.__init__(self, parent)
+
         self.species = species
         self.parent = parent
-        #self.configure(bg=bg_colour)
+
         self.name = tk.StringVar()
         self.name.set(self.species.entry_name.get())
+
         tk.Label(self, textvariable=self.name).grid(row=0, column=0, sticky='w')
         tk.Label(self, text="Objective:").grid(row=0, column=2, sticky='e')
+
         self.entry_objective = FloatEntry(self)
         self.entry_objective.grid(row=0, column=3, sticky='e')
+
         ttk.Button(self, image=edit_image, command=lambda: species.tkraise()).grid(row=0, column=4, sticky='w')
         ttk.Button(self, image=cross_image, command=lambda: self.remove()).grid(row=0, column=5, sticky='w')
 
@@ -493,7 +498,7 @@ class RunPage(tk.Frame):
         if founder != None:
             founder.plot(sub_plot=self.plot_founder, force=False)
             self.plot_founder.set_xlabel("Time [h]")
-            self.plot_founder.set_ylabel("Abundance")
+            self.plot_founder.set_ylabel("Biomass [pg]")
             self.fig2.align_labels(self.plot_founder)
 
 class RunObject:
@@ -556,7 +561,7 @@ class RunObject:
 class RefinePage(tk.Frame):
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent)
-
+        """Page that allows the user to tweak and test a solution of the genetic algorithm"""
         self.individual = None
         self.chrom = None
         self.save = None
@@ -573,7 +578,6 @@ class RefinePage(tk.Frame):
 
         ttk.Label(self, text="Simulated Growth:", style='big.TLabel').grid(row=0, column=5)
         ttk.Label(self, text='Medium refinement', style='big.TLabel').grid(row=0, column=0)
-        ttk.Label(self, text="Medium:", style='big.TLabel').grid(row=0, column=6)
 
         ttk.Label(self, text="Save File:").grid(row=1, column=0)
         ttk.Label(self, text="Input Chromosome:").grid(row=2, column=0)
@@ -588,10 +592,6 @@ class RefinePage(tk.Frame):
         ttk.Button(self, text="Back", command=lambda: controller.show_frame(StartPage)).grid(row=3, column=0)
         ttk.Button(self, text="Import", command=self.load).grid(row=3, column=1)
 
-        self.medium = MediumTreeView(self)
-        self.medium.grid(row=1, column=6, rowspan=40)
-
-
     def load(self):
         if self.chrom != self.entry_chromosome.get() or self.save != self.entry_savefile.get():
             chr = Chromosome_Quantitative.import_chromosome(self.entry_chromosome.get())
@@ -602,6 +602,8 @@ class RefinePage(tk.Frame):
              mutation_freq, deletion_freq, crossover_freq, twopoint, repeats, chromosome) = BacCoMed.load_runfile(self.entry_savefile.get())
             self.save = self.entry_savefile.get()
 
+            self.medium = MediumTreeView(self)
+            self.medium.grid(row=1, column=6, rowspan=40)
             self.medium.add_medium(chr.to_medium(medium_volume), medium_volume)
 
             self.individual = Individual(culture, chr, objective, medium_volume, sim_time, timestep, data_watcher=culture.data_watcher)

@@ -23,13 +23,13 @@ class Individual:
             data_watcher2 = DataWatcher.create_new_watcher(data_watcher)
             self.register_data_watcher(data_watcher2)
 
-    def plot(self, save_uptake, medium=None, sub_plot=None, force=False, save_crossfeed=False):
+    def plot(self, save_uptake=False, medium=None, sub_plot=None, force=False, save_crossfeed=False):
         """plot the growth curves of the bacterial culture"""
         self.register_data_watcher(self.data_watcher)
         if medium is not None:
             self.score_fitness(self.fitness_function, save_uptake, medium, save_crossfeed=save_crossfeed)
         else:
-            self.get_fitness(force, save_crossfeed=save_crossfeed, save_uptake=save_uptake)
+            self.get_fitness(save_uptake=save_uptake, force=force, medium=medium, save_crossfeed=save_crossfeed)
 
         if sub_plot is not None:
             sub_plot.clear()
@@ -43,11 +43,11 @@ class Individual:
                 curve = spec.get_growth_curve()
                 plt.plot([self.timestep * x for x in range(len(curve))], curve, label=spec.name)
             plt.xlabel("Time [h]")
-            plt.ylabel("Abundance")
+            plt.ylabel("Biomass [pg]")
             plt.legend()
             plt.show()
 
-    def score_fitness(self, fitness_func, save_uptake, medium=None, save_crossfeed=False):
+    def score_fitness(self, fitness_func, save_uptake=False, medium=None, save_crossfeed=False):
         """scores the fitness of an individual based on the fitness function passed as an argument"""
         if medium is None:
             self.culture.set_medium(self.chromosome.to_medium(self.medium_volume, self.data_watcher.get_oxygen()))
@@ -78,7 +78,7 @@ class Individual:
         self.data_watcher.set_fitness(round(fitness, 6))
         gc.collect()
 
-    def get_fitness(self, save_uptake, force=False, medium=None, save_crossfeed=False):
+    def get_fitness(self, save_uptake=False, force=False, medium=None, save_crossfeed=False):
         """returns the fitness of the individual. Evaluates the ftness if it wasn't already"""
         if self.data_watcher.get_fitness() == None or force or medium != None or save_crossfeed or save_uptake:
             self.score_fitness(fitness_func=self.fitness_function, save_uptake=save_uptake, medium=medium, save_crossfeed=save_crossfeed)
@@ -102,6 +102,7 @@ class Individual:
         return Individual(self.culture.copy(), self.chromosome.copy(), self.objective, self.medium_volume, self.simulation_time, self.timestep, self.data_watcher)
 
     def reconstruct(self, other):
+        """rebinds variables of an idividual after being copied in another thread so the garbage collector can get rid of the duplicates. Causes memory leak if not used"""
         self.culture = other.culture.copy()
         self.chromosome.reconstruct(other.chromosome)
         self.objective = other.objective
@@ -123,4 +124,3 @@ class Individual:
         self.timestep = None
         self.simulation_time = None
         self.medium_volume = None
-        #print("Destroyed Individual")

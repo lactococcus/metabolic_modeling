@@ -17,13 +17,13 @@ class Culture:
         ratios = [0 for species in self.species_list]
         self.rations = {}
 
-        total_volume = self.medium.volume * 10**15 #conversion from litre to pm^3
+        total_volume = self.medium.volume * 10**15 #conversion from litre to micrometer^3
         used_volume = 0
 
         for species in self.species_list:
             used_volume += species.volume * species.get_abundance()
 
-        if total_volume <= used_volume * 1000: # grow until 1/1000 of the medium is full of bacteria
+        if total_volume <= used_volume * 50:
             for component in self.medium.components:
                 self.rations[component] = [0 for x in ratios]
 
@@ -33,11 +33,11 @@ class Culture:
                 ratios[i] = 50 * spec.get_abundance() * spec.volume / total_volume # factor 50 is necessary to recreate experimental growth behavior of Klebsiella and Cirtobacter
 
             for component in self.medium.components:
-                self.rations[component] = [self.medium.components[component] * 100 * min(x, 1.0) for x in ratios] # factor 100 is needed or the bacteria grow too slow
+                self.rations[component] = [self.medium.components[component] * min(x, 1.0) for x in ratios] # allocates the nutrients to each bacteria
 
 
     def innoculate_species(self, species, abundance):
-        """adds a species to the culture"""
+        """adds a species to the culture. I know inoculate is written wrong"""
         species.set_data_watcher(self.data_watcher)
         species.set_abundance(abundance)
         species.set_init_abundance(abundance)
